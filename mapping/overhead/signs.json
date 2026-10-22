@@ -1,0 +1,30 @@
+{
+  "id": "signs",
+  "title": "SIGNS",
+  "order": 20,
+  "notes": "Panel SIGNS. SEAT BELTS y NO SMOKING usan AirbusFBW/OHPLightSwitches[11] y [12] con 0=OFF, 1=AUTO, 2=ON según usuarios del foro de X-Plane.org. EMER EXIT LT pendiente de localizar su dataref.",
+  "controls": [
+    {
+      "id": "signs.seat_belts",
+      "label": "SEAT BELTS",
+      "kind": "toggle3",
+      "positions": ["OFF", "AUTO", "ON"],
+      "state": { "dataref": "AirbusFBW/OHPLightSwitches", "index": 11 },
+      "col": 0,
+      "row": 0,
+      "verified": false,
+      "notes": "Índice 11 y valores 0/1/2 reportados por usuarios. Confirmar en el simulador."
+    },
+    {
+      "id": "signs.no_smoking",
+      "label": "NO SMOKING",
+      "kind": "toggle3",
+      "positions": ["OFF", "AUTO", "ON"],
+      "state": { "dataref": "AirbusFBW/OHPLightSwitches", "index": 12 },
+      "col": 1,
+      "row": 0,
+      "verified": false,
+      "notes": "Índice 12 reportado por usuarios. Confirmar en el simulador."
+    }
+  ]
+}
