@@ -3,7 +3,7 @@
   "title": "HYD",
   "group": "overhead",
   "order": 45,
-  "notes": "Hidráulica. AirbusFBW/HydOHPArray existe pero los índices son supuestos; todo bloqueado hasta verificar en Diagnóstico.",
+  "notes": "Hidráulica. HydOHPArray es escribible (volcado) pero los índices son supuestos; bloqueado hasta verificar en Diagnóstico.",
   "controls": [
     {
       "id": "hyd.eng1_pump",
@@ -21,14 +21,14 @@
         "top": {
           "text": "FAULT",
           "color": "amber",
-          "dataref": "AirbusFBW/HydOHPArray",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
           "index": 0,
           "onValue": 3
         },
         "bottom": {
           "text": "OFF",
           "color": "white",
-          "dataref": "AirbusFBW/HydOHPArray",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
           "index": 0,
           "onValue": 0
         }
@@ -37,7 +37,7 @@
       "col": 0,
       "row": 0,
       "verified": false,
-      "notes": "Índice supuesto de HydOHPArray (dataref confirmado, índice no). Bloqueado hasta verificar."
+      "notes": "Índice supuesto de HydOHPArray/HydPumpOHPArray (datarefs confirmados). Bloqueado hasta verificar."
     },
     {
       "id": "hyd.elec_pump_b",
@@ -55,14 +55,14 @@
         "top": {
           "text": "FAULT",
           "color": "amber",
-          "dataref": "AirbusFBW/HydOHPArray",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
           "index": 1,
           "onValue": 3
         },
         "bottom": {
           "text": "OFF",
           "color": "white",
-          "dataref": "AirbusFBW/HydOHPArray",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
           "index": 1,
           "onValue": 0
         }
@@ -71,7 +71,7 @@
       "col": 1,
       "row": 0,
       "verified": false,
-      "notes": "Índice supuesto de HydOHPArray (dataref confirmado, índice no). Bloqueado hasta verificar."
+      "notes": "Índice supuesto de HydOHPArray/HydPumpOHPArray (datarefs confirmados). Bloqueado hasta verificar."
     },
     {
       "id": "hyd.ptu",
@@ -89,15 +89,13 @@
         "top": {
           "text": "FAULT",
           "color": "amber",
-          "dataref": "AirbusFBW/HydOHPArray",
-          "index": 2,
+          "dataref": "AirbusFBW/HydPTUOHP",
           "onValue": 3
         },
         "bottom": {
           "text": "OFF",
           "color": "white",
-          "dataref": "AirbusFBW/HydOHPArray",
-          "index": 2,
+          "dataref": "AirbusFBW/HydPTUOHP",
           "onValue": 0
         }
       },
@@ -105,7 +103,7 @@
       "col": 2,
       "row": 0,
       "verified": false,
-      "notes": "Índice supuesto de HydOHPArray (dataref confirmado, índice no). Bloqueado hasta verificar."
+      "notes": "Índice supuesto de HydOHPArray/HydPumpOHPArray (datarefs confirmados). Bloqueado hasta verificar."
     },
     {
       "id": "hyd.eng2_pump",
@@ -123,14 +121,14 @@
         "top": {
           "text": "FAULT",
           "color": "amber",
-          "dataref": "AirbusFBW/HydOHPArray",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
           "index": 3,
           "onValue": 3
         },
         "bottom": {
           "text": "OFF",
           "color": "white",
-          "dataref": "AirbusFBW/HydOHPArray",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
           "index": 3,
           "onValue": 0
         }
@@ -139,7 +137,7 @@
       "col": 3,
       "row": 0,
       "verified": false,
-      "notes": "Índice supuesto de HydOHPArray (dataref confirmado, índice no). Bloqueado hasta verificar."
+      "notes": "Índice supuesto de HydOHPArray/HydPumpOHPArray (datarefs confirmados). Bloqueado hasta verificar."
     },
     {
       "id": "hyd.elec_pump_y",
@@ -157,14 +155,14 @@
         "top": {
           "text": "FAULT",
           "color": "amber",
-          "dataref": "AirbusFBW/HydOHPArray",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
           "index": 4,
           "onValue": 3
         },
         "bottom": {
           "text": "OFF",
           "color": "white",
-          "dataref": "AirbusFBW/HydOHPArray",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
           "index": 4,
           "onValue": 0
         }
@@ -173,26 +171,7 @@
       "col": 4,
       "row": 0,
       "verified": false,
-      "notes": "Índice supuesto de HydOHPArray (dataref confirmado, índice no). Bloqueado hasta verificar."
-    },
-    {
-      "id": "hyd.rat_man_on",
-      "label": "RAT MAN ON",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/HydOHPArray",
-        "index": 5
-      },
-      "guarded": true,
-      "readOnly": true,
-      "col": 1,
-      "row": 1,
-      "verified": false,
-      "notes": "Índice supuesto de HydOHPArray (dataref confirmado, índice no). Bloqueado hasta verificar."
+      "notes": "Índice supuesto de HydOHPArray/HydPumpOHPArray (datarefs confirmados). Bloqueado hasta verificar."
     }
   ]
 }

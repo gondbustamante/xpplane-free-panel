@@ -3,7 +3,7 @@
   "title": "FUEL",
   "group": "overhead",
   "order": 40,
-  "notes": "Bombas de combustible. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Ojo: las lámparas de las bombas derechas usan FuelAutoPumpSDArray[2] y [3], no [4] y [5].",
+  "notes": "Bombas de combustible con comandos confirmados. Las lámparas de las bombas derechas usan FuelAutoPumpSDArray[2] y [3]. X FEED bloqueado hasta localizar su índice.",
   "controls": [
     {
       "id": "fuel.l_pump1",
@@ -16,6 +16,10 @@
       "state": {
         "dataref": "AirbusFBW/FuelOHPArray",
         "index": 0
+      },
+      "commands": {
+        "up": "toliss_airbus/fuelcommands/PumpLWing1On",
+        "down": "toliss_airbus/fuelcommands/PumpLWing1Off"
       },
       "lamps": {
         "top": {
@@ -36,7 +40,7 @@
       "col": 0,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
     },
     {
       "id": "fuel.l_pump2",
@@ -49,6 +53,10 @@
       "state": {
         "dataref": "AirbusFBW/FuelOHPArray",
         "index": 1
+      },
+      "commands": {
+        "up": "toliss_airbus/fuelcommands/PumpLWing2On",
+        "down": "toliss_airbus/fuelcommands/PumpLWing2Off"
       },
       "lamps": {
         "top": {
@@ -69,7 +77,7 @@
       "col": 1,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
     },
     {
       "id": "fuel.ctr_pump1",
@@ -82,6 +90,10 @@
       "state": {
         "dataref": "AirbusFBW/FuelOHPArray",
         "index": 2
+      },
+      "commands": {
+        "up": "toliss_airbus/fuelcommands/PumpLCenterOn",
+        "down": "toliss_airbus/fuelcommands/PumpLCenterOff"
       },
       "lamps": {
         "top": {
@@ -102,7 +114,7 @@
       "col": 2,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
     },
     {
       "id": "fuel.mode_sel",
@@ -135,7 +147,7 @@
       "col": 3,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. 0 = MAN, 1 = AUTO."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). 0 = MAN, 1 = AUTO. Sin comando: escritura directa."
     },
     {
       "id": "fuel.ctr_pump2",
@@ -148,6 +160,10 @@
       "state": {
         "dataref": "AirbusFBW/FuelOHPArray",
         "index": 3
+      },
+      "commands": {
+        "up": "toliss_airbus/fuelcommands/PumpRCenterOn",
+        "down": "toliss_airbus/fuelcommands/PumpRCenterOff"
       },
       "lamps": {
         "top": {
@@ -168,7 +184,7 @@
       "col": 4,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
     },
     {
       "id": "fuel.r_pump1",
@@ -181,6 +197,10 @@
       "state": {
         "dataref": "AirbusFBW/FuelOHPArray",
         "index": 4
+      },
+      "commands": {
+        "up": "toliss_airbus/fuelcommands/PumpRWing1On",
+        "down": "toliss_airbus/fuelcommands/PumpRWing1Off"
       },
       "lamps": {
         "top": {
@@ -201,7 +221,7 @@
       "col": 5,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
     },
     {
       "id": "fuel.r_pump2",
@@ -214,6 +234,10 @@
       "state": {
         "dataref": "AirbusFBW/FuelOHPArray",
         "index": 5
+      },
+      "commands": {
+        "up": "toliss_airbus/fuelcommands/PumpRWing2On",
+        "down": "toliss_airbus/fuelcommands/PumpRWing2Off"
       },
       "lamps": {
         "top": {
@@ -234,7 +258,7 @@
       "col": 6,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
     },
     {
       "id": "fuel.x_feed",
@@ -245,6 +269,10 @@
         "ON"
       ],
       "state": {
+        "dataref": "AirbusFBW/FuelXFVOHPArray",
+        "index": 0
+      },
+      "write": {
         "dataref": "AirbusFBW/FuelOHPArray",
         "index": 7
       },
@@ -252,23 +280,23 @@
         "top": {
           "text": "ON",
           "color": "blue",
-          "dataref": "AirbusFBW/FuelOHPArray",
-          "index": 7,
-          "onValue": 1
+          "dataref": "AirbusFBW/FuelXFVOHPArray",
+          "index": 0,
+          "bit": 1
         },
         "bottom": {
           "text": "OPEN",
           "color": "green",
-          "dataref": "AirbusFBW/FuelOHPArray",
-          "index": 7,
-          "onValue": 1
+          "dataref": "AirbusFBW/FuelXFVOHPArray",
+          "index": 0,
+          "bit": 2
         }
       },
       "readOnly": true,
       "col": 3,
       "row": 1,
       "verified": false,
-      "notes": "Índice 7 de FuelOHPArray supuesto. Bloqueado hasta verificar."
+      "notes": "Lámparas de FuelXFVOHPArray (confirmado, bits supuestos). Escritura en FuelOHPArray[7] supuesta. Bloqueado."
     }
   ]
 }

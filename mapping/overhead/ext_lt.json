@@ -3,7 +3,7 @@
   "title": "EXT LT",
   "group": "overhead",
   "order": 60,
-  "notes": "Luces exteriores. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Los interruptores de dos posiciones están verificados; en los de tres falta confirmar el orden de los valores.",
+  "notes": "Luces exteriores. Índices y comandos confirmados. Los interruptores de tres posiciones se mueven con comandos Up/Down; solo falta confirmar el orden de valores para dibujar la posición.",
   "controls": [
     {
       "id": "ext_lt.strobe",
@@ -18,10 +18,14 @@
         "dataref": "AirbusFBW/OHPLightSwitches",
         "index": 7
       },
+      "commands": {
+        "up": "toliss_airbus/lightcommands/StrobeLightUp",
+        "down": "toliss_airbus/lightcommands/StrobeLightDown"
+      },
       "col": 0,
       "row": 0,
       "verified": false,
-      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
+      "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina."
     },
     {
       "id": "ext_lt.beacon",
@@ -35,10 +39,14 @@
         "dataref": "AirbusFBW/OHPLightSwitches",
         "index": 0
       },
+      "commands": {
+        "up": "toliss_airbus/lightcommands/BeaconOn",
+        "down": "toliss_airbus/lightcommands/BeaconOff"
+      },
       "col": 1,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
     },
     {
       "id": "ext_lt.wing",
@@ -52,10 +60,14 @@
         "dataref": "AirbusFBW/OHPLightSwitches",
         "index": 1
       },
+      "commands": {
+        "up": "toliss_airbus/lightcommands/WingLightOn",
+        "down": "toliss_airbus/lightcommands/WingLightOff"
+      },
       "col": 2,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
     },
     {
       "id": "ext_lt.nav_logo",
@@ -70,10 +82,14 @@
         "dataref": "AirbusFBW/OHPLightSwitches",
         "index": 2
       },
+      "commands": {
+        "up": "toliss_airbus/lightcommands/NavLightUp",
+        "down": "toliss_airbus/lightcommands/NavLightDown"
+      },
       "col": 3,
       "row": 0,
       "verified": false,
-      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
+      "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina."
     },
     {
       "id": "ext_lt.rwy_turn_off",
@@ -87,10 +103,14 @@
         "dataref": "AirbusFBW/OHPLightSwitches",
         "index": 6
       },
+      "commands": {
+        "up": "toliss_airbus/lightcommands/TurnoffLightOn",
+        "down": "toliss_airbus/lightcommands/TurnoffLightOff"
+      },
       "col": 4,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
     },
     {
       "id": "ext_lt.land_l",
@@ -105,10 +125,14 @@
         "dataref": "AirbusFBW/OHPLightSwitches",
         "index": 4
       },
+      "commands": {
+        "up": "toliss_airbus/lightcommands/LLandLightUp",
+        "down": "toliss_airbus/lightcommands/LLandLightDown"
+      },
       "col": 5,
       "row": 0,
       "verified": false,
-      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
+      "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina."
     },
     {
       "id": "ext_lt.land_r",
@@ -123,10 +147,14 @@
         "dataref": "AirbusFBW/OHPLightSwitches",
         "index": 5
       },
+      "commands": {
+        "up": "toliss_airbus/lightcommands/RLandLightUp",
+        "down": "toliss_airbus/lightcommands/RLandLightDown"
+      },
       "col": 6,
       "row": 0,
       "verified": false,
-      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
+      "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina."
     },
     {
       "id": "ext_lt.nose",
@@ -141,10 +169,14 @@
         "dataref": "AirbusFBW/OHPLightSwitches",
         "index": 3
       },
+      "commands": {
+        "up": "toliss_airbus/lightcommands/NoseLightUp",
+        "down": "toliss_airbus/lightcommands/NoseLightDown"
+      },
       "col": 7,
       "row": 0,
       "verified": false,
-      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
+      "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina."
     }
   ]
 }

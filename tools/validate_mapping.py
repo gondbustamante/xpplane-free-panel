@@ -84,8 +84,38 @@ def validate_layout(root, panel_ids):
     return errors, group_ids
 
 
+def names_in(control):
+    """Dataref and command names a control references."""
+    datarefs, commands = set(), set()
+    for key in ("state", "write"):
+        if key in control:
+            datarefs.add(control[key]["dataref"])
+    for half in ("top", "bottom"):
+        lamp = (control.get("lamps") or {}).get(half)
+        if lamp and lamp.get("dataref"):
+            datarefs.add(lamp["dataref"])
+    for key in ("up", "down", "press"):
+        value = (control.get("commands") or {}).get(key)
+        if value:
+            commands.add(value)
+    return datarefs, commands
+
+
+def load_reference(root):
+    """Names from mapping/reference/*.txt (xp.py dump), or None when no dump exists yet."""
+    def read(name):
+        path = os.path.join(root, "reference", name)
+        if not os.path.exists(path):
+            return None
+        with open(path, encoding="utf-8") as handle:
+            return {line.split("\t")[0].strip() for line in handle if line.strip()}
+    return read("datarefs.txt"), read("commands.txt")
+
+
 def main():
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "mapping")
+    ref_datarefs, ref_commands = load_reference(root)
+    used_datarefs, used_commands = set(), set()
     files = sorted(f for f in glob.glob(os.path.join(root, "**", "*.json"), recursive=True)
                    if os.path.basename(f) != "layout.json" and os.sep + "reference" + os.sep not in f)
     if not files:
@@ -98,6 +128,10 @@ def main():
         panel, rows, errors = validate(path)
         panel_ids.add(panel.get("id"))
         groups_used.add(panel.get("group"))
+        for control in panel.get("controls", []):
+            datarefs, commands = names_in(control)
+            used_datarefs |= datarefs
+            used_commands |= commands
         print(f"\n== {panel.get('title', '?')}  ({os.path.relpath(path)})")
         for row in rows:
             print("  {:<22} {:<8} {:<18} {:<36} verificado: {}".format(*row))
@@ -112,7 +146,17 @@ def main():
     for error in layout_errors:
         print(f"ERROR: {error}")
         failed = True
-    print(f"\n{total} controles, {verified} verificados, {total - verified} pendientes.")
+    if ref_datarefs is None or ref_commands is None:
+        print("\nSin volcado en mapping/reference/: ejecuta tools/xp.py dump para comprobar nombres contra ToLiss.")
+    else:
+        for name in sorted(used_datarefs - ref_datarefs):
+            print(f"ERROR: el dataref '{name}' no aparece en mapping/reference/datarefs.txt")
+            failed = True
+        for name in sorted(used_commands - ref_commands):
+            print(f"ERROR: el comando '{name}' no aparece en mapping/reference/commands.txt")
+            failed = True
+        print(f"\nNombres comprobados contra el volcado: {len(used_datarefs)} datarefs y {len(used_commands)} comandos.")
+    print(f"{total} controles, {verified} verificados, {total - verified} pendientes.")
     sys.exit(1 if failed else 0)
 
 

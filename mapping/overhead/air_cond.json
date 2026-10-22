@@ -3,7 +3,7 @@
   "title": "AIR COND",
   "group": "overhead",
   "order": 50,
-  "notes": "Packs y sangrados. PACK 1/2 y APU BLEED verificados (Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss.). ENG BLEED usa datarefs citados por usuarios; X BLEED, HOT AIR y RAM AIR son candidatos bloqueados.",
+  "notes": "Packs y sangrados. PACK 1/2 y APU BLEED con comandos confirmados. El resto escribe datarefs confirmados como escribibles en el volcado, con semántica de valores por confirmar.",
   "controls": [
     {
       "id": "air_cond.pack1",
@@ -37,7 +37,7 @@
       "col": 0,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
     },
     {
       "id": "air_cond.eng1_bleed",
@@ -61,7 +61,7 @@
       "col": 1,
       "row": 0,
       "verified": false,
-      "notes": "Dataref citado en listas de usuarios; escritura y lámpara FAULT por confirmar."
+      "notes": "Escribible (volcado). Sin comando; lámpara FAULT no localizada."
     },
     {
       "id": "air_cond.x_bleed",
@@ -75,11 +75,10 @@
       "state": {
         "dataref": "AirbusFBW/XBleedSwitch"
       },
-      "readOnly": true,
       "col": 2,
       "row": 0,
       "verified": false,
-      "notes": "Dataref candidato sin confirmar. Bloqueado."
+      "notes": "Escribible (volcado). Orden de valores por confirmar."
     },
     {
       "id": "air_cond.eng2_bleed",
@@ -103,7 +102,7 @@
       "col": 3,
       "row": 0,
       "verified": false,
-      "notes": "Dataref citado en listas de usuarios; escritura y lámpara FAULT por confirmar."
+      "notes": "Escribible (volcado). Sin comando; lámpara FAULT no localizada."
     },
     {
       "id": "air_cond.pack2",
@@ -137,7 +136,24 @@
       "col": 4,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+    },
+    {
+      "id": "air_cond.pack_flow",
+      "label": "PACK FLOW",
+      "kind": "rotary",
+      "positions": [
+        "LO",
+        "NORM",
+        "HI"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/PackFlowSel"
+      },
+      "col": 0,
+      "row": 1,
+      "verified": false,
+      "notes": "Escribible (volcado). Orden de valores por confirmar."
     },
     {
       "id": "air_cond.hot_air",
@@ -151,6 +167,12 @@
         "dataref": "AirbusFBW/HotAirSwitch"
       },
       "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/HotAirSwitchIllum",
+          "bit": 2
+        },
         "bottom": {
           "text": "OFF",
           "color": "white",
@@ -158,11 +180,10 @@
           "onValue": 0
         }
       },
-      "readOnly": true,
       "col": 1,
       "row": 1,
       "verified": false,
-      "notes": "Dataref candidato sin confirmar. Bloqueado."
+      "notes": "Escribible (volcado). Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
     },
     {
       "id": "air_cond.apu_bleed",
@@ -180,6 +201,12 @@
         "down": "toliss_airbus/apucommands/BleedOff"
       },
       "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/APUBleedInd",
+          "onValue": 2
+        },
         "bottom": {
           "text": "ON",
           "color": "blue",
@@ -190,7 +217,7 @@
       "col": 2,
       "row": 1,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Comandos citados en el foro de X-Plane.org."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
     },
     {
       "id": "air_cond.ram_air",
@@ -207,15 +234,15 @@
         "bottom": {
           "text": "ON",
           "color": "blue",
-          "dataref": "AirbusFBW/RamAirSwitch"
+          "dataref": "AirbusFBW/RamAirSwitchLights",
+          "bit": 1
         }
       },
       "guarded": true,
-      "readOnly": true,
       "col": 3,
       "row": 1,
       "verified": false,
-      "notes": "Dataref candidato sin confirmar. Bloqueado."
+      "notes": "Escribible (volcado). Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
     }
   ]
 }

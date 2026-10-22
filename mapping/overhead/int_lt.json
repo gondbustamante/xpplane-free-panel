@@ -1,0 +1,65 @@
+{
+  "id": "int_lt",
+  "title": "INT LT",
+  "group": "overhead",
+  "order": 65,
+  "notes": "Luces interiores. Comandos confirmados; DOME y STBY COMPASS no tienen dataref de posición localizado, así que la palanca solo refleja lo que se mueve desde el iPad.",
+  "controls": [
+    {
+      "id": "int_lt.dome",
+      "label": "DOME",
+      "kind": "toggle3",
+      "positions": [
+        "OFF",
+        "DIM",
+        "BRT"
+      ],
+      "commands": {
+        "up": "toliss_airbus/lightcommands/DomeLightUp",
+        "down": "toliss_airbus/lightcommands/DomeLightDown"
+      },
+      "col": 0,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Sin dataref de estado."
+    },
+    {
+      "id": "int_lt.stby_compass",
+      "label": "STBY COMPASS",
+      "kind": "toggle2",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "up": "toliss_airbus/lightcommands/CompassLightOn",
+        "down": "toliss_airbus/lightcommands/CompassLightOff"
+      },
+      "col": 1,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Sin dataref de estado."
+    },
+    {
+      "id": "int_lt.ann_lt",
+      "label": "ANN LT",
+      "kind": "toggle3",
+      "positions": [
+        "DIM",
+        "BRT",
+        "TEST"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/AnnunMode"
+      },
+      "commands": {
+        "up": "toliss_airbus/lightcommands/AnnunUp",
+        "down": "toliss_airbus/lightcommands/AnnunDown"
+      },
+      "col": 2,
+      "row": 0,
+      "verified": false,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Orden de valores de AnnunMode por confirmar."
+    }
+  ]
+}

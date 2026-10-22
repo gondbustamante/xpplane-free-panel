@@ -1,0 +1,86 @@
+{
+  "id": "cargo",
+  "title": "CARGO HEAT · SMOKE",
+  "group": "overhead",
+  "order": 56,
+  "notes": "Calefacción y humo de bodegas. Comandos confirmados en el volcado.",
+  "controls": [
+    {
+      "id": "cargo.hot_air",
+      "label": "HOT AIR",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/CargoHotAir"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/CargoHotAir",
+          "onValue": 0
+        }
+      },
+      "col": 0,
+      "row": 0,
+      "verified": false,
+      "notes": "CargoHotAir escribible (volcado)."
+    },
+    {
+      "id": "cargo.fwd_agent",
+      "label": "FWD DISCH",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "DISCH"
+      ],
+      "commands": {
+        "press": "AirbusFBW/CargoFireProt/FwdAgentPush",
+        "duration": 2
+      },
+      "guarded": true,
+      "col": 1,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+    },
+    {
+      "id": "cargo.aft_agent",
+      "label": "AFT DISCH",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "DISCH"
+      ],
+      "commands": {
+        "press": "AirbusFBW/CargoFireProt/AftAgentPush",
+        "duration": 2
+      },
+      "guarded": true,
+      "col": 2,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+    },
+    {
+      "id": "cargo.test",
+      "label": "SMOKE TEST",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/FireTestCargo",
+        "duration": 2
+      },
+      "col": 3,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+    }
+  ]
+}

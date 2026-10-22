@@ -1,0 +1,61 @@
+{
+  "id": "emer_elec",
+  "title": "EMER ELEC PWR",
+  "group": "overhead",
+  "order": 18,
+  "notes": "Generador de emergencia. Comandos confirmados en el volcado.",
+  "controls": [
+    {
+      "id": "emer_elec.man_on",
+      "label": "MAN ON",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "toliss_airbus/eleccommands/PressEmerGenButton"
+      },
+      "guarded": true,
+      "col": 0,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
+    },
+    {
+      "id": "emer_elec.gen_test",
+      "label": "GEN TEST",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "toliss_airbus/eleccommands/PressEmerGenTestButton",
+        "duration": 2
+      },
+      "guarded": true,
+      "col": 1,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+    },
+    {
+      "id": "emer_elec.rat_man_on",
+      "label": "RAT MAN ON",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "toliss_airbus/hydcommands/PressRATReleaseButton"
+      },
+      "guarded": true,
+      "col": 2,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "id": "rcdr_oxy",
+  "title": "RCDR · OXYGEN",
+  "group": "overhead",
+  "order": 25,
+  "notes": "Grabadores y oxígeno. Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+  "controls": [
+    {
+      "id": "rcdr.gnd_ctl",
+      "label": "GND CTL",
+      "kind": "korry",
+      "positions": [
+        "AUTO",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/CvrGndCtrl"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/CvrGndCtrl"
+        }
+      },
+      "col": 0,
+      "row": 0,
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+    },
+    {
+      "id": "rcdr.cvr_erase",
+      "label": "CVR ERASE",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/CVRErase",
+        "duration": 2
+      },
+      "guarded": true,
+      "col": 1,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+    },
+    {
+      "id": "rcdr.cvr_test",
+      "label": "CVR TEST",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/CVRTest",
+        "duration": 2
+      },
+      "col": 2,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+    },
+    {
+      "id": "oxy.crew_supply",
+      "label": "CREW SUPPLY",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/CrewOxySwitch"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/CrewOxySwitch",
+          "onValue": 0
+        }
+      },
+      "col": 3,
+      "row": 0,
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+    },
+    {
+      "id": "oxy.pax_mask",
+      "label": "MASK MAN ON",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/PaxOxyReleaseButtonPress"
+      },
+      "guarded": true,
+      "col": 4,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Suelta las máscaras de pasaje."
+    },
+    {
+      "id": "oxy.tmr_reset",
+      "label": "TMR RESET",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/TMRResetButtonPress"
+      },
+      "guarded": true,
+      "col": 5,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
+    }
+  ]
+}

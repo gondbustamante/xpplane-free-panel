@@ -1,0 +1,117 @@
+{
+  "id": "eng",
+  "title": "ENG MAN START · N1 MODE",
+  "group": "overhead",
+  "order": 75,
+  "notes": "Arranque manual y modo N1. Datarefs confirmados como escribibles; semántica por confirmar.",
+  "controls": [
+    {
+      "id": "eng.man_start1",
+      "label": "MAN START 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ManStartSwitchArray",
+        "index": 0
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/ManStartLightsArray",
+          "index": 0,
+          "bit": 1
+        }
+      },
+      "guarded": true,
+      "col": 0,
+      "row": 0,
+      "verified": false,
+      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
+    },
+    {
+      "id": "eng.man_start2",
+      "label": "MAN START 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ManStartSwitchArray",
+        "index": 1
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/ManStartLightsArray",
+          "index": 1,
+          "bit": 1
+        }
+      },
+      "guarded": true,
+      "col": 1,
+      "row": 0,
+      "verified": false,
+      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
+    },
+    {
+      "id": "eng.n1_mode1",
+      "label": "N1 MODE 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/N1ModeSwitchArray",
+        "index": 0
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/N1ModeLightsArray",
+          "index": 0,
+          "bit": 1
+        }
+      },
+      "guarded": true,
+      "col": 2,
+      "row": 0,
+      "verified": false,
+      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
+    },
+    {
+      "id": "eng.n1_mode2",
+      "label": "N1 MODE 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/N1ModeSwitchArray",
+        "index": 1
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/N1ModeLightsArray",
+          "index": 1,
+          "bit": 1
+        }
+      },
+      "guarded": true,
+      "col": 3,
+      "row": 0,
+      "verified": false,
+      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
+    }
+  ]
+}

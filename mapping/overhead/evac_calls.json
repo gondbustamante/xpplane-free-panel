@@ -1,0 +1,150 @@
+{
+  "id": "evac_calls",
+  "title": "EVAC · CALLS",
+  "group": "overhead",
+  "order": 15,
+  "notes": "Evacuación y llamadas. Datarefs y comandos confirmados en el volcado; semántica de valores por confirmar.",
+  "controls": [
+    {
+      "id": "evac.command",
+      "label": "COMMAND",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/EmerEvacButton"
+      },
+      "lamps": {
+        "top": {
+          "text": "EVAC",
+          "color": "red",
+          "dataref": "AirbusFBW/EmerEvacLight"
+        },
+        "bottom": {
+          "text": "ON",
+          "color": "white",
+          "dataref": "AirbusFBW/EmerEvacButton"
+        }
+      },
+      "guarded": true,
+      "col": 0,
+      "row": 0,
+      "verified": false,
+      "notes": "EmerEvacButton escribible (volcado)."
+    },
+    {
+      "id": "evac.capt_purs",
+      "label": "CAPT / PURS",
+      "kind": "toggle2",
+      "positions": [
+        "CAPT",
+        "CAPT & PURS"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/EmerEvacCaptPursSelSwitch"
+      },
+      "col": 1,
+      "row": 0,
+      "verified": false,
+      "notes": "Escribible (volcado). Orden de valores por confirmar."
+    },
+    {
+      "id": "evac.horn_off",
+      "label": "HORN SHUT OFF",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/EvacHornShutoff"
+      },
+      "col": 2,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
+    },
+    {
+      "id": "calls.emer",
+      "label": "EMER CALL",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/EmerCallOHPButton"
+      },
+      "lamps": {
+        "top": {
+          "text": "ON",
+          "color": "white",
+          "dataref": "AirbusFBW/EmerCallOHPButton"
+        },
+        "bottom": {
+          "text": "CALL",
+          "color": "amber",
+          "dataref": "AirbusFBW/EmerCallOHPButton"
+        }
+      },
+      "guarded": true,
+      "col": 3,
+      "row": 0,
+      "verified": false,
+      "notes": "EmerCallOHPButton escribible (volcado)."
+    },
+    {
+      "id": "calls.mech",
+      "label": "MECH",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/purser/mech",
+        "duration": 1
+      },
+      "col": 4,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
+    },
+    {
+      "id": "calls.fwd",
+      "label": "FWD",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/purser/fwd",
+        "duration": 1
+      },
+      "col": 5,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
+    },
+    {
+      "id": "calls.aft",
+      "label": "AFT",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/purser/aft",
+        "duration": 1
+      },
+      "col": 6,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
+    }
+  ]
+}

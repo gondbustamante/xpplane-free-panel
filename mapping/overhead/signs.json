@@ -3,25 +3,35 @@
   "title": "SIGNS",
   "group": "overhead",
   "order": 70,
-  "notes": "Señales de cabina. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss.",
+  "notes": "Señales de cabina. Comandos confirmados. Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
   "controls": [
     {
       "id": "signs.seat_belts",
       "label": "SEAT BELTS",
-      "kind": "toggle3",
+      "kind": "toggle2",
       "positions": [
         "OFF",
-        "AUTO",
         "ON"
       ],
       "state": {
         "dataref": "AirbusFBW/OHPLightSwitches",
-        "index": 11
+        "index": 11,
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "2": 1
+        }
+      },
+      "commands": {
+        "up": "toliss_airbus/lightcommands/FSBSignOn",
+        "down": "toliss_airbus/lightcommands/FSBSignOff"
       },
       "col": 0,
       "row": 0,
-      "verified": false,
-      "notes": "Índice 11 confirmado. Usuarios reportan 0=OFF, 1=AUTO, 2=ON; en hardware se usa como 0/1. Confirmar."
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). En el A320 de ToLiss el interruptor es OFF/ON (comandos FSBSignOn/Off)."
     },
     {
       "id": "signs.no_smoking",
@@ -36,10 +46,14 @@
         "dataref": "AirbusFBW/OHPLightSwitches",
         "index": 12
       },
+      "commands": {
+        "up": "toliss_airbus/lightcommands/NSSignUp",
+        "down": "toliss_airbus/lightcommands/NSSignDown"
+      },
       "col": 1,
       "row": 0,
       "verified": false,
-      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
+      "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina."
     },
     {
       "id": "signs.emer_exit_lt",
@@ -54,10 +68,14 @@
         "dataref": "AirbusFBW/OHPLightSwitches",
         "index": 10
       },
+      "commands": {
+        "up": "toliss_airbus/lightcommands/EmerExitLightUp",
+        "down": "toliss_airbus/lightcommands/EmerExitLightDown"
+      },
       "col": 2,
       "row": 0,
       "verified": false,
-      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador. Lámpara OFF en OHPLightsATA31_Raw[12]."
+      "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina. Lámpara OFF en OHPLightsATA31_Raw[12]."
     }
   ]
 }

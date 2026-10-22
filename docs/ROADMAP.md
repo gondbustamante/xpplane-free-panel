@@ -31,15 +31,13 @@ Objetivo: demostrar el camino completo iPad → relay → Web API → ToLiss con
 
 ## Fase 2 · Overhead completo (2 a 3 meses) — en curso
 
-Hecho el 2026-10-22: barra lateral con fases de vuelo y grupos de paneles (`mapping/layout.json`), selector rotatorio, pulsador guardado, 12 subpaneles del overhead con 74 controles (34 verificados por un proyecto de hardware que funciona contra ToLiss, 40 pendientes, de los cuales 26 bloqueados como solo lectura hasta confirmar índice).
+Hecho el 2026-10-22: barra lateral con fases de vuelo y grupos de paneles (`mapping/layout.json`), selector rotatorio, pulsador guardado, y **21 subpaneles del overhead con 124 controles**. Con el volcado real de ToLiss en `mapping/reference/`, los 74 datarefs y 101 comandos del mapeo están comprobados por nombre (el validador lo exige). 59 controles verificados; 65 pendientes de confirmar semántica de valores o índice, de los cuales 24 bloqueados como solo lectura.
 
 Pendiente por subpanel (verificar en Diagnóstico y desbloquear):
-- ELEC: índices de `ElecOHPArray` para GEN 1/2, BUS TIE, AC ESS FEED, GALLEY, COMMERCIAL, IDG 1/2; escritura de APU GEN.
-- HYD: índices de `HydOHPArray`.
-- AIR COND: X BLEED, HOT AIR, RAM AIR; lámparas FAULT de ENG BLEED.
-- FUEL: X FEED. ANTI ICE: PROBE/WINDOW HEAT. GPWS: SYS, G/S MODE, FLAP MODE, TERR.
-- Orden de valores de todos los controles de 3 posiciones (EXT LT, SIGNS, ADIRS, WIPER, ANN LT).
-- FIRE: pulsador de fuego del APU y agentes. Faltan por crear: FLT CTL, CABIN PRESS, VENTILATION, CARGO HEAT/SMOKE, ENG MAN START, EMER ELEC PWR, EVAC, INT LT, BAT voltímetros.
+- ELEC: índices de `ElecOHPArray` para GEN 1/2, APU GEN, BUS TIE, AC ESS FEED, GALLEY, COMMERCIAL (sin comando en ToLiss, solo escritura).
+- HYD: índices de `HydOHPArray` y `HydPumpOHPArray`. FLT CTL: índices de `FCCSwitchArray`. FIRE: índices de `FireExOHPArray` (agentes) y dataref del pulsador de fuego del APU. FUEL: X FEED.
+- Semántica 0/1/2 de los interruptores de 3 posiciones (EXT LT, SIGNS, ADIRS, X BLEED, PACK FLOW, WIPER, ANN LT) y de las lámparas en bits (`*SwitchLights`, `*Illum`).
+- Faltan: voltímetros BAT, LDG ELEV, selectores de temperatura, OVHD INTEG LT (brillo), RAIN RPLNT, APU fire pb.
 
 Orden original propuesto por valor para el flujo de vuelo y por riesgo de mapeo:
 

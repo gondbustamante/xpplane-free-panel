@@ -2,8 +2,8 @@
   "id": "anti_ice",
   "title": "ANTI ICE",
   "group": "overhead",
-  "order": 55,
-  "notes": "Antihielo. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss.",
+  "order": 57,
+  "notes": "Antihielo. Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
   "controls": [
     {
       "id": "anti_ice.wing",
@@ -45,7 +45,7 @@
       "col": 0,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Valor en bits: 1 = ON, 2 = FAULT."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Valor en bits: 1 = ON, 2 = FAULT."
     },
     {
       "id": "anti_ice.eng1",
@@ -87,7 +87,7 @@
       "col": 1,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Valor en bits: 1 = ON, 2 = FAULT."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Valor en bits: 1 = ON, 2 = FAULT."
     },
     {
       "id": "anti_ice.eng2",
@@ -129,7 +129,7 @@
       "col": 2,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Valor en bits: 1 = ON, 2 = FAULT."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Valor en bits: 1 = ON, 2 = FAULT."
     },
     {
       "id": "anti_ice.probe_window",
@@ -146,14 +146,14 @@
         "bottom": {
           "text": "ON",
           "color": "blue",
-          "dataref": "AirbusFBW/ProbeHeatSwitch"
+          "dataref": "AirbusFBW/PRobeHeatLights",
+          "bit": 1
         }
       },
-      "readOnly": true,
       "col": 3,
       "row": 0,
       "verified": false,
-      "notes": "Dataref candidato sin confirmar. Bloqueado."
+      "notes": "ProbeHeatSwitch escribible (volcado). Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
     }
   ]
 }

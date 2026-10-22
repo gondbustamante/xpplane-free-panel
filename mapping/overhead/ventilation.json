@@ -1,0 +1,93 @@
+{
+  "id": "ventilation",
+  "title": "VENTILATION",
+  "group": "overhead",
+  "order": 54,
+  "notes": "Ventilación de aviónica. Datarefs confirmados como escribibles; semántica por confirmar.",
+  "controls": [
+    {
+      "id": "vent.blower",
+      "label": "BLOWER",
+      "kind": "korry",
+      "positions": [
+        "AUTO",
+        "OVRD"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/BlowerSwitch"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/BlowerSwitchLights",
+          "bit": 2
+        },
+        "bottom": {
+          "text": "OVRD",
+          "color": "white",
+          "dataref": "AirbusFBW/BlowerSwitchLights",
+          "bit": 1
+        }
+      },
+      "col": 0,
+      "row": 0,
+      "verified": false,
+      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
+    },
+    {
+      "id": "vent.extract",
+      "label": "EXTRACT",
+      "kind": "korry",
+      "positions": [
+        "AUTO",
+        "OVRD"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ExtractSwitch"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/ExtractSwitchLights",
+          "bit": 2
+        },
+        "bottom": {
+          "text": "OVRD",
+          "color": "white",
+          "dataref": "AirbusFBW/ExtractSwitchLights",
+          "bit": 1
+        }
+      },
+      "col": 1,
+      "row": 0,
+      "verified": false,
+      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
+    },
+    {
+      "id": "vent.cab_fans",
+      "label": "CAB FANS",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/CabinFanSwitch"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/CabinFanSwitchLights",
+          "bit": 1
+        }
+      },
+      "col": 2,
+      "row": 0,
+      "verified": false,
+      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
+    }
+  ]
+}

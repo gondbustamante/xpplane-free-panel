@@ -3,8 +3,33 @@
   "title": "ELEC",
   "group": "overhead",
   "order": 20,
-  "notes": "Panel eléctrico. BAT 1/2 y EXT PWR verificados (Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss.). El resto usa índices supuestos de AirbusFBW/ElecOHPArray y está bloqueado hasta confirmarlos: abre Diagnóstico, pulsa cada botón en la cabina virtual y anota el índice que se ilumina.",
+  "notes": "Panel eléctrico. BAT 1/2, EXT PWR, IDG 1/2 y GND PWR con comandos confirmados. GEN 1/2, BUS TIE, AC ESS FEED, GALLEY y COMMERCIAL leen lámparas de datarefs confirmados pero escriben en índices supuestos de ElecOHPArray, por eso están bloqueados.",
   "controls": [
+    {
+      "id": "elec.gpu",
+      "label": "GND PWR UNIT",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "toliss_airbus/elec_ground_power/toggle"
+      },
+      "lamps": {
+        "top": {
+          "text": "AVAIL",
+          "color": "green",
+          "dataref": "AirbusFBW/ExtPowOHPArray",
+          "index": 0,
+          "onValue": 2
+        }
+      },
+      "col": 0,
+      "row": 0,
+      "verified": true,
+      "notes": "Conecta o retira la unidad de tierra (equivale al ISCS). Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
+    },
     {
       "id": "elec.bat1",
       "label": "BAT 1",
@@ -48,7 +73,7 @@
       "col": 1,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
     },
     {
       "id": "elec.bat2",
@@ -93,7 +118,7 @@
       "col": 2,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
     },
     {
       "id": "elec.idg1",
@@ -103,32 +128,15 @@
         "ON",
         "DISC"
       ],
-      "state": {
-        "dataref": "AirbusFBW/ElecOHPArray",
-        "index": 6
-      },
-      "lamps": {
-        "top": {
-          "text": "FAULT",
-          "color": "amber",
-          "dataref": "AirbusFBW/ElecOHPArray",
-          "index": 6,
-          "onValue": 3
-        },
-        "bottom": {
-          "text": "DISC",
-          "color": "amber",
-          "dataref": "AirbusFBW/ElecOHPArray",
-          "index": 6,
-          "onValue": 1
-        }
+      "commands": {
+        "press": "toliss_airbus/eleccommands/IDG1PressAndHold",
+        "duration": 3
       },
       "guarded": true,
-      "readOnly": true,
       "col": 0,
       "row": 1,
-      "verified": false,
-      "notes": "Dataref candidato sin confirmar: índice supuesto de ElecOHPArray. Bloqueado (solo lectura) hasta verificarlo en Diagnóstico."
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 3 s. Irreversible en vuelo (resetIDGs desde el ISCS)."
     },
     {
       "id": "elec.gen1",
@@ -139,6 +147,17 @@
         "ON"
       ],
       "state": {
+        "dataref": "AirbusFBW/EngGenOHPArray",
+        "index": 0,
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "3": 1
+        }
+      },
+      "write": {
         "dataref": "AirbusFBW/ElecOHPArray",
         "index": 0
       },
@@ -146,14 +165,14 @@
         "top": {
           "text": "FAULT",
           "color": "amber",
-          "dataref": "AirbusFBW/ElecOHPArray",
+          "dataref": "AirbusFBW/EngGenOHPArray",
           "index": 0,
           "onValue": 3
         },
         "bottom": {
           "text": "OFF",
           "color": "white",
-          "dataref": "AirbusFBW/ElecOHPArray",
+          "dataref": "AirbusFBW/EngGenOHPArray",
           "index": 0,
           "bit": 1,
           "invert": true
@@ -163,7 +182,7 @@
       "col": 1,
       "row": 1,
       "verified": false,
-      "notes": "Dataref candidato sin confirmar: índice supuesto de ElecOHPArray. Bloqueado (solo lectura) hasta verificarlo en Diagnóstico."
+      "notes": "Lámparas de EngGenOHPArray[0] (confirmado). Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico."
     },
     {
       "id": "elec.apu_gen",
@@ -175,7 +194,18 @@
       ],
       "state": {
         "dataref": "AirbusFBW/APUGenOHPArray",
-        "index": 0
+        "index": 0,
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "3": 1
+        }
+      },
+      "write": {
+        "dataref": "AirbusFBW/ElecOHPArray",
+        "index": 2
       },
       "lamps": {
         "top": {
@@ -189,13 +219,15 @@
           "color": "white",
           "dataref": "AirbusFBW/APUGenOHPArray",
           "index": 0,
-          "onValue": 0
+          "bit": 1,
+          "invert": true
         }
       },
+      "readOnly": true,
       "col": 2,
       "row": 1,
       "verified": false,
-      "notes": "Lámparas confirmadas (Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss.). Escritura de APUGenOHPArray[0] por confirmar; el proyecto de referencia no encontró comando que funcione."
+      "notes": "Lámparas confirmadas. Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico."
     },
     {
       "id": "elec.ext_pwr",
@@ -239,7 +271,7 @@
       "col": 3,
       "row": 1,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Valores: 0 off, 1 on, 2 disponible."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Valores: 0 off, 1 on, 2 disponible."
     },
     {
       "id": "elec.gen2",
@@ -250,6 +282,17 @@
         "ON"
       ],
       "state": {
+        "dataref": "AirbusFBW/EngGenOHPArray",
+        "index": 1,
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "3": 1
+        }
+      },
+      "write": {
         "dataref": "AirbusFBW/ElecOHPArray",
         "index": 1
       },
@@ -257,14 +300,14 @@
         "top": {
           "text": "FAULT",
           "color": "amber",
-          "dataref": "AirbusFBW/ElecOHPArray",
+          "dataref": "AirbusFBW/EngGenOHPArray",
           "index": 1,
           "onValue": 3
         },
         "bottom": {
           "text": "OFF",
           "color": "white",
-          "dataref": "AirbusFBW/ElecOHPArray",
+          "dataref": "AirbusFBW/EngGenOHPArray",
           "index": 1,
           "bit": 1,
           "invert": true
@@ -274,7 +317,7 @@
       "col": 4,
       "row": 1,
       "verified": false,
-      "notes": "Dataref candidato sin confirmar: índice supuesto de ElecOHPArray. Bloqueado (solo lectura) hasta verificarlo en Diagnóstico."
+      "notes": "Lámparas de EngGenOHPArray[1] (confirmado). Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico."
     },
     {
       "id": "elec.idg2",
@@ -284,32 +327,15 @@
         "ON",
         "DISC"
       ],
-      "state": {
-        "dataref": "AirbusFBW/ElecOHPArray",
-        "index": 7
-      },
-      "lamps": {
-        "top": {
-          "text": "FAULT",
-          "color": "amber",
-          "dataref": "AirbusFBW/ElecOHPArray",
-          "index": 7,
-          "onValue": 3
-        },
-        "bottom": {
-          "text": "DISC",
-          "color": "amber",
-          "dataref": "AirbusFBW/ElecOHPArray",
-          "index": 7,
-          "onValue": 1
-        }
+      "commands": {
+        "press": "toliss_airbus/eleccommands/IDG2PressAndHold",
+        "duration": 3
       },
       "guarded": true,
-      "readOnly": true,
       "col": 5,
       "row": 1,
-      "verified": false,
-      "notes": "Dataref candidato sin confirmar: índice supuesto de ElecOHPArray. Bloqueado (solo lectura) hasta verificarlo en Diagnóstico."
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 3 s."
     },
     {
       "id": "elec.ac_ess_feed",
@@ -320,30 +346,24 @@
         "ALTN"
       ],
       "state": {
+        "dataref": "AirbusFBW/AcEssAltn"
+      },
+      "write": {
         "dataref": "AirbusFBW/ElecOHPArray",
         "index": 3
       },
       "lamps": {
-        "top": {
-          "text": "FAULT",
-          "color": "amber",
-          "dataref": "AirbusFBW/ElecOHPArray",
-          "index": 3,
-          "onValue": 3
-        },
         "bottom": {
           "text": "ALTN",
           "color": "white",
-          "dataref": "AirbusFBW/ElecOHPArray",
-          "index": 3,
-          "onValue": 1
+          "dataref": "AirbusFBW/AcEssAltn"
         }
       },
       "readOnly": true,
       "col": 1,
       "row": 2,
       "verified": false,
-      "notes": "Dataref candidato sin confirmar: índice supuesto de ElecOHPArray. Bloqueado (solo lectura) hasta verificarlo en Diagnóstico."
+      "notes": "Lámpara de AcEssAltn (confirmado). Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico."
     },
     {
       "id": "elec.galley",
@@ -354,6 +374,13 @@
         "AUTO"
       ],
       "state": {
+        "dataref": "AirbusFBW/GalleyPBLight",
+        "values": [
+          1,
+          0
+        ]
+      },
+      "write": {
         "dataref": "AirbusFBW/ElecOHPArray",
         "index": 4
       },
@@ -361,23 +388,21 @@
         "top": {
           "text": "FAULT",
           "color": "amber",
-          "dataref": "AirbusFBW/ElecOHPArray",
-          "index": 4,
-          "onValue": 3
+          "dataref": "AirbusFBW/GalleyPBLight",
+          "onValue": 2
         },
         "bottom": {
           "text": "OFF",
           "color": "white",
-          "dataref": "AirbusFBW/ElecOHPArray",
-          "index": 4,
-          "onValue": 0
+          "dataref": "AirbusFBW/GalleyPBLight",
+          "onValue": 1
         }
       },
       "readOnly": true,
       "col": 2,
       "row": 2,
       "verified": false,
-      "notes": "Dataref candidato sin confirmar: índice supuesto de ElecOHPArray. Bloqueado (solo lectura) hasta verificarlo en Diagnóstico."
+      "notes": "Lámpara de GalleyPBLight (confirmado; semántica supuesta). Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico."
     },
     {
       "id": "elec.bus_tie",
@@ -386,33 +411,6 @@
       "positions": [
         "OFF",
         "AUTO"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/ElecOHPArray",
-        "index": 2
-      },
-      "lamps": {
-        "bottom": {
-          "text": "OFF",
-          "color": "white",
-          "dataref": "AirbusFBW/ElecOHPArray",
-          "index": 2,
-          "onValue": 0
-        }
-      },
-      "readOnly": true,
-      "col": 3,
-      "row": 2,
-      "verified": false,
-      "notes": "Dataref candidato sin confirmar: índice supuesto de ElecOHPArray. Bloqueado (solo lectura) hasta verificarlo en Diagnóstico."
-    },
-    {
-      "id": "elec.commercial",
-      "label": "COMMERCIAL",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
       ],
       "state": {
         "dataref": "AirbusFBW/ElecOHPArray",
@@ -428,10 +426,37 @@
         }
       },
       "readOnly": true,
+      "col": 3,
+      "row": 2,
+      "verified": false,
+      "notes": "Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico."
+    },
+    {
+      "id": "elec.commercial",
+      "label": "COMMERCIAL",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ElecOHPArray",
+        "index": 6
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/ElecOHPArray",
+          "index": 6,
+          "onValue": 0
+        }
+      },
+      "readOnly": true,
       "col": 4,
       "row": 2,
       "verified": false,
-      "notes": "Dataref candidato sin confirmar: índice supuesto de ElecOHPArray. Bloqueado (solo lectura) hasta verificarlo en Diagnóstico."
+      "notes": "Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico."
     }
   ]
 }

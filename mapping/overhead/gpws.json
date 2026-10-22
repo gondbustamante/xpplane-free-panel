@@ -2,8 +2,8 @@
   "id": "gpws",
   "title": "GPWS",
   "group": "overhead",
-  "order": 85,
-  "notes": "GPWS. LDG FLAP 3 verificado (Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss.); el resto son índices supuestos bloqueados.",
+  "order": 22,
+  "notes": "GPWS. Todos los comandos confirmados en el volcado; los índices de estado son supuestos salvo LDG FLAP 3.",
   "controls": [
     {
       "id": "gpws.sys",
@@ -16,6 +16,10 @@
       "state": {
         "dataref": "AirbusFBW/GPWSSwitchArray",
         "index": 0
+      },
+      "commands": {
+        "up": "toliss_airbus/gpwscommands/SystemOn",
+        "down": "toliss_airbus/gpwscommands/SystemOff"
       },
       "lamps": {
         "top": {
@@ -33,11 +37,10 @@
           "onValue": 0
         }
       },
-      "readOnly": true,
       "col": 0,
       "row": 0,
       "verified": false,
-      "notes": "Índice supuesto de GPWSSwitchArray. Bloqueado hasta verificar."
+      "notes": "Comandos confirmados; el índice de GPWSSwitchArray usado para la posición y la lámpara es supuesto."
     },
     {
       "id": "gpws.gs_mode",
@@ -49,7 +52,15 @@
       ],
       "state": {
         "dataref": "AirbusFBW/GPWSSwitchArray",
-        "index": 1
+        "index": 1,
+        "values": [
+          1,
+          0
+        ]
+      },
+      "commands": {
+        "up": "toliss_airbus/gpwscommands/GSModeOn",
+        "down": "toliss_airbus/gpwscommands/GSModeOff"
       },
       "lamps": {
         "bottom": {
@@ -57,14 +68,13 @@
           "color": "white",
           "dataref": "AirbusFBW/GPWSSwitchArray",
           "index": 1,
-          "onValue": 1
+          "onValue": 0
         }
       },
-      "readOnly": true,
       "col": 1,
       "row": 0,
       "verified": false,
-      "notes": "Índice supuesto de GPWSSwitchArray. Bloqueado hasta verificar."
+      "notes": "Comandos confirmados; el índice de GPWSSwitchArray usado para la posición y la lámpara es supuesto."
     },
     {
       "id": "gpws.flap_mode",
@@ -76,7 +86,15 @@
       ],
       "state": {
         "dataref": "AirbusFBW/GPWSSwitchArray",
-        "index": 2
+        "index": 2,
+        "values": [
+          1,
+          0
+        ]
+      },
+      "commands": {
+        "up": "toliss_airbus/gpwscommands/FlapModeOn",
+        "down": "toliss_airbus/gpwscommands/FlapModeOff"
       },
       "lamps": {
         "bottom": {
@@ -84,14 +102,13 @@
           "color": "white",
           "dataref": "AirbusFBW/GPWSSwitchArray",
           "index": 2,
-          "onValue": 1
+          "onValue": 0
         }
       },
-      "readOnly": true,
       "col": 2,
       "row": 0,
       "verified": false,
-      "notes": "Índice supuesto de GPWSSwitchArray. Bloqueado hasta verificar."
+      "notes": "Comandos confirmados; el índice de GPWSSwitchArray usado para la posición y la lámpara es supuesto."
     },
     {
       "id": "gpws.ldg_flap3",
@@ -120,7 +137,7 @@
       "col": 3,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
     },
     {
       "id": "gpws.terr",
@@ -132,7 +149,15 @@
       ],
       "state": {
         "dataref": "AirbusFBW/GPWSSwitchArray",
-        "index": 4
+        "index": 4,
+        "values": [
+          1,
+          0
+        ]
+      },
+      "commands": {
+        "up": "toliss_airbus/gpwscommands/TerrainOn",
+        "down": "toliss_airbus/gpwscommands/TerrainOff"
       },
       "lamps": {
         "bottom": {
@@ -140,14 +165,13 @@
           "color": "white",
           "dataref": "AirbusFBW/GPWSSwitchArray",
           "index": 4,
-          "onValue": 1
+          "onValue": 0
         }
       },
-      "readOnly": true,
       "col": 4,
       "row": 0,
       "verified": false,
-      "notes": "Índice supuesto de GPWSSwitchArray. Bloqueado hasta verificar."
+      "notes": "Comandos confirmados; el índice de GPWSSwitchArray usado para la posición y la lámpara es supuesto."
     }
   ]
 }

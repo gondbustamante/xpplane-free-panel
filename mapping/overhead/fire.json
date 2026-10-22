@@ -3,7 +3,7 @@
   "title": "FIRE",
   "group": "overhead",
   "order": 5,
-  "notes": "Panel de fuego. Pulsadores ENG 1/2 y pruebas verificados (Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss.). El pulsador de fuego del APU no tiene dataref localizado todavía.",
+  "notes": "Panel de fuego. Pulsadores ENG 1/2, pruebas y agente APU confirmados. Los agentes de motor usan índices supuestos de FireExOHPArray y están bloqueados.",
   "controls": [
     {
       "id": "fire.eng1",
@@ -35,58 +35,190 @@
       "col": 0,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Lámpara de fuego en OHPLightsATA70_Raw[11]."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
     },
     {
-      "id": "fire.eng1_test",
-      "label": "TEST 1",
+      "id": "fire.eng1_agent1",
+      "label": "AGENT 1",
       "kind": "korry",
       "positions": [
         "OFF",
-        "ON"
+        "DISCH"
       ],
-      "commands": {
-        "press": "AirbusFBW/FireTestENG1",
-        "duration": 2
+      "state": {
+        "dataref": "AirbusFBW/FireExOHPArray",
+        "index": 0
       },
+      "lamps": {
+        "top": {
+          "text": "SQUIB",
+          "color": "white",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 0,
+          "onValue": 1
+        },
+        "bottom": {
+          "text": "DISCH",
+          "color": "amber",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 0,
+          "onValue": 2
+        }
+      },
+      "guarded": true,
+      "readOnly": true,
       "col": 1,
       "row": 0,
-      "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Comando mantenido 2 s."
+      "verified": false,
+      "notes": "Índice 0 de FireExOHPArray supuesto. Bloqueado."
     },
     {
-      "id": "fire.apu_test",
-      "label": "APU TEST",
+      "id": "fire.eng1_agent2",
+      "label": "AGENT 2",
       "kind": "korry",
       "positions": [
         "OFF",
-        "ON"
+        "DISCH"
       ],
-      "commands": {
-        "press": "AirbusFBW/FireTestAPU",
-        "duration": 2
+      "state": {
+        "dataref": "AirbusFBW/FireExOHPArray",
+        "index": 1
       },
+      "lamps": {
+        "top": {
+          "text": "SQUIB",
+          "color": "white",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 1,
+          "onValue": 1
+        },
+        "bottom": {
+          "text": "DISCH",
+          "color": "amber",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 1,
+          "onValue": 2
+        }
+      },
+      "guarded": true,
+      "readOnly": true,
       "col": 2,
       "row": 0,
-      "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Comando mantenido 2 s."
+      "verified": false,
+      "notes": "Índice 1 de FireExOHPArray supuesto. Bloqueado."
     },
     {
-      "id": "fire.eng2_test",
-      "label": "TEST 2",
+      "id": "fire.apu",
+      "label": "APU FIRE",
+      "kind": "korry",
+      "positions": [
+        "NORM",
+        "PUSHED"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/APUOnFire"
+      },
+      "lamps": {
+        "top": {
+          "text": "FIRE",
+          "color": "red",
+          "dataref": "AirbusFBW/APUOnFire"
+        }
+      },
+      "guarded": true,
+      "readOnly": true,
+      "col": 3,
+      "row": 0,
+      "verified": false,
+      "notes": "Solo indicador: no hay dataref localizado para el pulsador de fuego del APU."
+    },
+    {
+      "id": "fire.apu_agent",
+      "label": "APU AGENT",
       "kind": "korry",
       "positions": [
         "OFF",
-        "ON"
+        "DISCH"
       ],
       "commands": {
-        "press": "AirbusFBW/FireTestENG2",
+        "press": "AirbusFBW/EngFireProt/APUAgentPush",
         "duration": 2
       },
-      "col": 3,
+      "guarded": true,
+      "col": 4,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Comando mantenido 2 s."
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+    },
+    {
+      "id": "fire.eng2_agent1",
+      "label": "AGENT 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "DISCH"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FireExOHPArray",
+        "index": 2
+      },
+      "lamps": {
+        "top": {
+          "text": "SQUIB",
+          "color": "white",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 2,
+          "onValue": 1
+        },
+        "bottom": {
+          "text": "DISCH",
+          "color": "amber",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 2,
+          "onValue": 2
+        }
+      },
+      "guarded": true,
+      "readOnly": true,
+      "col": 5,
+      "row": 0,
+      "verified": false,
+      "notes": "Índice 2 de FireExOHPArray supuesto. Bloqueado."
+    },
+    {
+      "id": "fire.eng2_agent2",
+      "label": "AGENT 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "DISCH"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FireExOHPArray",
+        "index": 3
+      },
+      "lamps": {
+        "top": {
+          "text": "SQUIB",
+          "color": "white",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 3,
+          "onValue": 1
+        },
+        "bottom": {
+          "text": "DISCH",
+          "color": "amber",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 3,
+          "onValue": 2
+        }
+      },
+      "guarded": true,
+      "readOnly": true,
+      "col": 6,
+      "row": 0,
+      "verified": false,
+      "notes": "Índice 3 de FireExOHPArray supuesto. Bloqueado."
     },
     {
       "id": "fire.eng2",
@@ -115,10 +247,61 @@
         }
       },
       "guarded": true,
-      "col": 4,
+      "col": 7,
       "row": 0,
       "verified": true,
-      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Lámpara de fuego en OHPLightsATA70_Raw[13]."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+    },
+    {
+      "id": "fire.eng1_test",
+      "label": "TEST ENG 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/FireTestENG1",
+        "duration": 2
+      },
+      "col": 1,
+      "row": 1,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+    },
+    {
+      "id": "fire.apu_test",
+      "label": "TEST APU",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/FireTestAPU",
+        "duration": 2
+      },
+      "col": 3,
+      "row": 1,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+    },
+    {
+      "id": "fire.eng2_test",
+      "label": "TEST ENG 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/FireTestENG2",
+        "duration": 2
+      },
+      "col": 6,
+      "row": 1,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
     }
   ]
 }

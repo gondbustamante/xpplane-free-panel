@@ -3,10 +3,10 @@
   "title": "ADIRS",
   "group": "overhead",
   "order": 10,
-  "notes": "Selectores IR 1/2/3 y luces. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. El orden OFF/NAV/ATT de los valores 0/1/2 está por confirmar.",
+  "notes": "Selectores IR con comandos confirmados; pulsadores IR/ADR con datarefs escribibles pendientes de confirmar semántica.",
   "controls": [
     {
-      "id": "adirs.ir1_lights",
+      "id": "adirs.ir1_pb",
       "label": "IR 1",
       "kind": "korry",
       "positions": [
@@ -14,8 +14,8 @@
         "ON"
       ],
       "state": {
-        "dataref": "AirbusFBW/OHPLightsATA34_Raw",
-        "index": 7
+        "dataref": "AirbusFBW/IRSwitchArray",
+        "index": 0
       },
       "lamps": {
         "top": {
@@ -25,17 +25,81 @@
           "index": 7
         },
         "bottom": {
-          "text": "ALIGN",
+          "text": "OFF",
           "color": "white",
-          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
-          "index": 6
+          "dataref": "AirbusFBW/IRSwitchArray",
+          "index": 0,
+          "onValue": 0
         }
       },
-      "readOnly": true,
       "col": 0,
       "row": 0,
-      "verified": true,
-      "notes": "Solo indicador. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+      "verified": false,
+      "notes": "IRSwitchArray existe y es escribible (volcado); semántica 0/1 y lámpara FAULT por confirmar."
+    },
+    {
+      "id": "adirs.ir3_pb",
+      "label": "IR 3",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/IRSwitchArray",
+        "index": 2
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
+          "index": 11
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/IRSwitchArray",
+          "index": 2,
+          "onValue": 0
+        }
+      },
+      "col": 1,
+      "row": 0,
+      "verified": false,
+      "notes": "IRSwitchArray existe y es escribible (volcado); semántica 0/1 y lámpara FAULT por confirmar."
+    },
+    {
+      "id": "adirs.ir2_pb",
+      "label": "IR 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/IRSwitchArray",
+        "index": 1
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
+          "index": 9
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/IRSwitchArray",
+          "index": 1,
+          "onValue": 0
+        }
+      },
+      "col": 2,
+      "row": 0,
+      "verified": false,
+      "notes": "IRSwitchArray existe y es escribible (volcado); semántica 0/1 y lámpara FAULT por confirmar."
     },
     {
       "id": "adirs.on_bat",
@@ -56,78 +120,113 @@
         }
       },
       "readOnly": true,
-      "col": 1,
-      "row": 0,
-      "verified": true,
-      "notes": "Solo indicador. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
-    },
-    {
-      "id": "adirs.ir2_lights",
-      "label": "IR 2",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/OHPLightsATA34_Raw",
-        "index": 9
-      },
-      "lamps": {
-        "top": {
-          "text": "FAULT",
-          "color": "amber",
-          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
-          "index": 9
-        },
-        "bottom": {
-          "text": "ALIGN",
-          "color": "white",
-          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
-          "index": 8
-        }
-      },
-      "readOnly": true,
-      "col": 2,
-      "row": 0,
-      "verified": true,
-      "notes": "Solo indicador. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
-    },
-    {
-      "id": "adirs.ir3_lights",
-      "label": "IR 3",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/OHPLightsATA34_Raw",
-        "index": 11
-      },
-      "lamps": {
-        "top": {
-          "text": "FAULT",
-          "color": "amber",
-          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
-          "index": 11
-        },
-        "bottom": {
-          "text": "ALIGN",
-          "color": "white",
-          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
-          "index": 10
-        }
-      },
-      "readOnly": true,
       "col": 3,
       "row": 0,
       "verified": true,
-      "notes": "Solo indicador. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+      "notes": "Solo indicador. Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+    },
+    {
+      "id": "adirs.adr1_pb",
+      "label": "ADR 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ADRSwitchArray",
+        "index": 0
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/ADRSwitchArray",
+          "index": 0,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/ADRSwitchArray",
+          "index": 0,
+          "onValue": 0
+        }
+      },
+      "col": 0,
+      "row": 1,
+      "verified": false,
+      "notes": "ADRSwitchArray existe y es escribible (volcado); semántica por confirmar."
+    },
+    {
+      "id": "adirs.adr3_pb",
+      "label": "ADR 3",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ADRSwitchArray",
+        "index": 2
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/ADRSwitchArray",
+          "index": 2,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/ADRSwitchArray",
+          "index": 2,
+          "onValue": 0
+        }
+      },
+      "col": 1,
+      "row": 1,
+      "verified": false,
+      "notes": "ADRSwitchArray existe y es escribible (volcado); semántica por confirmar."
+    },
+    {
+      "id": "adirs.adr2_pb",
+      "label": "ADR 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ADRSwitchArray",
+        "index": 1
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/ADRSwitchArray",
+          "index": 1,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/ADRSwitchArray",
+          "index": 1,
+          "onValue": 0
+        }
+      },
+      "col": 2,
+      "row": 1,
+      "verified": false,
+      "notes": "ADRSwitchArray existe y es escribible (volcado); semántica por confirmar."
     },
     {
       "id": "adirs.ir1",
-      "label": "IR 1",
+      "label": "IR 1 MODE",
       "kind": "rotary",
       "positions": [
         "OFF",
@@ -138,14 +237,18 @@
         "dataref": "AirbusFBW/ADIRUSwitchArray",
         "index": 0
       },
+      "commands": {
+        "up": "toliss_airbus/adirucommands/ADIRU1SwitchUp",
+        "down": "toliss_airbus/adirucommands/ADIRU1SwitchDown"
+      },
       "col": 0,
-      "row": 1,
-      "verified": false,
-      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
+      "row": 2,
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Up = girar a la derecha."
     },
     {
       "id": "adirs.ir3",
-      "label": "IR 3",
+      "label": "IR 3 MODE",
       "kind": "rotary",
       "positions": [
         "OFF",
@@ -156,14 +259,18 @@
         "dataref": "AirbusFBW/ADIRUSwitchArray",
         "index": 2
       },
+      "commands": {
+        "up": "toliss_airbus/adirucommands/ADIRU3SwitchUp",
+        "down": "toliss_airbus/adirucommands/ADIRU3SwitchDown"
+      },
       "col": 1,
-      "row": 1,
-      "verified": false,
-      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
+      "row": 2,
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Up = girar a la derecha."
     },
     {
       "id": "adirs.ir2",
-      "label": "IR 2",
+      "label": "IR 2 MODE",
       "kind": "rotary",
       "positions": [
         "OFF",
@@ -174,10 +281,92 @@
         "dataref": "AirbusFBW/ADIRUSwitchArray",
         "index": 1
       },
+      "commands": {
+        "up": "toliss_airbus/adirucommands/ADIRU2SwitchUp",
+        "down": "toliss_airbus/adirucommands/ADIRU2SwitchDown"
+      },
       "col": 2,
-      "row": 1,
-      "verified": false,
-      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
+      "row": 2,
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Up = girar a la derecha."
+    },
+    {
+      "id": "adirs.align1",
+      "label": "ALIGN 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightsATA34_Raw",
+        "index": 6
+      },
+      "lamps": {
+        "top": {
+          "text": "ALIGN",
+          "color": "white",
+          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
+          "index": 6
+        }
+      },
+      "readOnly": true,
+      "col": 0,
+      "row": 3,
+      "verified": true,
+      "notes": "Solo indicador. Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+    },
+    {
+      "id": "adirs.align3",
+      "label": "ALIGN 3",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightsATA34_Raw",
+        "index": 10
+      },
+      "lamps": {
+        "top": {
+          "text": "ALIGN",
+          "color": "white",
+          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
+          "index": 10
+        }
+      },
+      "readOnly": true,
+      "col": 1,
+      "row": 3,
+      "verified": true,
+      "notes": "Solo indicador. Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+    },
+    {
+      "id": "adirs.align2",
+      "label": "ALIGN 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightsATA34_Raw",
+        "index": 8
+      },
+      "lamps": {
+        "top": {
+          "text": "ALIGN",
+          "color": "white",
+          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
+          "index": 8
+        }
+      },
+      "readOnly": true,
+      "col": 2,
+      "row": 3,
+      "verified": true,
+      "notes": "Solo indicador. Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
     }
   ]
 }

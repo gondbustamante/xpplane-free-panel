@@ -17,7 +17,8 @@
         "adirs",
         "ext_lt",
         "signs",
-        "fuel"
+        "fuel",
+        "int_lt"
       ]
     },
     {
@@ -30,6 +31,8 @@
         "fuel",
         "anti_ice",
         "hyd",
+        "eng",
+        "cabin_press",
         "signs"
       ]
     },
@@ -39,6 +42,7 @@
       "icon": "airplane.departure",
       "subpanels": [
         "ext_lt",
+        "eng",
         "anti_ice",
         "air_cond",
         "apu",
@@ -53,7 +57,8 @@
         "ext_lt",
         "signs",
         "anti_ice",
-        "air_cond"
+        "air_cond",
+        "cabin_press"
       ]
     },
     {
@@ -65,7 +70,8 @@
         "signs",
         "anti_ice",
         "air_cond",
-        "gpws"
+        "gpws",
+        "wiper"
       ]
     },
     {
@@ -79,7 +85,22 @@
         "apu",
         "fuel",
         "adirs",
-        "elec"
+        "elec",
+        "int_lt"
+      ]
+    },
+    {
+      "id": "emergency",
+      "title": "Emergencias",
+      "icon": "exclamationmark.triangle",
+      "subpanels": [
+        "fire",
+        "cargo",
+        "emer_elec",
+        "evac_calls",
+        "cabin_press",
+        "hyd",
+        "rcdr_oxy"
       ]
     }
   ]
