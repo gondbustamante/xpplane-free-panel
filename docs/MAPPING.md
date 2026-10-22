@@ -1,6 +1,6 @@
 # Guía de mapeo
 
-El mapeo vive en `mapping/overhead/*.json`, un archivo por subpanel. La app los carga todos al arrancar (carpeta `mapping` dentro del bundle) y los ordena por `order`. Editar un JSON y relanzar la app basta; no hay que tocar código.
+El mapeo vive en `mapping/overhead/*.json`, un archivo por subpanel, y en `mapping/fcu/fcu.json` para el FCU. La app los carga todos al arrancar (carpeta `mapping` dentro del bundle) y ordena los subpaneles por `order`. Editar un JSON y relanzar la app basta; no hay que tocar código.
 
 ## Esquema
 
@@ -44,6 +44,85 @@ El mapeo vive en `mapping/overhead/*.json`, un archivo por subpanel. La app los 
 ```
 
 Valida siempre con `python3 tools/validate_mapping.py` antes de hacer commit.
+
+## Esquema del FCU (`mapping/fcu/fcu.json`)
+
+El FCU no encaja en palancas y korrys: cada selector es una ventana numérica, una rueda que gira, se empuja (gestionado) y se tira (seleccionado), y uno o dos flags de modo. Por eso tiene su propio esquema.
+
+```jsonc
+{
+  "id": "fcu",
+  "title": "FCU",
+  "notes": "…",
+  "available": { "dataref": "AirbusFBW/FCUAvail" },   // opcional; a 0 las ventanas se apagan
+
+  "selectors": [                                       // de izquierda a derecha
+    {
+      "id": "fcu.spd",
+      "label": "SPD",                                  // rótulo sobre la ventana
+      "alternateLabel": "MACH",                        // rótulo cuando "mode" está activo
+      "format": "speed",                               // speed | mach | heading | altitude | verticalSpeed | flightPathAngle
+      "alternateFormat": "mach",                       // formato cuando "mode" está activo
+      "value": { "dataref": "sim/cockpit/autopilot/airspeed" },          // lo que muestra la ventana
+      "alternateValue": { "dataref": "…" },            // opcional: otro dataref cuando "mode" está activo (p. ej. FPA)
+      "mode":    { "dataref": "sim/cockpit/autopilot/airspeed_is_mach" }, // flag > 0.5 (o "onValue")
+      "managed": { "dataref": "AirbusFBW/SPDmanaged" },                  // punto de gestionado
+      "dashed":  { "dataref": "AirbusFBW/SPDdashed" },                   // rayas en la ventana
+      "write":   { "dataref": "…" },                   // opcional; por defecto se escribe en "value"
+      "range": { "min": 100, "max": 399 },             // acota la entrada directa
+      "alternateRange": { "min": 0.10, "max": 0.99 },  // rango cuando "mode" está activo
+      "commands": {
+        "increase": "sim/autopilot/airspeed_up",       // un clic de rueda a derechas
+        "decrease": "sim/autopilot/airspeed_down",     // un clic a izquierdas
+        "push": "AirbusFBW/PushSPDSel",                // empujar la rueda
+        "pull": "AirbusFBW/PullSPDSel"                 // tirar de la rueda
+      },
+      "verified": false,
+      "notes": "…"
+    }
+  ],
+
+  "buttons": [
+    {
+      "id": "fcu.ap1",
+      "label": "AP1",
+      "sublabel": "…",                                 // opcional, segunda línea del rótulo
+      "column": "center",                              // id de un selector, o "center" (bloque AP1/AP2/A-THR)
+      "command": "toliss_airbus/ap1_push",             // kind "push" (por defecto)
+      "lit": { "dataref": "AirbusFBW/AP1Engage" },     // barras verdes cuando > 0.5 (o "onValue")
+      "verified": false
+    },
+    {
+      "id": "fcu.alt_step",
+      "label": "ALT STEP",
+      "column": "fcu.alt",
+      "kind": "toggle",                                // basculante: escribe "state" ciclando "values"
+      "state": { "dataref": "AirbusFBW/ALT100_1000" },
+      "positions": ["100", "1000"],
+      "values": [0, 1]                                 // opcional; por defecto 0, 1, 2…
+    }
+  ]
+}
+```
+
+Comportamiento:
+
+- Girar la rueda (arrastre, − / +) dispara `increase`/`decrease` una vez por clic. ToLiss aplica su paso (1 kt, 0.01 Mach, 1°, 100 o 1000 ft según `ALT100_1000`, 100 ft/min, 0.1° FPA). Si un selector no declara estos comandos, la app escribe `value` ± el paso por defecto del formato.
+- Tocar la ventana abre un cuadro para teclear el valor. Se acepta `.78` o `0,78`, se acota a `range` y se escribe en `write` (o en `value`). En modo alternativo con `alternateValue` se escribe ahí.
+- Los botones de la columna de un selector se dibujan bajo su rueda en el orden declarado. Los de `center` se dibujan tras el segundo selector: los dos primeros en fila (AP1 AP2) y el resto debajo (A/THR).
+
+Los formatos reproducen la ventana real: `250`, `.78`, `005`, `05000`, `+25oo` (centenas de ft/min) y `-3.0`. Las rayas son `---`, `-.--`, `-----` y `-.-`.
+
+### Verificar el FCU
+
+1. Los valores de las ventanas usan datarefs estándar de X-Plane (`sim/cockpit/autopilot/*`) que no están en `mapping/reference/datarefs.txt` porque el volcado se filtró por `AirbusFBW|toliss`. Para confirmarlos:
+   ```bash
+   python3 tools/xp.py dump --grep "AirbusFBW|toliss|sim/cockpit/autopilot|sim/autopilot"
+   python3 tools/xp.py watch sim/cockpit/autopilot/airspeed sim/cockpit/autopilot/vertical_velocity AirbusFBW/HDGTRKmode
+   ```
+   Gira las ruedas en la cabina virtual y pulsa HDG-V/S / TRK-FPA: así se ve qué contiene `vertical_velocity` en modo FPA (si ToLiss guarda ahí el ángulo en grados o hace falta otro dataref en `alternateValue`).
+2. Comprueba la escritura directa: `python3 tools/xp.py set sim/cockpit/autopilot/altitude 12000`. Si ToLiss la ignora o la deshace, cambia la estrategia en `fcu.json` (deja solo los comandos) y anótalo.
+3. Desde el iPad, la pantalla de diagnóstico ya lista todos los datarefs del FCU; los que cambian se iluminan.
 
 ## Procedimiento de verificación
 

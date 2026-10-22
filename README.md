@@ -2,7 +2,7 @@
 
 Panel overhead del Airbus A320 para iPad que controla el ToLiss A320 en X-Plane 12 a través de la red local. Interfaz 2.5D en SwiftUI con interruptores y pulsadores que se mueven como los reales, estado bidireccional (lo que cambias en el simulador se refleja en el iPad y viceversa) y mapeo de controles en archivos JSON para sobrevivir a las actualizaciones de ToLiss.
 
-**Estado:** fase 1 (MVP). Conectividad verificada de extremo a extremo, subpaneles EXT LT y SIGNS, reconexión automática y pantalla de diagnóstico para verificar mapeos desde el iPad. Ver [docs/ROADMAP.md](docs/ROADMAP.md).
+**Estado:** fase 1 (MVP). Conectividad verificada de extremo a extremo, subpaneles EXT LT y SIGNS, FCU completo (SPD/MACH, HDG/TRK, ALT, V/S-FPA, AP1/AP2, A/THR, LOC, APPR, EXPED) con ruedas, push/pull y entrada directa de valores, reconexión automática y pantalla de diagnóstico para verificar mapeos desde el iPad. Ver [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Cómo funciona
 
@@ -45,6 +45,8 @@ En Xcode: selecciona tu equipo en *Signing & Capabilities* (o rellena `DEVELOPME
 
 Pulsa el engranaje, introduce la IP del PC y el puerto 8087, y *Guardar y conectar*. Con el ToLiss cargado, los interruptores de EXT LT y SIGNS reflejan el estado del avión.
 
+El selector *Overhead / FCU* de la barra superior cambia de panel. En el FCU cada ventana muestra el valor real del avión (con el punto de modo gestionado y las rayas cuando toca); la rueda se gira arrastrando o con − / +, PUSH y PULL hacen lo mismo que empujar o tirar de la rueda, y tocar la ventana permite teclear un valor exacto. AP1, AP2, A/THR, LOC, APPR y EXPED se iluminan según el estado del autopiloto.
+
 ## Verificar y ampliar el mapeo
 
 Los índices del array `AirbusFBW/OHPLightSwitches` proceden de scripts publicados por usuarios y hay que confirmarlos en tu versión de ToLiss. El flujo está en [docs/MAPPING.md](docs/MAPPING.md). Desde el iPad: icono del estetoscopio, haz clic en un interruptor de la cabina virtual y mira qué índice se ilumina. Desde la Terminal:
@@ -64,6 +66,7 @@ Cuando un control esté confirmado, pon `"verified": true` en su JSON y desapare
 A320Overhead/          App iPad (SwiftUI): modelo, tema, controles 2.5D, vistas
 Packages/XPlaneKit/    Cliente de la Web API de X-Plane (REST + WebSocket) y modelos de mapeo, con tests
 mapping/overhead/      Un JSON por subpanel del overhead
+mapping/fcu/           Mapeo del FCU (ventanas, ruedas y pulsadores)
 tools/                 xp_relay.py (relay LAN), xp.py (CLI de descubrimiento), validate_mapping.py
 docs/                  Arquitectura, roadmap y guía de mapeo
 project.yml            Especificación XcodeGen (el .xcodeproj no se versiona)

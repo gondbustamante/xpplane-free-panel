@@ -29,6 +29,23 @@ Objetivo: demostrar el camino completo iPad → relay → Web API → ToLiss con
 
 **Aceptación:** vuelo completo usando solo el iPad para luces exteriores y signos, sin tocar el ratón.
 
+## Fase 1b · FCU (1 semana) — en curso
+
+Adelantado desde la fase 2 porque es el panel que más se toca en vuelo y reutiliza toda la infraestructura.
+
+- [x] Esquema de mapeo propio (`mapping/fcu/fcu.json`) y validador
+- [x] Ventanas SPD/MACH, HDG/TRK, ALT, V/S-FPA con punto de gestionado y rayas
+- [x] Rueda 2.5D arrastrable, − / + con repetición, PUSH / PULL
+- [x] Entrada directa de valor tocando la ventana (acotada al rango)
+- [x] Pulsadores AP1, AP2, A/THR, LOC, APPR, EXPED, SPD/MACH, HDG-V/S / TRK-FPA, METRIC ALT y selector 100/1000
+- [x] Selector Overhead / FCU en la barra superior
+- [ ] Verificar en el simulador los datarefs `sim/cockpit/autopilot/*` y qué contiene `vertical_velocity` en modo FPA
+- [ ] Verificar que la escritura directa de los datarefs es aceptada por ToLiss (si no, pasar la entrada directa a ráfagas de comandos)
+- [ ] Iluminación de EXPED (localizar dataref)
+- [ ] Botones FD y LS de los paneles EFIS adyacentes (opcional)
+
+**Aceptación:** ejecutar una salida y una aproximación ILS completas con el autopiloto tocando solo el iPad: selected speed/heading/altitude, V/S, managed con push, LOC y APPR.
+
 ## Fase 2 · Overhead completo (2 a 3 meses)
 
 Orden propuesto por valor para el flujo de vuelo y por riesgo de mapeo:

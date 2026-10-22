@@ -1,0 +1,172 @@
+{
+  "id": "fcu",
+  "title": "FCU",
+  "notes": "Flight Control Unit del ToLiss A320. Los valores de las ventanas viven en los datarefs estándar de X-Plane (sim/cockpit/autopilot/*), que ToLiss usa como memoria del FCU; los indicadores (managed, dashed, modos) y los comandos de push/pull y pulsadores son propios de ToLiss y figuran en mapping/reference/*.txt. Las ruedas se giran con los comandos sim/autopilot/*_up|_down, que ToLiss honra con su paso (1 kt, 0.01 Mach, 1°, 100/1000 ft según ALT100_1000, 100 ft/min, 0.1° FPA). La entrada directa escribe el dataref; ToLiss puede corregir el valor si no procede. Los nombres sim/* no están en mapping/reference/datarefs.txt porque el volcado se hizo con --grep AirbusFBW|toliss; vuelca con --grep \"AirbusFBW|toliss|sim/cockpit/autopilot|sim/autopilot\" para confirmarlos.",
+  "available": { "dataref": "AirbusFBW/FCUAvail" },
+  "selectors": [
+    {
+      "id": "fcu.spd",
+      "label": "SPD",
+      "alternateLabel": "MACH",
+      "format": "speed",
+      "alternateFormat": "mach",
+      "value": { "dataref": "sim/cockpit/autopilot/airspeed" },
+      "mode": { "dataref": "sim/cockpit/autopilot/airspeed_is_mach" },
+      "managed": { "dataref": "AirbusFBW/SPDmanaged" },
+      "dashed": { "dataref": "AirbusFBW/SPDdashed" },
+      "range": { "min": 100, "max": 399 },
+      "alternateRange": { "min": 0.10, "max": 0.99 },
+      "commands": {
+        "increase": "sim/autopilot/airspeed_up",
+        "decrease": "sim/autopilot/airspeed_down",
+        "push": "AirbusFBW/PushSPDSel",
+        "pull": "AirbusFBW/PullSPDSel"
+      },
+      "verified": false,
+      "notes": "sim/cockpit/autopilot/airspeed contiene nudos o Mach según airspeed_is_mach. Push/Pull confirmados en el volcado de comandos (también existen toliss_airbus/spd_push y spd_pull)."
+    },
+    {
+      "id": "fcu.hdg",
+      "label": "HDG",
+      "alternateLabel": "TRK",
+      "format": "heading",
+      "value": { "dataref": "sim/cockpit/autopilot/heading_mag" },
+      "mode": { "dataref": "AirbusFBW/HDGTRKmode" },
+      "managed": { "dataref": "AirbusFBW/HDGmanaged" },
+      "dashed": { "dataref": "AirbusFBW/HDGdashed" },
+      "range": { "min": 0, "max": 359 },
+      "commands": {
+        "increase": "sim/autopilot/heading_up",
+        "decrease": "sim/autopilot/heading_down",
+        "push": "AirbusFBW/PushHDGSel",
+        "pull": "AirbusFBW/PullHDGSel"
+      },
+      "verified": false,
+      "notes": "AirbusFBW/HDGTRKmode: 0 = HDG/V-S, 1 = TRK/FPA. En TRK el valor sigue en heading_mag."
+    },
+    {
+      "id": "fcu.alt",
+      "label": "ALT",
+      "format": "altitude",
+      "value": { "dataref": "sim/cockpit/autopilot/altitude" },
+      "managed": { "dataref": "AirbusFBW/ALTmanaged" },
+      "range": { "min": 100, "max": 49000 },
+      "commands": {
+        "increase": "sim/autopilot/altitude_up",
+        "decrease": "sim/autopilot/altitude_down",
+        "push": "AirbusFBW/PushAltitude",
+        "pull": "AirbusFBW/PullAltitude"
+      },
+      "verified": false,
+      "notes": "El paso de la rueda lo fija AirbusFBW/ALT100_1000 (0 = 100 ft, 1 = 1000 ft), expuesto como selector en 'buttons'. La ventana ALT nunca se muestra en rayas en el avión real."
+    },
+    {
+      "id": "fcu.vs",
+      "label": "V/S",
+      "alternateLabel": "FPA",
+      "format": "verticalSpeed",
+      "alternateFormat": "flightPathAngle",
+      "value": { "dataref": "sim/cockpit/autopilot/vertical_velocity" },
+      "mode": { "dataref": "AirbusFBW/HDGTRKmode" },
+      "dashed": { "dataref": "AirbusFBW/VSdashed" },
+      "range": { "min": -6000, "max": 6000 },
+      "alternateRange": { "min": -9.9, "max": 9.9 },
+      "commands": {
+        "increase": "sim/autopilot/vertical_speed_up",
+        "decrease": "sim/autopilot/vertical_speed_down",
+        "push": "AirbusFBW/PushVSSel",
+        "pull": "AirbusFBW/PullVSSel"
+      },
+      "verified": false,
+      "notes": "Pendiente confirmar qué contiene vertical_velocity en modo TRK/FPA (si ToLiss guarda ahí el FPA en grados o hace falta otro dataref: añade 'alternateValue'). Vigílalo desde Diagnóstico al pulsar HDG-V/S / TRK-FPA."
+    }
+  ],
+  "buttons": [
+    {
+      "id": "fcu.spd_mach",
+      "label": "SPD",
+      "sublabel": "MACH",
+      "column": "fcu.spd",
+      "command": "toliss_airbus/ias_mach_button_push",
+      "verified": false,
+      "notes": "Conmuta la ventana entre nudos y Mach."
+    },
+    {
+      "id": "fcu.hdg_trk",
+      "label": "HDG V/S",
+      "sublabel": "TRK FPA",
+      "column": "fcu.hdg",
+      "command": "toliss_airbus/hdgtrk_button_push",
+      "verified": false
+    },
+    {
+      "id": "fcu.loc",
+      "label": "LOC",
+      "column": "fcu.hdg",
+      "command": "AirbusFBW/LOCbutton",
+      "lit": { "dataref": "AirbusFBW/LOCilluminated" },
+      "verified": false,
+      "notes": "También existe toliss_airbus/loc_push."
+    },
+    {
+      "id": "fcu.ap1",
+      "label": "AP1",
+      "column": "center",
+      "command": "toliss_airbus/ap1_push",
+      "lit": { "dataref": "AirbusFBW/AP1Engage" },
+      "verified": false
+    },
+    {
+      "id": "fcu.ap2",
+      "label": "AP2",
+      "column": "center",
+      "command": "toliss_airbus/ap2_push",
+      "lit": { "dataref": "AirbusFBW/AP2Engage" },
+      "verified": false
+    },
+    {
+      "id": "fcu.athr",
+      "label": "A/THR",
+      "column": "center",
+      "command": "AirbusFBW/ATHRbutton",
+      "lit": { "dataref": "AirbusFBW/ATHRmode" },
+      "verified": false,
+      "notes": "ATHRmode: 0 = off, 1 = armado, 2 = activo. El pulsador se ilumina con cualquier valor > 0."
+    },
+    {
+      "id": "fcu.metric_alt",
+      "label": "METRIC",
+      "sublabel": "ALT",
+      "column": "fcu.alt",
+      "command": "toliss_airbus/metric_alt_button_push",
+      "lit": { "dataref": "AirbusFBW/MetricAlt" },
+      "verified": false
+    },
+    {
+      "id": "fcu.alt_step",
+      "label": "ALT STEP",
+      "column": "fcu.alt",
+      "kind": "toggle",
+      "state": { "dataref": "AirbusFBW/ALT100_1000" },
+      "positions": ["100", "1000"],
+      "verified": false,
+      "notes": "Selector de paso de la rueda de altitud. Escritura directa de AirbusFBW/ALT100_1000 (int, rw)."
+    },
+    {
+      "id": "fcu.exped",
+      "label": "EXPED",
+      "column": "fcu.vs",
+      "command": "AirbusFBW/EXPEDbutton",
+      "verified": false,
+      "notes": "Sin dataref de iluminación conocido; mirar AirbusFBW/APVerticalMode en Diagnóstico."
+    },
+    {
+      "id": "fcu.appr",
+      "label": "APPR",
+      "column": "fcu.vs",
+      "command": "AirbusFBW/APPRbutton",
+      "lit": { "dataref": "AirbusFBW/APPRilluminated" },
+      "verified": false
+    }
+  ]
+}

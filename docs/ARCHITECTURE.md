@@ -11,7 +11,7 @@ Una app nativa de iPad que reproduce el overhead del Airbus A320 y controla el T
 - **Resistente a cambios de ToLiss.** El mapeo de controles es un archivo de datos, no código.
 - **Sin dependencias de pago** (Air Manager, etc.) ni plugins propios dentro de X-Plane.
 
-Fuera de alcance por ahora: otros paneles (pedestal, FCU, MCDU), 3D real, publicación en App Store.
+El FCU (panel de autopiloto del glareshield) entró en alcance tras el MVP del overhead porque comparte toda la infraestructura y es lo que más se toca en vuelo. Fuera de alcance por ahora: pedestal, MCDU, 3D real, publicación en App Store.
 
 ## 2. Vista general
 
@@ -41,7 +41,8 @@ Fuera de alcance por ahora: otros paneles (pedestal, FCU, MCDU), 3D real, public
 | `RESTClient` | `GET /datarefs?filter[name]=`, `GET/PATCH /datarefs/{id}/value[?index=]`, `GET /commands?filter[name]=`, `POST /command/{id}/activate`. |
 | `WebSocketClient` (actor) | `URLSessionWebSocketTask`. Correlaciona cada `result` con su `req_id`, timeout de 5 s, reenvía `dataref_update_values` al cliente. |
 | `XPValue` | Valor JSON (número, array, string). Codifica enteros sin decimales porque X-Plane rechaza `1.0` en datarefs `int`. |
-| `PanelMapping` | Modelos `Codable` del JSON de mapeo y la lógica valor ↔ posición. |
+| `PanelMapping` | Modelos `Codable` del JSON de mapeo del overhead y la lógica valor ↔ posición. |
+| `FCUMapping` | Modelos `Codable` del JSON del FCU (selectores con ventana + rueda, pulsadores) y `FCUFormat`, que renderiza y parsea los valores de las ventanas (`250`, `.78`, `005`, `05000`, `+25oo`, `-3.0`). |
 
 Es multiplataforma (iOS 17 / macOS 14) para poder ejecutar los tests con `swift test` en el Mac.
 
@@ -50,10 +51,13 @@ Es multiplataforma (iOS 17 / macOS 14) para poder ejecutar los tests con `swift 
 - `PanelModel`: único estado observable. Carga los JSON del bundle, suscribe todos los datarefs referenciados, traduce cada actualización a posiciones de control y lámparas, y ejecuta las interacciones con actualización optimista (la UI se mueve al instante y la suscripción confirma o corrige).
 - Controles 2.5D: `ToggleSwitchView` (palanca de 2 o 3 posiciones, tap arriba/abajo o flick) y `KorryButtonView` (pulsador con dos leyendas iluminables y hundimiento al tocar).
 - `SubpanelView` dibuja cada subpanel con el marco blanco y el título al estilo Airbus a partir de `col`/`row` del JSON.
+- `FCUView` dibuja el FCU: una columna por selector (`FCUWindowView` con dígitos ámbar y punto de gestionado, `FCUKnobView` con rueda arrastrable, − / + con repetición y PUSH / PULL) y el bloque AP1 / AP2 / A/THR tras el segundo selector. Los pulsadores (`FCUPushButtonView`) llevan las tres barras verdes del avión real; el selector 100/1000 es un basculante (`FCUToggleView`). `RootView` alterna Overhead y FCU con un selector segmentado persistido.
 
 ### 3.3 Mapeo (`mapping/overhead/*.json`)
 
 Un archivo por subpanel. Cada control declara de dónde lee su estado, dónde escribe (por defecto, el mismo dataref) y opcionalmente comandos `up`/`down`/`press` que tienen prioridad sobre la escritura. Esquema completo en [MAPPING.md](MAPPING.md).
+
+`mapping/fcu/fcu.json` describe el FCU con otro esquema: cada selector declara el dataref de la ventana, los flags de modo (SPD/MACH, HDG-V/S / TRK-FPA), gestionado y rayas, el rango de la entrada directa y los comandos `increase`/`decrease`/`push`/`pull`; cada pulsador, su comando y el dataref que lo ilumina. Los valores de las ventanas viven en los datarefs estándar `sim/cockpit/autopilot/*`, que ToLiss usa como memoria del FCU; los indicadores y comandos son `AirbusFBW/*` y `toliss_airbus/*`.
 
 ### 3.4 Herramientas (`tools/`)
 
@@ -93,6 +97,7 @@ Decisión de uso: suscripciones y comandos mantenidos por WebSocket; escrituras 
 2. **Suscribir.** Se recogen todos los datarefs referenciados en los JSON (estado y lámparas), se resuelven a ids y se suscriben **enteros**, sin índice. Los que X-Plane no conoce (avión no cargado, nombre cambiado) se listan en la pantalla de conexión en lugar de abortar.
 3. **Actualizar.** Cada `dataref_update_values` se traduce a posición por control (`values` del JSON o 0,1,2… por defecto, con búsqueda del valor más cercano).
 4. **Actuar.** Al mover un control: posición optimista en UI → comando `up`/`down` si existe, si no `PATCH` del elemento del array → la suscripción confirma. Si falla, se revierte y se muestra el error.
+5. **FCU.** Girar la rueda dispara `increase`/`decrease` una vez por clic (ToLiss aplica su propio paso: 1 kt, 0.01 Mach, 1°, 100/1000 ft, 100 ft/min); PUSH/PULL disparan sus comandos; teclear un valor escribe el dataref de la ventana acotado al rango. Sin actualización optimista: la ventana solo muestra lo que el simulador confirma, igual que el FCU real.
 
 ## 6. Red, permisos y seguridad
 
@@ -113,6 +118,8 @@ Decisión de uso: suscripciones y comandos mantenidos por WebSocket; escrituras 
 | D6 | **Escritura de dataref por defecto, comandos si están declarados** | Solo comandos | La escritura de `OHPLightSwitches[i]` está confirmada por usuarios; los nombres de los comandos `toliss_airbus/lightcommands/*` hay que volcarlos primero. Algunos controles de ToLiss solo responden a comandos (p. ej. ANN LT), por eso el esquema soporta ambos. |
 | D7 | **XcodeGen** en lugar de versionar el `.xcodeproj` | `.xcodeproj` en git | El proyecto se generó sin Xcode; `project.yml` es legible, diffable y evita conflictos. |
 | D8 | **Actualización optimista** en la UI | Esperar confirmación | Sensación de respuesta inmediata; la suscripción corrige en milisegundos si el simulador rechaza la orden. |
+| D9 | **FCU con esquema propio** en `mapping/fcu/` | Forzar el FCU en el esquema del overhead (`toggle`/`korry`) | Un selector del FCU es ventana numérica + rueda con push/pull + flags de modo; no es una palanca de N posiciones. Un esquema específico queda legible y el validador lo comprueba aparte. La capa de red y `PanelModel` se comparten. |
+| D10 | **Rueda del FCU por comandos `sim/autopilot/*`**, entrada directa por escritura | Escribir siempre el dataref | Los comandos respetan el paso y la lógica de ToLiss (ALT 100/1000, Mach vs nudos). La escritura directa se reserva a teclear un valor exacto, donde el usuario quiere saltar sin dar 200 clics. |
 
 ## 8. Riesgos abiertos
 
@@ -122,3 +129,4 @@ Decisión de uso: suscripciones y comandos mantenidos por WebSocket; escrituras 
 | Índices de `OHPLightSwitches` distintos en la versión instalada | Controles cruzados | `xp.py watch` + flag `verified` por control; badge naranja en UI hasta confirmar. |
 | Escritura directa ignorada por ToLiss en algunos switches | Control sin efecto | Añadir `commands` al JSON tras volcar `toliss_airbus/*` con `xp.py dump`. |
 | Formato exacto de los mensajes WS distinto al inferido | Fallo de suscripción | `WSIncoming` tolera tipos desconocidos; los tests fijan la forma; ajustar tras el primer spike. |
+| ToLiss no acepte la escritura directa de `sim/cockpit/autopilot/*` o guarde el FPA en otro sitio | Entrada directa sin efecto; ventana FPA errónea | Las ruedas van por comandos, que sí están en el volcado. Vigilar los datarefs desde Diagnóstico al pulsar HDG-V/S / TRK-FPA y ajustar `value`/`alternateValue`/`write` en `fcu.json`. |

@@ -48,6 +48,8 @@ final class PanelModel {
 
     private(set) var status: Status = .disconnected
     private(set) var subpanels: [SubpanelDefinition] = []
+    /// Flight Control Unit mapping (`mapping/fcu/fcu.json`), nil when the file is missing.
+    private(set) var fcu: FCUDefinition?
     /// Control id → current position index (0 = bottom).
     private(set) var positions: [String: Int] = [:]
     /// Latest raw value for each lamp binding.
@@ -91,10 +93,22 @@ final class PanelModel {
             lastError = "No se encontró la carpeta 'mapping' en el bundle."
             return
         }
+        let fileManager = FileManager.default
+        let overheadDirectory = directory.appendingPathComponent("overhead", isDirectory: true)
         do {
-            subpanels = try PanelLoader.loadAll(in: directory)
+            // Older bundles kept the overhead JSON at the root of `mapping/`.
+            let source = fileManager.fileExists(atPath: overheadDirectory.path) ? overheadDirectory : directory
+            subpanels = try PanelLoader.loadAll(in: source)
         } catch {
-            lastError = "Error leyendo mapping: \(error.localizedDescription)"
+            lastError = "Error leyendo mapping/overhead: \(error.localizedDescription)"
+        }
+        let fcuDirectory = directory.appendingPathComponent("fcu", isDirectory: true)
+        if fileManager.fileExists(atPath: fcuDirectory.path) {
+            do {
+                fcu = try FCULoader.loadFirst(in: fcuDirectory)
+            } catch {
+                lastError = "Error leyendo mapping/fcu: \(error.localizedDescription)"
+            }
         }
     }
 
@@ -109,6 +123,7 @@ final class PanelModel {
             if let top = control.lamps?.top?.dataref { names.insert(top) }
             if let bottom = control.lamps?.bottom?.dataref { names.insert(bottom) }
         }
+        if let fcu { names.formUnion(fcu.datarefNames) }
         return names
     }
 
@@ -299,6 +314,149 @@ final class PanelModel {
     func isLit(_ lamp: Lamp?) -> Bool {
         guard let lamp, let key = lamp.key else { return false }
         return lamp.isLit(lampValues[key])
+    }
+
+    // MARK: FCU
+
+    /// Latest raw value behind a binding (array element when it has an index).
+    func value(_ binding: FCUBinding?) -> XPValue? {
+        guard let binding, let raw = rawValues[binding.dataref] else { return nil }
+        return raw.element(at: binding.index)
+    }
+
+    func isOn(_ binding: FCUBinding?) -> Bool {
+        guard let binding else { return false }
+        return binding.isOn(value(binding))
+    }
+
+    /// False only when the mapping declares an availability flag and it reads zero.
+    var isFCUPowered: Bool {
+        guard let available = fcu?.available else { return true }
+        guard value(available) != nil else { return true }   // unknown yet: do not blank the panel
+        return isOn(available)
+    }
+
+    func isAvailable(_ selector: FCUSelectorDefinition) -> Bool {
+        guard status == .connected else { return false }
+        return !unresolved.contains(selector.value.dataref)
+    }
+
+    func isAvailable(_ button: FCUButtonDefinition) -> Bool {
+        guard status == .connected else { return false }
+        switch button.resolvedKind {
+        case .push: return button.command != nil
+        case .toggle:
+            guard let state = button.state else { return false }
+            return !unresolved.contains(state.dataref)
+        }
+    }
+
+    /// Numeric value currently shown in a selector window, honouring its mode flag.
+    func displayedValue(of selector: FCUSelectorDefinition) -> Double? {
+        let modeOn = isOn(selector.mode)
+        return value(selector.activeValueBinding(modeOn: modeOn))?.doubleValue
+    }
+
+    /// Turns a knob `steps` clicks (positive = clockwise / increase). Uses the mapped commands so
+    /// ToLiss applies its own increments; falls back to writing the value when there are none.
+    func turn(_ selector: FCUSelectorDefinition, steps: Int) {
+        guard let client, steps != 0 else { return }
+        let increasing = steps > 0
+        let command = increasing ? selector.commands?.increase : selector.commands?.decrease
+        Task {
+            do {
+                if let command {
+                    for _ in 0..<abs(steps) {
+                        try await client.fire(command: command)
+                    }
+                } else {
+                    let modeOn = self.isOn(selector.mode)
+                    let format = selector.activeFormat(modeOn: modeOn)
+                    let current = self.displayedValue(of: selector) ?? 0
+                    var target = current + Double(steps) * format.defaultStep
+                    if format.isAngle {
+                        target = target.truncatingRemainder(dividingBy: 360)
+                        if target < 0 { target += 360 }
+                    }
+                    if let range = selector.activeRange(modeOn: modeOn) { target = range.clamp(target) }
+                    try await client.write(selector.writeBinding.key, XPValue(target))
+                }
+            } catch {
+                self.lastError = self.describe(error)
+            }
+        }
+    }
+
+    /// Knob pushed in (managed mode).
+    func push(_ selector: FCUSelectorDefinition) {
+        fireFCU(selector.commands?.push)
+    }
+
+    /// Knob pulled out (selected mode).
+    func pull(_ selector: FCUSelectorDefinition) {
+        fireFCU(selector.commands?.pull)
+    }
+
+    /// Direct entry: writes a typed value, clamped to the mapped range. Returns false when the text
+    /// is not a number.
+    @discardableResult
+    func set(_ selector: FCUSelectorDefinition, to text: String) -> Bool {
+        guard let client else { return false }
+        let modeOn = isOn(selector.mode)
+        let format = selector.activeFormat(modeOn: modeOn)
+        guard var target = format.parse(text) else { return false }
+        if format.isAngle {
+            target = target.truncatingRemainder(dividingBy: 360)
+            if target < 0 { target += 360 }
+        }
+        if let range = selector.activeRange(modeOn: modeOn) { target = range.clamp(target) }
+        let binding = modeOn && selector.alternateValue != nil ? selector.activeValueBinding(modeOn: true) : selector.writeBinding
+        Task {
+            do {
+                try await client.write(binding.key, XPValue(target))
+            } catch {
+                self.lastError = self.describe(error)
+            }
+        }
+        return true
+    }
+
+    func press(_ button: FCUButtonDefinition) {
+        guard let client else { return }
+        switch button.resolvedKind {
+        case .push:
+            fireFCU(button.command)
+        case .toggle:
+            guard let state = button.state else { return }
+            let next = button.nextValue(after: value(state))
+            Task {
+                do {
+                    try await client.write(state.key, XPValue(next))
+                } catch {
+                    self.lastError = self.describe(error)
+                }
+            }
+        }
+    }
+
+    func isLit(_ button: FCUButtonDefinition) -> Bool {
+        isOn(button.lit)
+    }
+
+    /// Toggle buttons: index of the position currently shown.
+    func position(of button: FCUButtonDefinition) -> Int {
+        button.position(for: value(button.state)) ?? 0
+    }
+
+    private func fireFCU(_ command: String?) {
+        guard let client, let command else { return }
+        Task {
+            do {
+                try await client.fire(command: command)
+            } catch {
+                self.lastError = self.describe(error)
+            }
+        }
     }
 
     // MARK: Diagnostics

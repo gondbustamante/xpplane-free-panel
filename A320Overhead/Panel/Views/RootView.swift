@@ -1,19 +1,46 @@
 import SwiftUI
 import XPlaneKit
 
+/// Which panel fills the screen. Persisted so the app reopens where you left it.
+enum PanelPage: String, CaseIterable, Identifiable {
+    case overhead
+    case fcu
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .overhead: return "Overhead"
+        case .fcu: return "FCU"
+        }
+    }
+}
+
 struct RootView: View {
     @Environment(PanelModel.self) private var model
+    @AppStorage("ui.page") private var pageRaw = PanelPage.overhead.rawValue
     @State private var showSettings = false
     @State private var showDiagnostics = false
 
+    private var page: Binding<PanelPage> {
+        Binding(get: { PanelPage(rawValue: pageRaw) ?? .overhead },
+                set: { pageRaw = $0.rawValue })
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            ConnectionBar(showSettings: $showSettings, showDiagnostics: $showDiagnostics)
+            ConnectionBar(page: page, showSettings: $showSettings, showDiagnostics: $showDiagnostics)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
             ScrollView([.horizontal, .vertical], showsIndicators: false) {
-                OverheadView()
-                    .padding(24)
+                switch page.wrappedValue {
+                case .overhead:
+                    OverheadView()
+                        .padding(24)
+                case .fcu:
+                    FCUView()
+                        .padding(24)
+                }
             }
         }
         .background(PanelTheme.cockpitBackground.ignoresSafeArea())

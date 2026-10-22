@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ConnectionBar: View {
     @Environment(PanelModel.self) private var model
+    @Binding var page: PanelPage
     @Binding var showSettings: Bool
     @Binding var showDiagnostics: Bool
 
@@ -26,6 +27,14 @@ struct ConnectionBar: View {
                     .font(.footnote)
                     .foregroundStyle(.orange)
             }
+            Spacer()
+            Picker("Panel", selection: $page) {
+                ForEach(PanelPage.allCases) { option in
+                    Text(option.title).tag(option)
+                }
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 190)
             Spacer()
             Text("\(model.host):\(String(model.port))")
                 .font(.footnote.monospaced())
