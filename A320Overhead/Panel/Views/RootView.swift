@@ -1,4 +1,5 @@
 import SwiftUI
+import XPlaneKit
 
 struct RootView: View {
     @Environment(PanelModel.self) private var model
