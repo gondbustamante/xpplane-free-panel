@@ -1,42 +1,65 @@
 {
   "id": "fire",
-  "title": "FIRE",
+  "title": "",
   "group": "overhead",
   "order": 5,
-  "notes": "Panel de fuego. Pulsadores ENG 1/2, pruebas y agente APU confirmados. Los agentes de motor usan índices supuestos de FireExOHPArray y están bloqueados.",
-  "controls": [
+  "frame": {
+    "x": 200,
+    "y": 82,
+    "w": 416,
+    "h": 68
+  },
+  "titleHidden": true,
+  "notes": "Pulsadores de fuego ENG 1/2 y pruebas confirmados; agentes con índices supuestos. Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
+  "decorations": [
     {
-      "id": "fire.eng1",
-      "label": "ENG 1 FIRE",
-      "kind": "korry",
-      "positions": [
-        "NORM",
-        "PUSHED"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/ENGFireSwitchArray",
-        "index": 0
-      },
-      "lamps": {
-        "top": {
-          "text": "FIRE",
-          "color": "red",
-          "dataref": "AirbusFBW/OHPLightsATA70_Raw",
-          "index": 11
-        },
-        "bottom": {
-          "text": "PUSHED",
-          "color": "white",
-          "dataref": "AirbusFBW/ENGFireSwitchArray",
-          "index": 0
-        }
-      },
-      "guarded": true,
-      "col": 0,
-      "row": 0,
-      "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+      "type": "divider",
+      "points": [
+        [
+          162.6,
+          3.7
+        ],
+        [
+          162.6,
+          64.7
+        ]
+      ]
     },
+    {
+      "type": "divider",
+      "points": [
+        [
+          254.9,
+          3.7
+        ],
+        [
+          254.9,
+          64.7
+        ]
+      ]
+    },
+    {
+      "type": "text",
+      "at": [
+        9.2,
+        34.0
+      ],
+      "text": "FIRE",
+      "size": 7,
+      "vertical": true
+    },
+    {
+      "type": "text",
+      "at": [
+        406.4,
+        34.0
+      ],
+      "text": "FIRE",
+      "size": 7,
+      "vertical": true
+    }
+  ],
+  "controls": [
     {
       "id": "fire.eng1_agent1",
       "label": "AGENT 1",
@@ -67,10 +90,44 @@
       },
       "guarded": true,
       "readOnly": true,
-      "col": 1,
-      "row": 0,
       "verified": false,
-      "notes": "Índice 0 de FireExOHPArray supuesto. Bloqueado."
+      "notes": "Índice 0 de FireExOHPArray supuesto. Bloqueado.",
+      "guardStyle": "red",
+      "x": 31.4,
+      "y": 27.7
+    },
+    {
+      "id": "fire.eng1",
+      "label": "ENG 1",
+      "kind": "korry",
+      "positions": [
+        "NORM",
+        "PUSHED"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENGFireSwitchArray",
+        "index": 0
+      },
+      "lamps": {
+        "top": {
+          "text": "FIRE",
+          "color": "red",
+          "dataref": "AirbusFBW/OHPLightsATA70_Raw",
+          "index": 11
+        },
+        "bottom": {
+          "text": "PUSHED",
+          "color": "white",
+          "dataref": "AirbusFBW/ENGFireSwitchArray",
+          "index": 0
+        }
+      },
+      "guarded": true,
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "style": "fire",
+      "x": 86.8,
+      "y": 35.1
     },
     {
       "id": "fire.eng1_agent2",
@@ -102,14 +159,34 @@
       },
       "guarded": true,
       "readOnly": true,
-      "col": 2,
-      "row": 0,
       "verified": false,
-      "notes": "Índice 1 de FireExOHPArray supuesto. Bloqueado."
+      "notes": "Índice 1 de FireExOHPArray supuesto. Bloqueado.",
+      "guardStyle": "red",
+      "x": 144.1,
+      "y": 27.7
+    },
+    {
+      "id": "fire.eng1_test",
+      "label": "TEST",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/FireTestENG1",
+        "duration": 2
+      },
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s.",
+      "style": "round",
+      "size": 16,
+      "x": 31.4,
+      "y": 49.9
     },
     {
       "id": "fire.apu",
-      "label": "APU FIRE",
+      "label": "APU",
       "kind": "korry",
       "positions": [
         "NORM",
@@ -127,14 +204,15 @@
       },
       "guarded": true,
       "readOnly": true,
-      "col": 3,
-      "row": 0,
       "verified": false,
-      "notes": "Solo indicador: no hay dataref localizado para el pulsador de fuego del APU."
+      "notes": "Solo indicador: no hay dataref localizado para el pulsador de fuego del APU.",
+      "style": "fire",
+      "x": 208.7,
+      "y": 30.3
     },
     {
       "id": "fire.apu_agent",
-      "label": "APU AGENT",
+      "label": "AGENT",
       "kind": "korry",
       "positions": [
         "OFF",
@@ -145,10 +223,30 @@
         "duration": 2
       },
       "guarded": true,
-      "col": 4,
-      "row": 0,
       "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s.",
+      "guardStyle": "red",
+      "x": 176.6,
+      "y": 59.1
+    },
+    {
+      "id": "fire.apu_test",
+      "label": "TEST",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/FireTestAPU",
+        "duration": 2
+      },
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s.",
+      "style": "round",
+      "size": 16,
+      "x": 236.4,
+      "y": 54.7
     },
     {
       "id": "fire.eng2_agent1",
@@ -180,10 +278,44 @@
       },
       "guarded": true,
       "readOnly": true,
-      "col": 5,
-      "row": 0,
       "verified": false,
-      "notes": "Índice 2 de FireExOHPArray supuesto. Bloqueado."
+      "notes": "Índice 2 de FireExOHPArray supuesto. Bloqueado.",
+      "guardStyle": "red",
+      "x": 271.5,
+      "y": 27.7
+    },
+    {
+      "id": "fire.eng2",
+      "label": "ENG 2",
+      "kind": "korry",
+      "positions": [
+        "NORM",
+        "PUSHED"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENGFireSwitchArray",
+        "index": 1
+      },
+      "lamps": {
+        "top": {
+          "text": "FIRE",
+          "color": "red",
+          "dataref": "AirbusFBW/OHPLightsATA70_Raw",
+          "index": 13
+        },
+        "bottom": {
+          "text": "PUSHED",
+          "color": "white",
+          "dataref": "AirbusFBW/ENGFireSwitchArray",
+          "index": 1
+        }
+      },
+      "guarded": true,
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "style": "fire",
+      "x": 328.8,
+      "y": 35.1
     },
     {
       "id": "fire.eng2_agent2",
@@ -215,80 +347,15 @@
       },
       "guarded": true,
       "readOnly": true,
-      "col": 6,
-      "row": 0,
       "verified": false,
-      "notes": "Índice 3 de FireExOHPArray supuesto. Bloqueado."
-    },
-    {
-      "id": "fire.eng2",
-      "label": "ENG 2 FIRE",
-      "kind": "korry",
-      "positions": [
-        "NORM",
-        "PUSHED"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/ENGFireSwitchArray",
-        "index": 1
-      },
-      "lamps": {
-        "top": {
-          "text": "FIRE",
-          "color": "red",
-          "dataref": "AirbusFBW/OHPLightsATA70_Raw",
-          "index": 13
-        },
-        "bottom": {
-          "text": "PUSHED",
-          "color": "white",
-          "dataref": "AirbusFBW/ENGFireSwitchArray",
-          "index": 1
-        }
-      },
-      "guarded": true,
-      "col": 7,
-      "row": 0,
-      "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
-    },
-    {
-      "id": "fire.eng1_test",
-      "label": "TEST ENG 1",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "commands": {
-        "press": "AirbusFBW/FireTestENG1",
-        "duration": 2
-      },
-      "col": 1,
-      "row": 1,
-      "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
-    },
-    {
-      "id": "fire.apu_test",
-      "label": "TEST APU",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "commands": {
-        "press": "AirbusFBW/FireTestAPU",
-        "duration": 2
-      },
-      "col": 3,
-      "row": 1,
-      "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+      "notes": "Índice 3 de FireExOHPArray supuesto. Bloqueado.",
+      "guardStyle": "red",
+      "x": 384.2,
+      "y": 27.7
     },
     {
       "id": "fire.eng2_test",
-      "label": "TEST ENG 2",
+      "label": "TEST",
       "kind": "korry",
       "positions": [
         "OFF",
@@ -298,10 +365,12 @@
         "press": "AirbusFBW/FireTestENG2",
         "duration": 2
       },
-      "col": 6,
-      "row": 1,
       "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s.",
+      "style": "round",
+      "size": 16,
+      "x": 384.2,
+      "y": 49.9
     }
   ]
 }

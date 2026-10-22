@@ -5,13 +5,18 @@ import SwiftUI
 enum PanelTheme {
     static let cockpitBackground = Color(red: 0.07, green: 0.08, blue: 0.10)
     /// Airbus cockpit grey: a dark, slightly blue grey.
-    static let panelFace = Color(red: 0.23, green: 0.27, blue: 0.33)
-    static let panelFaceHighlight = Color(red: 0.28, green: 0.32, blue: 0.38)
+    static let panelFace = Color(red: 0.33, green: 0.37, blue: 0.43)
+    static let panelFaceHighlight = Color(red: 0.38, green: 0.42, blue: 0.48)
     static let panelEdge = Color(red: 0.16, green: 0.17, blue: 0.19)
+    /// Dark gap between plates.
+    static let panelGap = Color(red: 0.13, green: 0.14, blue: 0.17)
+    /// Synoptic lines on HYD, FUEL, ELEC and AIR COND.
+    static let synoptic = Color(red: 0.36, green: 0.93, blue: 0.40)
+    static let fcuDigitsColor = Color(red: 1.0, green: 0.66, blue: 0.18)
     static let bezel = Color(red: 0.42, green: 0.44, blue: 0.46)
     static let korryFace = Color(red: 0.07, green: 0.07, blue: 0.08)
     static let legend = Color.white
-    static let unlitLegend = Color(white: 0.38)
+    static let unlitLegend = Color(white: 0.42)
     static let verificationBadge = Color(red: 1.0, green: 0.62, blue: 0.0)
     /// LCD digits of the FCU windows (warm amber, like the ToLiss unit).
     static let fcuDigits = Color(red: 1.0, green: 0.66, blue: 0.18)

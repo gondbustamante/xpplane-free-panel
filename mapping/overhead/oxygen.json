@@ -3,8 +3,71 @@
   "title": "OXYGEN",
   "group": "overhead",
   "order": 26,
-  "notes": "Oxígeno. Confirmado por el volcado y por XSchenFly.",
+  "frame": {
+    "x": 14,
+    "y": 446,
+    "w": 176,
+    "h": 40
+  },
+  "notes": "Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
+  "decorations": [
+    {
+      "type": "divider",
+      "points": [
+        [
+          122.4,
+          10.8
+        ],
+        [
+          122.4,
+          35.7
+        ]
+      ]
+    }
+  ],
   "controls": [
+    {
+      "id": "oxy.pax_mask",
+      "label": "MASK MAN ON",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/PaxOxyReleaseButtonPress"
+      },
+      "guarded": true,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Suelta las máscaras de pasaje.",
+      "guardStyle": "red",
+      "x": 66.4,
+      "y": 22.7
+    },
+    {
+      "id": "oxy.passenger",
+      "label": "PASSENGER",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/PaxOxyMask"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "SYS ON",
+          "color": "white",
+          "dataref": "AirbusFBW/PaxOxyMask"
+        }
+      },
+      "readOnly": true,
+      "verified": true,
+      "notes": "Solo indicador (PaxOxyMask, ro).",
+      "x": 104.1,
+      "y": 24.2
+    },
     {
       "id": "oxy.crew_supply",
       "label": "CREW SUPPLY",
@@ -24,44 +87,10 @@
           "onValue": 0
         }
       },
-      "col": 0,
-      "row": 0,
       "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
-    },
-    {
-      "id": "oxy.pax_mask",
-      "label": "MASK MAN ON",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "commands": {
-        "press": "AirbusFBW/PaxOxyReleaseButtonPress"
-      },
-      "guarded": true,
-      "col": 1,
-      "row": 0,
-      "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Suelta las máscaras de pasaje."
-    },
-    {
-      "id": "oxy.tmr_reset",
-      "label": "TMR RESET",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "commands": {
-        "press": "AirbusFBW/TMRResetButtonPress"
-      },
-      "guarded": true,
-      "col": 2,
-      "row": 0,
-      "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "x": 144.5,
+      "y": 24.2
     }
   ]
 }

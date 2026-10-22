@@ -428,6 +428,39 @@ final class PanelModel {
         return lamp.isLit(lampValues[key])
     }
 
+    /// Knob: 0…1 over the control's range from the raw dataref value.
+    func fraction(of control: ControlDefinition) -> Double {
+        guard let state = control.state, let range = control.range,
+              let raw = rawValues[state.dataref]?.element(at: state.index)?.doubleValue else { return 0 }
+        return range.fraction(of: raw)
+    }
+
+    /// Knob: writes the raw value for a 0…1 fraction.
+    func set(_ control: ControlDefinition, fraction: Double) {
+        guard let client, let binding = control.writeBinding, let range = control.range else { return }
+        let target = range.value(at: fraction)
+        Task {
+            do {
+                try await client.write(binding.key, XPValue(target))
+            } catch {
+                self.lastError = self.describe(error)
+            }
+        }
+    }
+
+    /// Display: formatted raw value. Without a format it is a legend window that shows the last
+    /// position name when the value is on (ADIRS "ON BAT"). Dashes when unknown.
+    func displayText(of control: ControlDefinition) -> String {
+        guard let state = control.state,
+              let raw = rawValues[state.dataref]?.element(at: state.index)?.doubleValue else {
+            return (control.format ?? "").isEmpty ? "" : "--.-"
+        }
+        if let format = control.format, !format.isEmpty {
+            return String(format: format, raw)
+        }
+        return raw > 0.5 ? (control.positions.last ?? "ON") : ""
+    }
+
     // MARK: FCU
 
     /// Latest raw value behind a binding (array element when it has an index).

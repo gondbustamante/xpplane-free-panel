@@ -16,23 +16,51 @@ struct KorryButtonView: View {
     var guarded = false
     let enabled: Bool
     var dimmed = false
+    /// "cage" (black see-through frame) or "red" (solid hinged cover).
+    var guardStyle = "cage"
+    var sideLabel: String? = nil
+    /// Inline: label above in a VStack (grid panels). Otherwise the label is an overlay and the
+    /// view's frame is the button itself (absolute panels).
+    var inline = true
+    var size: CGFloat = 58
     let onPress: () -> Void
 
     @State private var guardOpen = false
     @State private var guardTimer: Task<Void, Never>?
 
-    private let size: CGFloat = 58
-
     var body: some View {
-        VStack(spacing: 5) {
-            PanelLabel(text: label)
-            ZStack(alignment: .top) {
-                button
-                if guarded { guardCover }
+        Group {
+            if inline {
+                VStack(spacing: 5) {
+                    PanelLabel(text: label)
+                    guardedButton
+                }
+            } else {
+                guardedButton
+                    .overlay(alignment: .top) { ControlLabel(text: label).offset(y: -14) }
+                    .overlay(alignment: .trailing) {
+                        if let sideLabel {
+                            VStack(spacing: -1) {
+                                ForEach(Array(sideLabel.enumerated()), id: \.offset) { _, letter in
+                                    Text(String(letter)).font(.system(size: 7, weight: .semibold)).foregroundStyle(PanelTheme.legend)
+                                }
+                            }
+                            .offset(x: 9)
+                        }
+                    }
             }
-            .frame(width: size, height: size)
         }
         .opacity(dimmed ? 0.5 : 1)
+    }
+
+    private var guardedButton: some View {
+        ZStack(alignment: .top) {
+            button
+            if guarded {
+                if guardStyle == "red" { redGuard } else { cageGuard }
+            }
+        }
+        .frame(width: size, height: size)
     }
 
     private var button: some View {
@@ -64,28 +92,36 @@ struct KorryButtonView: View {
         .disabled(!enabled)
     }
 
-    /// Clear plastic guard hinged on its top edge, with the red and white diagonal stripes of the
-    /// real switch guards. Translucent so the button legend stays readable underneath.
-    private var guardCover: some View {
+    /// Black see-through cage hinged on its top edge (EVAC COMMAND, DITCHING, RAM AIR, MAN START…).
+    private var cageGuard: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color.white.opacity(0.18))
-            ForEach(0..<5, id: \.self) { index in
-                Rectangle()
-                    .fill(index % 2 == 0 ? Color(red: 0.90, green: 0.12, blue: 0.10).opacity(0.85)
-                                         : Color.white.opacity(0.75))
-                    .frame(width: 9, height: size * 2)
-                    .offset(x: CGFloat(index - 2) * 18)
-                    .rotationEffect(.degrees(-45))
-            }
-            RoundedRectangle(cornerRadius: 4)
-                .stroke(Color.white.opacity(0.7), lineWidth: 1.2)
+            RoundedRectangle(cornerRadius: 3)
+                .stroke(Color(white: 0.10), lineWidth: 3)
+                .padding(1.5)
+            Rectangle().fill(Color(white: 0.10)).frame(width: 3)
+            Rectangle().fill(Color(white: 0.10)).frame(height: 3)
+            RoundedRectangle(cornerRadius: 3).fill(Color.black.opacity(0.18))
         }
         .frame(width: size, height: size)
         .clipShape(RoundedRectangle(cornerRadius: 4))
-        .shadow(color: .black.opacity(guardOpen ? 0.1 : 0.45), radius: 3, y: 2)
-        .rotation3DEffect(.degrees(guardOpen ? -105 : 0), axis: (x: 1, y: 0, z: 0), anchor: .top, perspective: 0.7)
-        .animation(.spring(response: 0.25, dampingFraction: 0.7), value: guardOpen)
+        .modifier(GuardHinge(open: guardOpen))
+        .allowsHitTesting(!guardOpen)
+        .onTapGesture { openGuard() }
+        .disabled(!enabled)
+    }
+
+    /// Solid red hinged cover (IDG, MAN ON, MASK MAN ON, DISCH, RAT MAN ON).
+    private var redGuard: some View {
+        ZStack(alignment: .top) {
+            RoundedRectangle(cornerRadius: 3)
+                .fill(LinearGradient(colors: [Color(red: 0.93, green: 0.22, blue: 0.18), Color(red: 0.72, green: 0.10, blue: 0.08)],
+                                     startPoint: .top, endPoint: .bottom))
+                .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.black.opacity(0.6), lineWidth: 1))
+            RoundedRectangle(cornerRadius: 1).fill(Color.black).frame(width: size * 0.45, height: 3).padding(.top, 3)
+            Rectangle().fill(Color.black.opacity(0.35)).frame(width: 1.5).padding(.vertical, 8)
+        }
+        .frame(width: size, height: size)
+        .modifier(GuardHinge(open: guardOpen))
         .allowsHitTesting(!guardOpen)
         .onTapGesture { openGuard() }
         .disabled(!enabled)
@@ -112,15 +148,25 @@ struct KorryButtonView: View {
     private func half(_ lamp: KorryLamp?) -> some View {
         ZStack {
             Rectangle()
-                .fill(lamp?.lit == true ? lamp!.color.opacity(0.28) : Color.clear)
+                .fill(lamp?.lit == true ? lamp!.color.opacity(0.22) : Color.clear)
             if let lamp {
                 Text(lamp.text)
-                    .font(.system(size: 10.5, weight: .heavy))
+                    .font(.system(size: size * 0.17, weight: .heavy)).fontWidth(.condensed)
                     .foregroundStyle(lamp.lit ? lamp.color : PanelTheme.unlitLegend)
                     .shadow(color: lamp.lit ? lamp.color.opacity(1) : .clear, radius: 5)
-                    .shadow(color: lamp.lit ? lamp.color.opacity(0.6) : .clear, radius: 1)
+                    .padding(.horizontal, 3).padding(.vertical, 1)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 1.5)
+                            .stroke(lamp.lit ? lamp.color.opacity(0.9) : PanelTheme.unlitLegend.opacity(0.7), lineWidth: 0.8)
+                    )
                     .lineLimit(1)
-                    .minimumScaleFactor(0.6)
+                    .minimumScaleFactor(0.5)
+            } else {
+                // Unused half: the two tiny lamp dots visible on a blank Korry.
+                HStack(spacing: size * 0.14) {
+                    Circle().fill(Color(white: 0.30)).frame(width: size * 0.06, height: size * 0.06)
+                    Circle().fill(Color(white: 0.30)).frame(width: size * 0.06, height: size * 0.06)
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -141,10 +187,21 @@ struct KorryButtonView: View {
                         top: KorryLamp(text: "FAULT", color: PanelTheme.lamp("amber"), lit: false),
                         bottom: nil,
                         guarded: true,
-                        enabled: true) {}
+                        enabled: true, guardStyle: "red") {}
     }
     .padding(30)
     .background(PanelTheme.panelFace)
+}
+
+/// Lifts a guard about its top edge.
+struct GuardHinge: ViewModifier {
+    let open: Bool
+    func body(content: Content) -> some View {
+        content
+            .shadow(color: .black.opacity(open ? 0.1 : 0.45), radius: 3, y: 2)
+            .rotation3DEffect(.degrees(open ? -105 : 0), axis: (x: 1, y: 0, z: 0), anchor: .top, perspective: 0.7)
+            .animation(.spring(response: 0.25, dampingFraction: 0.7), value: open)
+    }
 }
 
 /// Sinks the button while touched. A `Button` (unlike a zero-distance drag) cooperates with the

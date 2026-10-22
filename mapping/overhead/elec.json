@@ -1,38 +1,403 @@
 {
   "id": "elec",
-  "title": "ELEC",
+  "title": "",
   "group": "overhead",
   "order": 20,
-  "notes": "Panel eléctrico. BAT 1/2, EXT PWR, IDG 1/2 y GND PWR con comandos confirmados. GEN 1/2, BUS TIE, AC ESS FEED, GALLEY y COMMERCIAL leen lámparas de datarefs confirmados pero escriben en índices supuestos de ElecOHPArray, por eso están bloqueados.",
+  "frame": {
+    "x": 200,
+    "y": 270,
+    "w": 416,
+    "h": 102
+  },
+  "titleHidden": true,
+  "notes": "BAT, EXT PWR, IDG con comandos confirmados; GEN/BUS TIE/AC ESS/GALLEY/COMMERCIAL bloqueados. Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
+  "decorations": [
+    {
+      "type": "text",
+      "at": [
+        197.7,
+        7.2
+      ],
+      "text": "BAT",
+      "size": 5.5
+    },
+    {
+      "type": "box",
+      "at": [
+        86.8,
+        11.2
+      ],
+      "text": "DC BUS 1"
+    },
+    {
+      "type": "box",
+      "at": [
+        327.0,
+        11.2
+      ],
+      "text": "DC BUS 2"
+    },
+    {
+      "type": "box",
+      "at": [
+        86.8,
+        41.0
+      ],
+      "text": "AC BUS 1"
+    },
+    {
+      "type": "box",
+      "at": [
+        208.7,
+        41.0
+      ],
+      "text": "AC ESS BUS"
+    },
+    {
+      "type": "box",
+      "at": [
+        327.0,
+        41.0
+      ],
+      "text": "AC BUS 2"
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          86.8,
+          15.9
+        ],
+        [
+          86.8,
+          36.7
+        ]
+      ]
+    },
+    {
+      "type": "arrow",
+      "at": [
+        86.8,
+        16.7
+      ],
+      "direction": "up"
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          327.0,
+          15.9
+        ],
+        [
+          327.0,
+          36.7
+        ]
+      ]
+    },
+    {
+      "type": "arrow",
+      "at": [
+        327.0,
+        16.7
+      ],
+      "direction": "up"
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          107.1,
+          41.0
+        ],
+        [
+          186.6,
+          41.0
+        ]
+      ]
+    },
+    {
+      "type": "arrow",
+      "at": [
+        186.6,
+        41.0
+      ],
+      "direction": "right"
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          306.6,
+          41.0
+        ],
+        [
+          230.9,
+          41.0
+        ]
+      ]
+    },
+    {
+      "type": "arrow",
+      "at": [
+        230.9,
+        41.0
+      ],
+      "direction": "left"
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          280.8,
+          36.7
+        ],
+        [
+          280.8,
+          41.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          70.2,
+          61.8
+        ],
+        [
+          347.3,
+          61.8
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          70.2,
+          59.0
+        ],
+        [
+          70.2,
+          64.5
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          347.3,
+          59.0
+        ],
+        [
+          347.3,
+          64.5
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          86.8,
+          45.8
+        ],
+        [
+          86.8,
+          77.7
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          327.0,
+          45.8
+        ],
+        [
+          327.0,
+          77.7
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          157.0,
+          61.8
+        ],
+        [
+          157.0,
+          77.7
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          258.6,
+          61.8
+        ],
+        [
+          258.6,
+          77.7
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          208.7,
+          61.8
+        ],
+        [
+          208.7,
+          67.7
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          59.1,
+          84.5
+        ],
+        [
+          75.7,
+          84.5
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          341.7,
+          84.5
+        ],
+        [
+          358.4,
+          84.5
+        ]
+      ]
+    },
+    {
+      "type": "text",
+      "at": [
+        9.2,
+        51.0
+      ],
+      "text": "ELEC",
+      "size": 7,
+      "vertical": true
+    },
+    {
+      "type": "text",
+      "at": [
+        406.4,
+        51.0
+      ],
+      "text": "ELEC",
+      "size": 7,
+      "vertical": true
+    }
+  ],
   "controls": [
     {
-      "id": "elec.gpu",
-      "label": "GND PWR UNIT",
+      "id": "elec.commercial",
+      "label": "COMMERCIAL",
       "kind": "korry",
       "positions": [
         "OFF",
         "ON"
       ],
-      "commands": {
-        "press": "toliss_airbus/elec_ground_power/toggle"
+      "state": {
+        "dataref": "AirbusFBW/ElecOHPArray",
+        "index": 6
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/ElecOHPArray",
+          "index": 6,
+          "onValue": 0
+        }
+      },
+      "readOnly": true,
+      "verified": false,
+      "notes": "Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico.",
+      "x": 47.3,
+      "y": 16.7
+    },
+    {
+      "id": "elec.galley",
+      "label": "GALY & CAB",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "AUTO"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/GalleyPBLight",
+        "values": [
+          1,
+          0
+        ]
+      },
+      "write": {
+        "dataref": "AirbusFBW/ElecOHPArray",
+        "index": 4
       },
       "lamps": {
         "top": {
-          "text": "AVAIL",
-          "color": "green",
-          "dataref": "AirbusFBW/ExtPowOHPArray",
-          "index": 0,
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/GalleyPBLight",
           "onValue": 2
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/GalleyPBLight",
+          "onValue": 1
         }
       },
-      "col": 0,
-      "row": 0,
+      "readOnly": true,
+      "verified": false,
+      "notes": "Lámpara de GalleyPBLight (confirmado; semántica supuesta). Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico.",
+      "sideLabel": "AUTO",
+      "x": 47.3,
+      "y": 44.6
+    },
+    {
+      "id": "elec.bat1_v",
+      "label": "BAT 1",
+      "kind": "display",
+      "positions": [
+        "",
+        ""
+      ],
+      "state": {
+        "dataref": "AirbusFBW/BatVolts",
+        "index": 0
+      },
+      "format": "%.1fV",
       "verified": true,
-      "notes": "Conecta o retira la unidad de tierra (equivale al ISCS). Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
+      "notes": "Voltímetro (BatVolts, ro).",
+      "x": 144.1,
+      "y": 21.9
     },
     {
       "id": "elec.bat1",
-      "label": "BAT 1",
+      "label": "1",
       "kind": "korry",
       "positions": [
         "OFF",
@@ -70,14 +435,14 @@
           "invert": true
         }
       },
-      "col": 1,
-      "row": 0,
       "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "x": 188.4,
+      "y": 21.9
     },
     {
       "id": "elec.bat2",
-      "label": "BAT 2",
+      "label": "2",
       "kind": "korry",
       "positions": [
         "OFF",
@@ -115,10 +480,84 @@
           "invert": true
         }
       },
-      "col": 2,
-      "row": 0,
       "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "x": 206.9,
+      "y": 21.9
+    },
+    {
+      "id": "elec.bat2_v",
+      "label": "BAT 2",
+      "kind": "display",
+      "positions": [
+        "",
+        ""
+      ],
+      "state": {
+        "dataref": "AirbusFBW/BatVolts",
+        "index": 1
+      },
+      "format": "%.1fV",
+      "verified": true,
+      "notes": "Voltímetro (BatVolts, ro).",
+      "x": 251.2,
+      "y": 21.9
+    },
+    {
+      "id": "elec.ac_ess_feed",
+      "label": "AC ESS FEED",
+      "kind": "korry",
+      "positions": [
+        "NORM",
+        "ALTN"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/AcEssAltn"
+      },
+      "write": {
+        "dataref": "AirbusFBW/ElecOHPArray",
+        "index": 3
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ALTN",
+          "color": "white",
+          "dataref": "AirbusFBW/AcEssAltn"
+        }
+      },
+      "readOnly": true,
+      "verified": false,
+      "notes": "Lámpara de AcEssAltn (confirmado). Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico.",
+      "x": 291.9,
+      "y": 32.7
+    },
+    {
+      "id": "elec.bus_tie",
+      "label": "BUS TIE",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "AUTO"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ElecOHPArray",
+        "index": 5
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/ElecOHPArray",
+          "index": 5,
+          "onValue": 0
+        }
+      },
+      "readOnly": true,
+      "verified": false,
+      "notes": "Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico.",
+      "sideLabel": "AUTO",
+      "x": 208.7,
+      "y": 73.7
     },
     {
       "id": "elec.idg1",
@@ -133,10 +572,11 @@
         "duration": 3
       },
       "guarded": true,
-      "col": 0,
-      "row": 1,
       "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 3 s. Irreversible en vuelo (resetIDGs desde el ISCS)."
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 3 s. Irreversible en vuelo (resetIDGs desde el ISCS).",
+      "guardStyle": "red",
+      "x": 47.3,
+      "y": 84.5
     },
     {
       "id": "elec.gen1",
@@ -179,10 +619,10 @@
         }
       },
       "readOnly": true,
-      "col": 1,
-      "row": 1,
       "verified": false,
-      "notes": "Lámparas de EngGenOHPArray[0] (confirmado). Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico."
+      "notes": "Lámparas de EngGenOHPArray[0] (confirmado). Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico.",
+      "x": 86.8,
+      "y": 84.5
     },
     {
       "id": "elec.apu_gen",
@@ -224,10 +664,10 @@
         }
       },
       "readOnly": true,
-      "col": 2,
-      "row": 1,
       "verified": false,
-      "notes": "Lámparas confirmadas. Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico."
+      "notes": "Lámparas confirmadas. Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico.",
+      "x": 157.0,
+      "y": 84.5
     },
     {
       "id": "elec.ext_pwr",
@@ -268,10 +708,10 @@
           "onValue": 1
         }
       },
-      "col": 3,
-      "row": 1,
       "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Valores: 0 off, 1 on, 2 disponible."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Valores: 0 off, 1 on, 2 disponible.",
+      "x": 258.6,
+      "y": 84.5
     },
     {
       "id": "elec.gen2",
@@ -314,10 +754,10 @@
         }
       },
       "readOnly": true,
-      "col": 4,
-      "row": 1,
       "verified": false,
-      "notes": "Lámparas de EngGenOHPArray[1] (confirmado). Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico."
+      "notes": "Lámparas de EngGenOHPArray[1] (confirmado). Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico.",
+      "x": 328.8,
+      "y": 84.5
     },
     {
       "id": "elec.idg2",
@@ -332,131 +772,37 @@
         "duration": 3
       },
       "guarded": true,
-      "col": 5,
-      "row": 1,
       "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 3 s."
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 3 s.",
+      "guardStyle": "red",
+      "x": 369.4,
+      "y": 84.5
     },
     {
-      "id": "elec.ac_ess_feed",
-      "label": "AC ESS FEED",
-      "kind": "korry",
-      "positions": [
-        "NORM",
-        "ALTN"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/AcEssAltn"
-      },
-      "write": {
-        "dataref": "AirbusFBW/ElecOHPArray",
-        "index": 3
-      },
-      "lamps": {
-        "bottom": {
-          "text": "ALTN",
-          "color": "white",
-          "dataref": "AirbusFBW/AcEssAltn"
-        }
-      },
-      "readOnly": true,
-      "col": 1,
-      "row": 2,
-      "verified": false,
-      "notes": "Lámpara de AcEssAltn (confirmado). Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico."
-    },
-    {
-      "id": "elec.galley",
-      "label": "GALY & CAB",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "AUTO"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/GalleyPBLight",
-        "values": [
-          1,
-          0
-        ]
-      },
-      "write": {
-        "dataref": "AirbusFBW/ElecOHPArray",
-        "index": 4
-      },
-      "lamps": {
-        "top": {
-          "text": "FAULT",
-          "color": "amber",
-          "dataref": "AirbusFBW/GalleyPBLight",
-          "onValue": 2
-        },
-        "bottom": {
-          "text": "OFF",
-          "color": "white",
-          "dataref": "AirbusFBW/GalleyPBLight",
-          "onValue": 1
-        }
-      },
-      "readOnly": true,
-      "col": 2,
-      "row": 2,
-      "verified": false,
-      "notes": "Lámpara de GalleyPBLight (confirmado; semántica supuesta). Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico."
-    },
-    {
-      "id": "elec.bus_tie",
-      "label": "BUS TIE",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "AUTO"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/ElecOHPArray",
-        "index": 5
-      },
-      "lamps": {
-        "bottom": {
-          "text": "OFF",
-          "color": "white",
-          "dataref": "AirbusFBW/ElecOHPArray",
-          "index": 5,
-          "onValue": 0
-        }
-      },
-      "readOnly": true,
-      "col": 3,
-      "row": 2,
-      "verified": false,
-      "notes": "Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico."
-    },
-    {
-      "id": "elec.commercial",
-      "label": "COMMERCIAL",
+      "id": "elec.gpu",
+      "label": "GND PWR",
       "kind": "korry",
       "positions": [
         "OFF",
         "ON"
       ],
-      "state": {
-        "dataref": "AirbusFBW/ElecOHPArray",
-        "index": 6
+      "commands": {
+        "press": "toliss_airbus/elec_ground_power/toggle"
       },
       "lamps": {
-        "bottom": {
-          "text": "OFF",
-          "color": "white",
-          "dataref": "AirbusFBW/ElecOHPArray",
-          "index": 6,
-          "onValue": 0
+        "top": {
+          "text": "AVAIL",
+          "color": "green",
+          "dataref": "AirbusFBW/ExtPowOHPArray",
+          "index": 0,
+          "onValue": 2
         }
       },
-      "readOnly": true,
-      "col": 4,
-      "row": 2,
-      "verified": false,
-      "notes": "Sin comando en ToLiss; la escritura iría a un índice supuesto de ElecOHPArray. Bloqueado hasta verificar el índice en Diagnóstico."
+      "verified": true,
+      "notes": "Conecta o retira la unidad de tierra (equivale al ISCS). No existe en el avión real.",
+      "size": 16,
+      "x": 369.4,
+      "y": 44.6
     }
   ]
 }

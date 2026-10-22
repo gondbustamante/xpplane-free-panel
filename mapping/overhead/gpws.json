@@ -3,8 +3,63 @@
   "title": "GPWS",
   "group": "overhead",
   "order": 22,
-  "notes": "GPWS. Todos los comandos confirmados en el volcado; los índices de estado son supuestos salvo LDG FLAP 3.",
+  "frame": {
+    "x": 14,
+    "y": 362,
+    "w": 176,
+    "h": 36
+  },
+  "notes": "Comandos confirmados; índices de estado supuestos salvo LDG FLAP 3. Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
+  "decorations": [
+    {
+      "type": "divider",
+      "points": [
+        [
+          43.0,
+          9.0
+        ],
+        [
+          43.0,
+          33.8
+        ]
+      ]
+    }
+  ],
   "controls": [
+    {
+      "id": "gpws.terr",
+      "label": "TERR",
+      "kind": "korry",
+      "positions": [
+        "ON",
+        "OFF"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/GPWSSwitchArray",
+        "index": 4,
+        "values": [
+          1,
+          0
+        ]
+      },
+      "commands": {
+        "up": "toliss_airbus/gpwscommands/TerrainOn",
+        "down": "toliss_airbus/gpwscommands/TerrainOff"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/GPWSSwitchArray",
+          "index": 4,
+          "onValue": 0
+        }
+      },
+      "verified": false,
+      "notes": "Comandos confirmados; el índice de GPWSSwitchArray usado para la posición y la lámpara es supuesto.",
+      "x": 27.3,
+      "y": 23.6
+    },
     {
       "id": "gpws.sys",
       "label": "SYS",
@@ -37,10 +92,10 @@
           "onValue": 0
         }
       },
-      "col": 0,
-      "row": 0,
       "verified": false,
-      "notes": "Comandos confirmados; el índice de GPWSSwitchArray usado para la posición y la lámpara es supuesto."
+      "notes": "Comandos confirmados; el índice de GPWSSwitchArray usado para la posición y la lámpara es supuesto.",
+      "x": 58.6,
+      "y": 23.6
     },
     {
       "id": "gpws.gs_mode",
@@ -71,10 +126,10 @@
           "onValue": 0
         }
       },
-      "col": 1,
-      "row": 0,
       "verified": false,
-      "notes": "Comandos confirmados; el índice de GPWSSwitchArray usado para la posición y la lámpara es supuesto."
+      "notes": "Comandos confirmados; el índice de GPWSSwitchArray usado para la posición y la lámpara es supuesto.",
+      "x": 89.8,
+      "y": 23.6
     },
     {
       "id": "gpws.flap_mode",
@@ -105,10 +160,10 @@
           "onValue": 0
         }
       },
-      "col": 2,
-      "row": 0,
       "verified": false,
-      "notes": "Comandos confirmados; el índice de GPWSSwitchArray usado para la posición y la lámpara es supuesto."
+      "notes": "Comandos confirmados; el índice de GPWSSwitchArray usado para la posición y la lámpara es supuesto.",
+      "x": 118.5,
+      "y": 23.6
     },
     {
       "id": "gpws.ldg_flap3",
@@ -134,44 +189,10 @@
           "index": 3
         }
       },
-      "col": 3,
-      "row": 0,
       "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
-    },
-    {
-      "id": "gpws.terr",
-      "label": "TERR",
-      "kind": "korry",
-      "positions": [
-        "ON",
-        "OFF"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/GPWSSwitchArray",
-        "index": 4,
-        "values": [
-          1,
-          0
-        ]
-      },
-      "commands": {
-        "up": "toliss_airbus/gpwscommands/TerrainOn",
-        "down": "toliss_airbus/gpwscommands/TerrainOff"
-      },
-      "lamps": {
-        "bottom": {
-          "text": "OFF",
-          "color": "white",
-          "dataref": "AirbusFBW/GPWSSwitchArray",
-          "index": 4,
-          "onValue": 0
-        }
-      },
-      "col": 4,
-      "row": 0,
-      "verified": false,
-      "notes": "Comandos confirmados; el índice de GPWSSwitchArray usado para la posición y la lámpara es supuesto."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "x": 148.4,
+      "y": 23.6
     }
   ]
 }

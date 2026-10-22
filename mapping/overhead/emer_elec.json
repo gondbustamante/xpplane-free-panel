@@ -3,8 +3,107 @@
   "title": "EMER ELEC PWR",
   "group": "overhead",
   "order": 18,
-  "notes": "Generador de emergencia. Comandos confirmados en el volcado.",
+  "frame": {
+    "x": 14,
+    "y": 318,
+    "w": 176,
+    "h": 38
+  },
+  "notes": "Comandos confirmados para GEN TEST y MAN ON. Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
+  "decorations": [
+    {
+      "type": "divider",
+      "points": [
+        [
+          50.8,
+          8.3
+        ],
+        [
+          50.8,
+          33.0
+        ]
+      ]
+    }
+  ],
   "controls": [
+    {
+      "id": "emer_elec.gen_test",
+      "label": "EMER GEN TEST",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "toliss_airbus/eleccommands/PressEmerGenTestButton",
+        "duration": 2
+      },
+      "guarded": true,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s.",
+      "guardStyle": "cage",
+      "x": 32.5,
+      "y": 20.7
+    },
+    {
+      "id": "emer_elec.gen1_line",
+      "label": "GEN 1 LINE",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ElecOHPArray",
+        "index": 8
+      },
+      "lamps": {
+        "top": {
+          "text": "SMOKE",
+          "color": "amber",
+          "dataref": "AirbusFBW/ElecOHPArray",
+          "index": 8,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/ElecOHPArray",
+          "index": 8,
+          "onValue": 0
+        }
+      },
+      "readOnly": true,
+      "notes": "Índice de ElecOHPArray supuesto. Bloqueado.",
+      "x": 69.0,
+      "y": 21.7,
+      "verified": false
+    },
+    {
+      "id": "emer_elec.rat_fault",
+      "label": "RAT & EMER GEN",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/HydRATMode"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/HydRATMode",
+          "onValue": 3
+        }
+      },
+      "readOnly": true,
+      "verified": false,
+      "notes": "Solo indicador; dataref de la lámpara FAULT por localizar.",
+      "x": 104.1,
+      "y": 21.7
+    },
     {
       "id": "emer_elec.man_on",
       "label": "MAN ON",
@@ -17,45 +116,12 @@
         "press": "toliss_airbus/eleccommands/PressEmerGenButton"
       },
       "guarded": true,
-      "col": 0,
-      "row": 0,
       "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
-    },
-    {
-      "id": "emer_elec.gen_test",
-      "label": "GEN TEST",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "commands": {
-        "press": "toliss_airbus/eleccommands/PressEmerGenTestButton",
-        "duration": 2
-      },
-      "guarded": true,
-      "col": 1,
-      "row": 0,
-      "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
-    },
-    {
-      "id": "emer_elec.rat_man_on",
-      "label": "RAT MAN ON",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "commands": {
-        "press": "toliss_airbus/hydcommands/PressRATReleaseButton"
-      },
-      "guarded": true,
-      "col": 2,
-      "row": 0,
-      "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt).",
+      "guardStyle": "red",
+      "sideLabel": "AUTO",
+      "x": 131.5,
+      "y": 20.7
     }
   ]
 }

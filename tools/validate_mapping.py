@@ -11,7 +11,10 @@ import json
 import os
 import sys
 
-KINDS = {"toggle2": 2, "toggle3": 3, "korry": None, "rotary": None}
+KINDS = {"toggle2": 2, "toggle3": 3, "korry": None, "rotary": None, "knob": None, "display": None}
+DECORATIONS = {"line", "arrow", "bracket", "box", "text", "divider"}
+GUARD_STYLES = {"cage", "red"}
+KORRY_STYLES = {"round", "fire"}
 COLORS = {"amber", "green", "white", "blue", "red"}
 FCU_FORMATS = {"speed", "mach", "heading", "altitude", "verticalSpeed", "flightPathAngle"}
 FCU_BUTTON_KINDS = {"push", "toggle"}
@@ -38,15 +41,38 @@ def validate_subpanel(panel, errors):
     seen = set()
     if "group" not in panel:
         errors.append("falta 'group' en el subpanel")
+    frame = panel.get("frame")
+    if frame is not None and not all(k in frame for k in ("x", "y", "w", "h")):
+        errors.append("'frame' necesita x, y, w, h")
+    for deco in panel.get("decorations", []) or []:
+        if deco.get("type") not in DECORATIONS:
+            errors.append(f"decoración de tipo '{deco.get('type')}' no soportada")
+        if deco.get("type") in ("line", "divider", "bracket") and len(deco.get("points") or []) < 2:
+            errors.append(f"decoración '{deco.get('type')}' necesita al menos 2 'points'")
+        if deco.get("type") in ("arrow", "box", "text") and not deco.get("at"):
+            errors.append(f"decoración '{deco.get('type')}' necesita 'at'")
     for control in panel.get("controls", []):
         cid = control.get("id", "<sin id>")
         where = f"{cid}"
         if cid in seen:
             errors.append(f"{where}: id duplicado")
         seen.add(cid)
-        for key in ("label", "kind", "positions", "col", "row"):
+        for key in ("label", "kind", "positions"):
             if key not in control:
                 errors.append(f"{where}: falta '{key}'")
+        if frame is not None:
+            if "x" not in control or "y" not in control:
+                errors.append(f"{where}: el subpanel tiene 'frame', el control necesita 'x' e 'y'")
+            elif not (0 <= control["x"] <= frame["w"] and 0 <= control["y"] <= frame["h"]):
+                errors.append(f"{where}: ({control['x']}, {control['y']}) cae fuera del frame {frame['w']}x{frame['h']}")
+        elif "col" not in control or "row" not in control:
+            errors.append(f"{where}: sin 'frame' el control necesita 'col' y 'row'")
+        if control.get("guardStyle") and control["guardStyle"] not in GUARD_STYLES:
+            errors.append(f"{where}: guardStyle '{control['guardStyle']}' no válido")
+        if control.get("style") and control["style"] not in KORRY_STYLES:
+            errors.append(f"{where}: style '{control['style']}' no válido")
+        if control.get("kind") == "knob" and not control.get("range"):
+            errors.append(f"{where}: un knob necesita 'range'")
         kind = control.get("kind")
         positions = control.get("positions", [])
         if kind not in KINDS:
@@ -60,7 +86,7 @@ def validate_subpanel(panel, errors):
         for name in ("state", "write"):
             if name in control:
                 check_binding(control[name], f"{where}.{name}", positions, errors)
-        if "state" not in control and "commands" not in control:
+        if "state" not in control and "commands" not in control and kind != "display":
             errors.append(f"{where}: necesita 'state' o 'commands'")
         for half in ("top", "bottom"):
             lamp = (control.get("lamps") or {}).get(half)
@@ -236,6 +262,9 @@ def validate_layout(root, panel_ids, panel_ids_by_group):
         for sub in phase.get("subpanels", []):
             if sub not in panel_ids:
                 errors.append(f"layout.json: la fase '{phase.get('id')}' referencia el panel inexistente '{sub}'")
+    for group in (layout.get("canvases") or {}):
+        if group not in group_ids:
+            errors.append(f"layout.json: 'canvases' usa el grupo no declarado '{group}'")
     for group, arrangement in (layout.get("arrangements") or {}).items():
         if group not in group_ids:
             errors.append(f"layout.json: 'arrangements' usa el grupo no declarado '{group}'")

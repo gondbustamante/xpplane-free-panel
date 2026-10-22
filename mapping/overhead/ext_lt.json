@@ -3,7 +3,50 @@
   "title": "EXT LT",
   "group": "overhead",
   "order": 60,
-  "notes": "Luces exteriores. Índices y comandos confirmados. Los interruptores de tres posiciones se mueven con comandos Up/Down; solo falta confirmar el orden de valores para dibujar la posición.",
+  "frame": {
+    "x": 200,
+    "y": 530,
+    "w": 188,
+    "h": 74
+  },
+  "notes": "Comandos confirmados. Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
+  "decorations": [
+    {
+      "type": "text",
+      "at": [
+        95.9,
+        39.5
+      ],
+      "text": "LAND",
+      "size": 5.5
+    },
+    {
+      "type": "bracket",
+      "points": [
+        [
+          65.4,
+          40.5
+        ],
+        [
+          91.8,
+          40.5
+        ]
+      ]
+    },
+    {
+      "type": "bracket",
+      "points": [
+        [
+          102.9,
+          40.5
+        ],
+        [
+          129.3,
+          40.5
+        ]
+      ]
+    }
+  ],
   "controls": [
     {
       "id": "ext_lt.strobe",
@@ -22,10 +65,11 @@
         "up": "toliss_airbus/lightcommands/StrobeLightUp",
         "down": "toliss_airbus/lightcommands/StrobeLightDown"
       },
-      "col": 0,
-      "row": 0,
       "verified": false,
-      "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina."
+      "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina.",
+      "size": 20,
+      "x": 33.4,
+      "y": 25.0
     },
     {
       "id": "ext_lt.beacon",
@@ -43,10 +87,11 @@
         "up": "toliss_airbus/lightcommands/BeaconOn",
         "down": "toliss_airbus/lightcommands/BeaconOff"
       },
-      "col": 1,
-      "row": 0,
       "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "size": 20,
+      "x": 70.9,
+      "y": 25.0
     },
     {
       "id": "ext_lt.wing",
@@ -64,10 +109,11 @@
         "up": "toliss_airbus/lightcommands/WingLightOn",
         "down": "toliss_airbus/lightcommands/WingLightOff"
       },
-      "col": 2,
-      "row": 0,
       "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "size": 20,
+      "x": 111.2,
+      "y": 25.0
     },
     {
       "id": "ext_lt.nav_logo",
@@ -86,10 +132,11 @@
         "up": "toliss_airbus/lightcommands/NavLightUp",
         "down": "toliss_airbus/lightcommands/NavLightDown"
       },
-      "col": 3,
-      "row": 0,
       "verified": false,
-      "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina."
+      "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina.",
+      "size": 20,
+      "x": 162.7,
+      "y": 25.0
     },
     {
       "id": "ext_lt.rwy_turn_off",
@@ -107,14 +154,15 @@
         "up": "toliss_airbus/lightcommands/TurnoffLightOn",
         "down": "toliss_airbus/lightcommands/TurnoffLightOff"
       },
-      "col": 4,
-      "row": 0,
       "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "size": 20,
+      "x": 33.4,
+      "y": 57.0
     },
     {
       "id": "ext_lt.land_l",
-      "label": "LAND L",
+      "label": "L",
       "kind": "toggle3",
       "positions": [
         "RETRACT",
@@ -129,14 +177,15 @@
         "up": "toliss_airbus/lightcommands/LLandLightUp",
         "down": "toliss_airbus/lightcommands/LLandLightDown"
       },
-      "col": 1,
-      "row": 1,
       "verified": false,
-      "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina."
+      "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina.",
+      "size": 20,
+      "x": 73.7,
+      "y": 57.0
     },
     {
       "id": "ext_lt.land_r",
-      "label": "LAND R",
+      "label": "R",
       "kind": "toggle3",
       "positions": [
         "RETRACT",
@@ -151,10 +200,11 @@
         "up": "toliss_airbus/lightcommands/RLandLightUp",
         "down": "toliss_airbus/lightcommands/RLandLightDown"
       },
-      "col": 2,
-      "row": 1,
       "verified": false,
-      "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina."
+      "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina.",
+      "size": 20,
+      "x": 119.6,
+      "y": 57.0
     },
     {
       "id": "ext_lt.nose",
@@ -173,10 +223,11 @@
         "up": "toliss_airbus/lightcommands/NoseLightUp",
         "down": "toliss_airbus/lightcommands/NoseLightDown"
       },
-      "col": 3,
-      "row": 1,
       "verified": false,
-      "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina."
+      "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina.",
+      "size": 20,
+      "x": 158.5,
+      "y": 57.0
     }
   ]
 }

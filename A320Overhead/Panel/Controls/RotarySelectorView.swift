@@ -8,6 +8,8 @@ struct RotarySelectorView: View {
     let position: Int
     let enabled: Bool
     var dimmed = false
+    var inline = true
+    var diameter: CGFloat = 52
     let onMove: (Int) -> Void
 
     private let sweep: Double = 120
@@ -18,6 +20,53 @@ struct RotarySelectorView: View {
     }
 
     var body: some View {
+        if inline {
+            inlineBody
+        } else {
+            absoluteBody
+        }
+    }
+
+    /// Light grey knob with a bar handle; legends sit around the arc, as on the aircraft.
+    private var absoluteBody: some View {
+        ZStack {
+            ForEach(0..<count, id: \.self) { index in
+                Rectangle().fill(Color.white.opacity(0.9)).frame(width: 1.5, height: 5)
+                    .offset(y: -diameter * 0.62).rotationEffect(.degrees(angle(for: index)))
+            }
+            Circle()
+                .fill(RadialGradient(colors: [Color(white: 0.92), Color(white: 0.60)],
+                                     center: UnitPoint(x: 0.4, y: 0.35), startRadius: 1, endRadius: diameter * 0.6))
+                .frame(width: diameter, height: diameter)
+                .overlay(Circle().stroke(Color.black.opacity(0.6), lineWidth: 0.8))
+                .shadow(color: .black.opacity(0.55), radius: 3, y: 2)
+            ZStack {
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(LinearGradient(colors: [Color(white: 0.85), Color(white: 0.55)], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: diameter * 0.26, height: diameter * 0.86)
+                    .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.black.opacity(0.35), lineWidth: 0.6))
+                Capsule().fill(Color(white: 0.2)).frame(width: 2, height: diameter * 0.36).offset(y: -diameter * 0.22)
+            }
+            .rotationEffect(.degrees(angle(for: min(max(position, 0), count - 1))))
+        }
+        .frame(width: diameter, height: diameter)
+        .contentShape(Circle())
+        .animation(.spring(response: 0.2, dampingFraction: 0.7), value: position)
+        .onTapGesture { location in onMove(location.x < diameter / 2 ? -1 : 1) }
+        .overlay(alignment: .top) { ControlLabel(text: label).offset(y: -30) }
+        .overlay {
+            ForEach(positions.indices, id: \.self) { index in
+                let radians = (angle(for: index) - 90) * .pi / 180
+                ControlLabel(text: positions[index], size: 8)
+                    .opacity(index == position ? 1 : 0.8)
+                    .offset(x: CGFloat(cos(radians)) * diameter * 0.86, y: CGFloat(sin(radians)) * diameter * 0.86)
+            }
+        }
+        .opacity(dimmed ? 0.5 : 1)
+        .disabled(!enabled)
+    }
+
+    private var inlineBody: some View {
         VStack(spacing: 4) {
             PanelLabel(text: label)
             HStack(spacing: 6) {

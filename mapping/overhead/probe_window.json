@@ -1,0 +1,40 @@
+{
+  "id": "probe_window",
+  "title": "PROBE/WINDOW HEAT",
+  "group": "overhead",
+  "order": 36,
+  "frame": {
+    "x": 380,
+    "y": 474,
+    "w": 62,
+    "h": 52
+  },
+  "notes": "ProbeHeatSwitch escribible (volcado). Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
+  "controls": [
+    {
+      "id": "anti_ice.probe_window",
+      "label": "",
+      "kind": "korry",
+      "positions": [
+        "AUTO",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ProbeHeatSwitch"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/PRobeHeatLights",
+          "bit": 1
+        }
+      },
+      "verified": false,
+      "notes": "ProbeHeatSwitch escribible (volcado). Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref.",
+      "sideLabel": "AUTO",
+      "x": 31,
+      "y": 33
+    }
+  ]
+}

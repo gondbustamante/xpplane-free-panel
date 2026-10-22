@@ -3,7 +3,13 @@
   "title": "RCDR",
   "group": "overhead",
   "order": 25,
-  "notes": "Grabadores. Confirmado por el volcado y por XSchenFly.",
+  "frame": {
+    "x": 14,
+    "y": 404,
+    "w": 176,
+    "h": 36
+  },
+  "notes": "Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
   "controls": [
     {
       "id": "rcdr.gnd_ctl",
@@ -23,10 +29,11 @@
           "dataref": "AirbusFBW/CvrGndCtrl"
         }
       },
-      "col": 0,
-      "row": 0,
       "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "sideLabel": "AUTO",
+      "x": 66.4,
+      "y": 20.1
     },
     {
       "id": "rcdr.cvr_erase",
@@ -40,11 +47,12 @@
         "press": "AirbusFBW/CVRErase",
         "duration": 2
       },
-      "guarded": true,
-      "col": 1,
-      "row": 0,
+      "guarded": false,
       "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s.",
+      "style": "round",
+      "x": 104.1,
+      "y": 20.1
     },
     {
       "id": "rcdr.cvr_test",
@@ -58,10 +66,11 @@
         "press": "AirbusFBW/CVRTest",
         "duration": 2
       },
-      "col": 2,
-      "row": 0,
       "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s.",
+      "style": "round",
+      "x": 144.5,
+      "y": 20.1
     }
   ]
 }

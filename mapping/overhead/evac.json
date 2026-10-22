@@ -3,7 +3,28 @@
   "title": "EVAC",
   "group": "overhead",
   "order": 15,
-  "notes": "Evacuación. Datarefs y comandos confirmados en el volcado; semántica de valores por confirmar.",
+  "frame": {
+    "x": 14,
+    "y": 272,
+    "w": 176,
+    "h": 40
+  },
+  "notes": "Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
+  "decorations": [
+    {
+      "type": "divider",
+      "points": [
+        [
+          10.4,
+          36.8
+        ],
+        [
+          166.6,
+          36.8
+        ]
+      ]
+    }
+  ],
   "controls": [
     {
       "id": "evac.command",
@@ -29,26 +50,11 @@
         }
       },
       "guarded": true,
-      "col": 0,
-      "row": 0,
       "verified": false,
-      "notes": "EmerEvacButton escribible (volcado)."
-    },
-    {
-      "id": "evac.capt_purs",
-      "label": "CAPT / PURS",
-      "kind": "toggle2",
-      "positions": [
-        "CAPT",
-        "CAPT & PURS"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/EmerEvacCaptPursSelSwitch"
-      },
-      "col": 1,
-      "row": 0,
-      "verified": false,
-      "notes": "Escribible (volcado). Orden de valores por confirmar."
+      "notes": "EmerEvacButton escribible (volcado).",
+      "guardStyle": "cage",
+      "x": 69.0,
+      "y": 20.9
     },
     {
       "id": "evac.horn_off",
@@ -61,10 +67,28 @@
       "commands": {
         "press": "AirbusFBW/EvacHornShutoff"
       },
-      "col": 2,
-      "row": 0,
       "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt).",
+      "style": "round",
+      "x": 106.7,
+      "y": 20.9
+    },
+    {
+      "id": "evac.capt_purs",
+      "label": "CAPT & PURS",
+      "kind": "toggle2",
+      "positions": [
+        "CAPT",
+        "CAPT & PURS"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/EmerEvacCaptPursSelSwitch"
+      },
+      "verified": false,
+      "notes": "Escribible (volcado). Orden de valores por confirmar.",
+      "size": 20,
+      "x": 144.5,
+      "y": 20.9
     }
   ]
 }

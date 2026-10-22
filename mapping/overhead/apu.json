@@ -2,8 +2,14 @@
   "id": "apu",
   "title": "APU",
   "group": "overhead",
-  "order": 30,
-  "notes": "Arranque y control del APU. Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+  "order": 61,
+  "frame": {
+    "x": 390,
+    "y": 530,
+    "w": 52,
+    "h": 74
+  },
+  "notes": "Confirmado. Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
   "controls": [
     {
       "id": "apu.master",
@@ -34,10 +40,10 @@
           "index": 0
         }
       },
-      "col": 0,
-      "row": 0,
       "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "x": 28.9,
+      "y": 28.6
     },
     {
       "id": "apu.start",
@@ -66,10 +72,10 @@
           "dataref": "AirbusFBW/APUStarter"
         }
       },
-      "col": 1,
-      "row": 0,
       "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). APUStarter queda en 1 hasta AVAIL o MASTER OFF; ToLiss ignora pulsaciones entre 0,3 y 5 s tras MASTER ON con ECB frío."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). APUStarter queda en 1 hasta AVAIL o MASTER OFF; ToLiss ignora pulsaciones entre 0,3 y 5 s tras MASTER ON con ECB frío.",
+      "x": 28.9,
+      "y": 55.3
     }
   ]
 }

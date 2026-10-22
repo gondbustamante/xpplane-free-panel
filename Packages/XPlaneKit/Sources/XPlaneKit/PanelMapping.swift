@@ -14,10 +14,64 @@ public struct SubpanelDefinition: Codable, Identifiable, Sendable {
     public let group: String?
     public let order: Int?
     public let columns: Int?
+    /// Position and size on the group's canvas, in canvas units. When present the subpanel is
+    /// drawn at true geometry and its controls use `x`/`y`; otherwise it falls back to a grid.
+    public let frame: PanelFrame?
+    /// Where the title is drawn, relative to the frame. Default: top centre.
+    public let titleAt: [Double]?
+    public let titleHidden: Bool?
+    /// Static artwork: synoptic lines, arrows, boxed labels, dividers.
+    public let decorations: [Decoration]?
     public let controls: [ControlDefinition]
     public let notes: String?
 
     public var groupID: String { group ?? "overhead" }
+    public var isAbsolute: Bool { frame != nil }
+}
+
+/// Rectangle in canvas units (origin top-left).
+public struct PanelFrame: Codable, Sendable {
+    public let x: Double
+    public let y: Double
+    public let w: Double
+    public let h: Double
+
+    public init(x: Double, y: Double, w: Double, h: Double) {
+        self.x = x; self.y = y; self.w = w; self.h = h
+    }
+}
+
+/// Static artwork inside a subpanel. Coordinates are in canvas units relative to the subpanel.
+///   line     points[]                 polyline (green by default)
+///   arrow    at, direction            small filled triangle
+///   bracket  points[2]                line with short end ticks (e.g. "L TK PUMPS")
+///   box      at, text                 white-outlined label box ("GREEN", "AC BUS 1")
+///   text     at, text, size, vertical plain label
+///   divider  points[2]                thin white separator line
+public struct Decoration: Codable, Sendable {
+    public let type: String
+    public let points: [[Double]]?
+    public let at: [Double]?
+    public let text: String?
+    public let color: String?
+    public let width: Double?
+    public let size: Double?
+    public let direction: String?
+    public let vertical: Bool?
+}
+
+public struct ValueRange: Codable, Sendable {
+    public let min: Double
+    public let max: Double
+
+    public func clamp(_ value: Double) -> Double { Swift.min(Swift.max(value, min), max) }
+    public func fraction(of value: Double) -> Double {
+        guard max > min else { return 0 }
+        return (clamp(value) - min) / (max - min)
+    }
+    public func value(at fraction: Double) -> Double {
+        min + (max - min) * Swift.min(Swift.max(fraction, 0), 1)
+    }
 }
 
 public struct ControlDefinition: Codable, Identifiable, Sendable {
@@ -26,6 +80,8 @@ public struct ControlDefinition: Codable, Identifiable, Sendable {
         case toggle3   // three-position lever switch
         case korry     // square pushbutton with up to two annunciator legends
         case rotary    // rotary selector with N detents
+        case knob      // continuous knob over `range` (temperature, brightness, LDG ELEV)
+        case display   // numeric read-out (battery voltage)
     }
 
     public let id: String
@@ -43,16 +99,34 @@ public struct ControlDefinition: Codable, Identifiable, Sendable {
     public let lamps: Lamps?
     /// Korry only: a cover must be lifted before the button accepts a press.
     public let guarded: Bool?
+    /// "red" (solid hinged cover) or "cage" (black see-through frame). Default "cage".
+    public let guardStyle: String?
+    /// Visual variant: korry "round" (round black pushbutton) or "fire" (red fire handle).
+    public let style: String?
+    /// Small vertical legend beside a korry ("AUTO").
+    public let sideLabel: String?
+    /// Knob: value range. Display: unused.
+    public let range: ValueRange?
+    /// Display: printf-style format, e.g. "%.1fV".
+    public let format: String?
     /// Shows state but refuses input. Used while a candidate mapping is being verified.
     public let readOnly: Bool?
-    public let col: Int
-    public let row: Int
+    /// Grid placement (subpanels without `frame`).
+    public let col: Int?
+    public let row: Int?
+    /// Centre of the control body in canvas units relative to the subpanel (subpanels with `frame`).
+    public let x: Double?
+    public let y: Double?
+    /// Body size override in canvas units (korry side, toggle bezel, knob diameter).
+    public let size: Double?
     public let verified: Bool?
     public let notes: String?
 
     public var isVerified: Bool { verified ?? false }
     public var isReadOnly: Bool { readOnly ?? false }
     public var writeBinding: ValueBinding? { write ?? state }
+    public var gridColumn: Int { col ?? 0 }
+    public var gridRow: Int { row ?? 0 }
 }
 
 public struct ValueBinding: Codable, Sendable {
@@ -168,22 +242,37 @@ public struct PanelArrangement: Codable, Sendable {
     }
 }
 
+/// Size of a group's canvas in canvas units, for subpanels placed with `frame`.
+public struct CanvasSize: Codable, Sendable {
+    public let width: Double
+    public let height: Double
+}
+
 public struct PanelLayout: Codable, Sendable {
     public let groups: [PanelGroup]
     public let phases: [FlightPhase]
     /// Optional arrangement per group id. Groups without one flow left to right and wrap.
     public let arrangements: [String: PanelArrangement]?
+    /// Optional canvas per group id. Subpanels of that group with a `frame` are drawn at
+    /// their true position on it.
+    public let canvases: [String: CanvasSize]?
 
-    public static let empty = PanelLayout(groups: [], phases: [], arrangements: nil)
+    public static let empty = PanelLayout(groups: [], phases: [], arrangements: nil, canvases: nil)
 
-    public init(groups: [PanelGroup], phases: [FlightPhase], arrangements: [String: PanelArrangement]? = nil) {
+    public init(groups: [PanelGroup], phases: [FlightPhase], arrangements: [String: PanelArrangement]? = nil,
+                canvases: [String: CanvasSize]? = nil) {
         self.groups = groups
         self.phases = phases
         self.arrangements = arrangements
+        self.canvases = canvases
     }
 
     public func arrangement(for group: String) -> PanelArrangement? {
         arrangements?[group]
+    }
+
+    public func canvas(for group: String) -> CanvasSize? {
+        canvases?[group]
     }
 }
 

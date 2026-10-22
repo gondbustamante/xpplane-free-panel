@@ -40,11 +40,11 @@ struct SubpanelView: View {
     @Environment(PanelModel.self) private var model
 
     private var rows: [Int] {
-        Array(Set(panel.controls.map(\.row))).sorted()
+        Array(Set(panel.controls.map(\.gridRow))).sorted()
     }
 
     private func controls(in row: Int) -> [ControlDefinition] {
-        panel.controls.filter { $0.row == row }.sorted { $0.col < $1.col }
+        panel.controls.filter { $0.gridRow == row }.sorted { $0.gridColumn < $1.gridColumn }
     }
 
     var body: some View {
@@ -117,6 +117,9 @@ struct ControlView: View {
                                dimmed: model.isDimmed(control)) { delta in
                 model.move(control, by: delta)
             }
+        case .knob, .display:
+            AbsoluteControlView(control: control)
+                .frame(width: 80, height: 60)
         case .korry:
             KorryButtonView(label: control.label,
                             top: lamp(control.lamps?.top),

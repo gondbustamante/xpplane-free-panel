@@ -2,9 +2,54 @@
   "id": "int_lt",
   "title": "INT LT",
   "group": "overhead",
-  "order": 65,
-  "notes": "Luces interiores. Comandos confirmados; DOME y STBY COMPASS no tienen dataref de posición localizado, así que la palanca solo refleja lo que se mueve desde el iPad.",
+  "order": 62,
+  "frame": {
+    "x": 444,
+    "y": 530,
+    "w": 172,
+    "h": 42
+  },
+  "notes": "Comandos confirmados. Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
   "controls": [
+    {
+      "id": "int_lt.integ",
+      "label": "OVHD INTEG LT",
+      "kind": "knob",
+      "positions": [
+        "OFF",
+        "BRT"
+      ],
+      "size": 20,
+      "state": {
+        "dataref": "AirbusFBW/OHPBrightnessLevel"
+      },
+      "range": {
+        "min": 0,
+        "max": 1
+      },
+      "verified": true,
+      "notes": "OHPBrightnessLevel (float 0-1, rw).",
+      "x": 24.2,
+      "y": 25.5
+    },
+    {
+      "id": "int_lt.stby_compass",
+      "label": "ICE IND & STBY COMPASS",
+      "kind": "toggle2",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "up": "toliss_airbus/lightcommands/CompassLightOn",
+        "down": "toliss_airbus/lightcommands/CompassLightOff"
+      },
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Sin dataref de estado.",
+      "size": 18,
+      "x": 62.3,
+      "y": 25.5
+    },
     {
       "id": "int_lt.dome",
       "label": "DOME",
@@ -18,27 +63,11 @@
         "up": "toliss_airbus/lightcommands/DomeLightUp",
         "down": "toliss_airbus/lightcommands/DomeLightDown"
       },
-      "col": 0,
-      "row": 0,
       "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Sin dataref de estado."
-    },
-    {
-      "id": "int_lt.stby_compass",
-      "label": "STBY COMPASS",
-      "kind": "toggle2",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "commands": {
-        "up": "toliss_airbus/lightcommands/CompassLightOn",
-        "down": "toliss_airbus/lightcommands/CompassLightOff"
-      },
-      "col": 1,
-      "row": 0,
-      "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Sin dataref de estado."
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Sin dataref de estado.",
+      "size": 18,
+      "x": 95.4,
+      "y": 25.5
     },
     {
       "id": "int_lt.ann_lt",
@@ -56,10 +85,11 @@
         "up": "toliss_airbus/lightcommands/AnnunUp",
         "down": "toliss_airbus/lightcommands/AnnunDown"
       },
-      "col": 2,
-      "row": 0,
       "verified": false,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Orden de valores de AnnunMode por confirmar."
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Orden de valores de AnnunMode por confirmar.",
+      "size": 18,
+      "x": 134.9,
+      "y": 25.5
     }
   ]
 }

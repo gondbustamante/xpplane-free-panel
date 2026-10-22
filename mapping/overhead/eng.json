@@ -1,13 +1,71 @@
 {
   "id": "eng",
-  "title": "ENG MAN START · N1 MODE",
+  "title": "",
   "group": "overhead",
-  "order": 75,
-  "notes": "Arranque manual y modo N1. Datarefs confirmados como escribibles; semántica por confirmar.",
+  "order": 43,
+  "frame": {
+    "x": 626,
+    "y": 488,
+    "w": 190,
+    "h": 42
+  },
+  "titleHidden": true,
+  "notes": "Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
+  "decorations": [
+    {
+      "type": "text",
+      "at": [
+        53.4,
+        4.0
+      ],
+      "text": "ENG",
+      "size": 6
+    },
+    {
+      "type": "text",
+      "at": [
+        53.4,
+        8.1
+      ],
+      "text": "MAN START",
+      "size": 5.5
+    },
+    {
+      "type": "text",
+      "at": [
+        137.7,
+        4.0
+      ],
+      "text": "ENG",
+      "size": 6
+    },
+    {
+      "type": "text",
+      "at": [
+        137.7,
+        8.1
+      ],
+      "text": "N1 MODE",
+      "size": 5.5
+    },
+    {
+      "type": "divider",
+      "points": [
+        [
+          94.2,
+          9.0
+        ],
+        [
+          94.2,
+          37.1
+        ]
+      ]
+    }
+  ],
   "controls": [
     {
       "id": "eng.man_start1",
-      "label": "MAN START 1",
+      "label": "1",
       "kind": "korry",
       "positions": [
         "OFF",
@@ -27,14 +85,15 @@
         }
       },
       "guarded": true,
-      "col": 0,
-      "row": 0,
       "verified": false,
-      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
+      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref.",
+      "guardStyle": "cage",
+      "x": 32.3,
+      "y": 25.2
     },
     {
       "id": "eng.man_start2",
-      "label": "MAN START 2",
+      "label": "2",
       "kind": "korry",
       "positions": [
         "OFF",
@@ -54,14 +113,15 @@
         }
       },
       "guarded": true,
-      "col": 1,
-      "row": 0,
       "verified": false,
-      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
+      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref.",
+      "guardStyle": "cage",
+      "x": 73.1,
+      "y": 25.2
     },
     {
       "id": "eng.n1_mode1",
-      "label": "N1 MODE 1",
+      "label": "1",
       "kind": "korry",
       "positions": [
         "OFF",
@@ -81,14 +141,15 @@
         }
       },
       "guarded": true,
-      "col": 2,
-      "row": 0,
       "verified": false,
-      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
+      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref.",
+      "guardStyle": "cage",
+      "x": 118.0,
+      "y": 25.2
     },
     {
       "id": "eng.n1_mode2",
-      "label": "N1 MODE 2",
+      "label": "2",
       "kind": "korry",
       "positions": [
         "OFF",
@@ -108,10 +169,11 @@
         }
       },
       "guarded": true,
-      "col": 3,
-      "row": 0,
       "verified": false,
-      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
+      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref.",
+      "guardStyle": "cage",
+      "x": 157.4,
+      "y": 25.2
     }
   ]
 }

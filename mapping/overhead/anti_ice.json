@@ -2,8 +2,55 @@
   "id": "anti_ice",
   "title": "ANTI ICE",
   "group": "overhead",
-  "order": 57,
-  "notes": "Antihielo. Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+  "order": 35,
+  "frame": {
+    "x": 200,
+    "y": 474,
+    "w": 178,
+    "h": 52
+  },
+  "notes": "Comandos confirmados. Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
+  "decorations": [
+    {
+      "type": "divider",
+      "points": [
+        [
+          49.8,
+          16.2
+        ],
+        [
+          49.8,
+          48.8
+        ]
+      ]
+    },
+    {
+      "type": "divider",
+      "points": [
+        [
+          97.9,
+          16.2
+        ],
+        [
+          97.9,
+          48.8
+        ]
+      ]
+    },
+    {
+      "type": "divider",
+      "points": [
+        [
+          174.4,
+          16.2
+        ],
+        [
+          174.4,
+          48.8
+        ]
+      ]
+    }
+  ],
   "controls": [
     {
       "id": "anti_ice.wing",
@@ -42,10 +89,10 @@
           "bit": 1
         }
       },
-      "col": 0,
-      "row": 0,
       "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Valor en bits: 1 = ON, 2 = FAULT."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Valor en bits: 1 = ON, 2 = FAULT.",
+      "x": 33.8,
+      "y": 31.7
     },
     {
       "id": "anti_ice.eng1",
@@ -84,10 +131,10 @@
           "bit": 1
         }
       },
-      "col": 1,
-      "row": 0,
       "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Valor en bits: 1 = ON, 2 = FAULT."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Valor en bits: 1 = ON, 2 = FAULT.",
+      "x": 115.7,
+      "y": 31.7
     },
     {
       "id": "anti_ice.eng2",
@@ -126,34 +173,10 @@
           "bit": 1
         }
       },
-      "col": 2,
-      "row": 0,
       "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Valor en bits: 1 = ON, 2 = FAULT."
-    },
-    {
-      "id": "anti_ice.probe_window",
-      "label": "PROBE/WINDOW HEAT",
-      "kind": "korry",
-      "positions": [
-        "AUTO",
-        "ON"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/ProbeHeatSwitch"
-      },
-      "lamps": {
-        "bottom": {
-          "text": "ON",
-          "color": "blue",
-          "dataref": "AirbusFBW/PRobeHeatLights",
-          "bit": 1
-        }
-      },
-      "col": 3,
-      "row": 0,
-      "verified": false,
-      "notes": "ProbeHeatSwitch escribible (volcado). Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Valor en bits: 1 = ON, 2 = FAULT.",
+      "x": 154.9,
+      "y": 31.7
     }
   ]
 }

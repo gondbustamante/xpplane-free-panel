@@ -2,12 +2,18 @@
   "id": "cargo_smoke",
   "title": "CARGO SMOKE",
   "group": "overhead",
-  "order": 13,
-  "notes": "Detección y extinción de humo en bodegas. Comandos confirmados en el volcado.",
+  "order": 41,
+  "frame": {
+    "x": 626,
+    "y": 384,
+    "w": 190,
+    "h": 58
+  },
+  "notes": "Agentes y prueba con comandos confirmados. Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
   "controls": [
     {
       "id": "cargo.fwd_agent",
-      "label": "FWD DISCH",
+      "label": "DISCH",
       "kind": "korry",
       "positions": [
         "OFF",
@@ -18,14 +24,85 @@
         "duration": 2
       },
       "guarded": true,
-      "col": 0,
-      "row": 0,
       "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s.",
+      "guardStyle": "red",
+      "x": 30.9,
+      "y": 31.0
+    },
+    {
+      "id": "cargo.fwd_smoke",
+      "label": "FWD",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightsATA70_Raw",
+        "index": 5
+      },
+      "lamps": {
+        "top": {
+          "text": "SMOKE",
+          "color": "red",
+          "dataref": "AirbusFBW/OHPLightsATA70_Raw",
+          "index": 5
+        }
+      },
+      "readOnly": true,
+      "notes": "Indicador; índice de ATA70_Raw supuesto.",
+      "x": 56.2,
+      "y": 35.7,
+      "verified": false
+    },
+    {
+      "id": "cargo.test",
+      "label": "TEST",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/FireTestCargo",
+        "duration": 2
+      },
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s.",
+      "style": "round",
+      "x": 91.3,
+      "y": 38.8
+    },
+    {
+      "id": "cargo.aft_smoke",
+      "label": "AFT",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightsATA70_Raw",
+        "index": 6
+      },
+      "lamps": {
+        "top": {
+          "text": "SMOKE",
+          "color": "red",
+          "dataref": "AirbusFBW/OHPLightsATA70_Raw",
+          "index": 6
+        }
+      },
+      "readOnly": true,
+      "notes": "Indicador; índice de ATA70_Raw supuesto.",
+      "x": 127.9,
+      "y": 35.7,
+      "verified": false
     },
     {
       "id": "cargo.aft_agent",
-      "label": "AFT DISCH",
+      "label": "DISCH",
       "kind": "korry",
       "positions": [
         "OFF",
@@ -36,27 +113,11 @@
         "duration": 2
       },
       "guarded": true,
-      "col": 1,
-      "row": 0,
       "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
-    },
-    {
-      "id": "cargo.test",
-      "label": "SMOKE TEST",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "commands": {
-        "press": "AirbusFBW/FireTestCargo",
-        "duration": 2
-      },
-      "col": 2,
-      "row": 0,
-      "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s.",
+      "guardStyle": "red",
+      "x": 156.0,
+      "y": 31.0
     }
   ]
 }

@@ -1,9 +1,279 @@
 {
   "id": "hyd",
-  "title": "HYD",
+  "title": "",
   "group": "overhead",
-  "order": 45,
-  "notes": "Hidráulica. HydOHPArray es escribible (volcado) pero los índices son supuestos; bloqueado hasta verificar en Diagnóstico.",
+  "order": 8,
+  "frame": {
+    "x": 200,
+    "y": 152,
+    "w": 416,
+    "h": 54
+  },
+  "titleHidden": true,
+  "notes": "Índices de HydOHPArray supuestos; RAT MAN ON por comando confirmado. Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
+  "decorations": [
+    {
+      "type": "box",
+      "at": [
+        86.8,
+        5.6
+      ],
+      "text": "GREEN"
+    },
+    {
+      "type": "box",
+      "at": [
+        208.7,
+        5.6
+      ],
+      "text": "BLUE"
+    },
+    {
+      "type": "box",
+      "at": [
+        328.8,
+        5.6
+      ],
+      "text": "YELLOW"
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          70.2,
+          13.0
+        ],
+        [
+          384.2,
+          13.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          86.8,
+          9.3
+        ],
+        [
+          86.8,
+          24.8
+        ]
+      ]
+    },
+    {
+      "type": "arrow",
+      "at": [
+        86.8,
+        9.3
+      ],
+      "direction": "up"
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          208.7,
+          9.3
+        ],
+        [
+          208.7,
+          24.8
+        ]
+      ]
+    },
+    {
+      "type": "arrow",
+      "at": [
+        208.7,
+        9.3
+      ],
+      "direction": "up"
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          328.8,
+          9.3
+        ],
+        [
+          328.8,
+          24.8
+        ]
+      ]
+    },
+    {
+      "type": "arrow",
+      "at": [
+        328.8,
+        9.3
+      ],
+      "direction": "up"
+    },
+    {
+      "type": "arrow",
+      "at": [
+        121.9,
+        13.0
+      ],
+      "direction": "left"
+    },
+    {
+      "type": "arrow",
+      "at": [
+        177.3,
+        13.0
+      ],
+      "direction": "right"
+    },
+    {
+      "type": "arrow",
+      "at": [
+        236.4,
+        13.0
+      ],
+      "direction": "left"
+    },
+    {
+      "type": "arrow",
+      "at": [
+        295.6,
+        13.0
+      ],
+      "direction": "right"
+    },
+    {
+      "type": "arrow",
+      "at": [
+        354.7,
+        13.0
+      ],
+      "direction": "left"
+    },
+    {
+      "type": "box",
+      "at": [
+        269.7,
+        13.0
+      ],
+      "text": "PTU"
+    },
+    {
+      "type": "bracket",
+      "points": [
+        [
+          70.2,
+          22.3
+        ],
+        [
+          103.4,
+          22.3
+        ]
+      ]
+    },
+    {
+      "type": "bracket",
+      "points": [
+        [
+          192.1,
+          22.3
+        ],
+        [
+          225.4,
+          22.3
+        ]
+      ]
+    },
+    {
+      "type": "bracket",
+      "points": [
+        [
+          312.2,
+          22.3
+        ],
+        [
+          345.4,
+          22.3
+        ]
+      ]
+    },
+    {
+      "type": "bracket",
+      "points": [
+        [
+          356.5,
+          22.3
+        ],
+        [
+          389.8,
+          22.3
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          373.1,
+          13.0
+        ],
+        [
+          373.1,
+          22.3
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          166.3,
+          17.1
+        ],
+        [
+          166.3,
+          31.0
+        ]
+      ],
+      "width": 0.8
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          166.3,
+          17.1
+        ],
+        [
+          177.3,
+          13.0
+        ]
+      ],
+      "width": 0.8
+    },
+    {
+      "type": "text",
+      "at": [
+        9.2,
+        29.5
+      ],
+      "text": "HYD",
+      "size": 7,
+      "vertical": true
+    },
+    {
+      "type": "text",
+      "at": [
+        406.4,
+        29.5
+      ],
+      "text": "HYD",
+      "size": 7,
+      "vertical": true
+    }
+  ],
   "controls": [
     {
       "id": "hyd.eng1_pump",
@@ -34,14 +304,32 @@
         }
       },
       "readOnly": true,
-      "col": 0,
-      "row": 0,
       "verified": false,
-      "notes": "Índice supuesto de HydOHPArray/HydPumpOHPArray (datarefs confirmados). Bloqueado hasta verificar."
+      "notes": "Índice supuesto de HydOHPArray/HydPumpOHPArray (datarefs confirmados). Bloqueado hasta verificar.",
+      "x": 86.8,
+      "y": 38.8
+    },
+    {
+      "id": "hyd.rat_man_on",
+      "label": "RAT MAN ON",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "guardStyle": "red",
+      "commands": {
+        "press": "toliss_airbus/hydcommands/PressRATReleaseButton"
+      },
+      "verified": true,
+      "readOnly": false,
+      "notes": "Comando confirmado en el volcado.",
+      "x": 145.9,
+      "y": 37.2
     },
     {
       "id": "hyd.elec_pump_b",
-      "label": "ELEC PUMP (B)",
+      "label": "ELEC PUMP",
       "kind": "korry",
       "positions": [
         "OFF",
@@ -68,10 +356,11 @@
         }
       },
       "readOnly": true,
-      "col": 1,
-      "row": 0,
       "verified": false,
-      "notes": "Índice supuesto de HydOHPArray/HydPumpOHPArray (datarefs confirmados). Bloqueado hasta verificar."
+      "notes": "Índice supuesto de HydOHPArray/HydPumpOHPArray (datarefs confirmados). Bloqueado hasta verificar.",
+      "sideLabel": "AUTO",
+      "x": 208.7,
+      "y": 38.8
     },
     {
       "id": "hyd.ptu",
@@ -100,10 +389,11 @@
         }
       },
       "readOnly": true,
-      "col": 2,
-      "row": 0,
       "verified": false,
-      "notes": "Índice supuesto de HydOHPArray/HydPumpOHPArray (datarefs confirmados). Bloqueado hasta verificar."
+      "notes": "Índice supuesto de HydOHPArray/HydPumpOHPArray (datarefs confirmados). Bloqueado hasta verificar.",
+      "sideLabel": "AUTO",
+      "x": 269.7,
+      "y": 30.4
     },
     {
       "id": "hyd.eng2_pump",
@@ -134,18 +424,18 @@
         }
       },
       "readOnly": true,
-      "col": 3,
-      "row": 0,
       "verified": false,
-      "notes": "Índice supuesto de HydOHPArray/HydPumpOHPArray (datarefs confirmados). Bloqueado hasta verificar."
+      "notes": "Índice supuesto de HydOHPArray/HydPumpOHPArray (datarefs confirmados). Bloqueado hasta verificar.",
+      "x": 328.8,
+      "y": 38.8
     },
     {
       "id": "hyd.elec_pump_y",
-      "label": "ELEC PUMP (Y)",
+      "label": "ELEC PUMP",
       "kind": "korry",
       "positions": [
         "OFF",
-        "AUTO"
+        "ON"
       ],
       "state": {
         "dataref": "AirbusFBW/HydOHPArray",
@@ -168,10 +458,10 @@
         }
       },
       "readOnly": true,
-      "col": 4,
-      "row": 0,
       "verified": false,
-      "notes": "Índice supuesto de HydOHPArray/HydPumpOHPArray (datarefs confirmados). Bloqueado hasta verificar."
+      "notes": "Índice supuesto de HydOHPArray/HydPumpOHPArray (datarefs confirmados). Bloqueado hasta verificar.",
+      "x": 373.1,
+      "y": 38.8
     }
   ]
 }

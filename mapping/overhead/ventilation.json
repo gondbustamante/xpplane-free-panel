@@ -2,8 +2,29 @@
   "id": "ventilation",
   "title": "VENTILATION",
   "group": "overhead",
-  "order": 54,
-  "notes": "Ventilación de aviónica. Datarefs confirmados como escribibles; semántica por confirmar.",
+  "order": 42,
+  "frame": {
+    "x": 626,
+    "y": 446,
+    "w": 190,
+    "h": 38
+  },
+  "notes": "Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
+  "decorations": [
+    {
+      "type": "divider",
+      "points": [
+        [
+          137.7,
+          7.3
+        ],
+        [
+          137.7,
+          34.3
+        ]
+      ]
+    }
+  ],
   "controls": [
     {
       "id": "vent.blower",
@@ -30,10 +51,11 @@
           "bit": 1
         }
       },
-      "col": 0,
-      "row": 0,
       "verified": false,
-      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
+      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref.",
+      "sideLabel": "AUTO",
+      "x": 32.3,
+      "y": 22.4
     },
     {
       "id": "vent.extract",
@@ -60,10 +82,11 @@
           "bit": 1
         }
       },
-      "col": 1,
-      "row": 0,
       "verified": false,
-      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
+      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref.",
+      "sideLabel": "AUTO",
+      "x": 70.3,
+      "y": 22.4
     },
     {
       "id": "vent.cab_fans",
@@ -84,10 +107,10 @@
           "bit": 1
         }
       },
-      "col": 2,
-      "row": 0,
       "verified": false,
-      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
+      "notes": "Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref.",
+      "x": 157.4,
+      "y": 22.4
     }
   ]
 }

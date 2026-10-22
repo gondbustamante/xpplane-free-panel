@@ -1,13 +1,295 @@
 {
   "id": "fuel",
-  "title": "FUEL",
+  "title": "",
   "group": "overhead",
-  "order": 40,
-  "notes": "Bombas de combustible con comandos confirmados. Las lámparas de las bombas derechas usan FuelAutoPumpSDArray[2] y [3]. X FEED bloqueado hasta localizar su índice.",
+  "order": 9,
+  "frame": {
+    "x": 200,
+    "y": 208,
+    "w": 416,
+    "h": 58
+  },
+  "titleHidden": true,
+  "notes": "Bombas con comandos confirmados. Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
+  "decorations": [
+    {
+      "type": "box",
+      "at": [
+        86.8,
+        6.6
+      ],
+      "text": "ENG 1"
+    },
+    {
+      "type": "box",
+      "at": [
+        168.1,
+        6.6
+      ],
+      "text": "APU"
+    },
+    {
+      "type": "box",
+      "at": [
+        328.8,
+        6.6
+      ],
+      "text": "ENG 2"
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          55.4,
+          16.6
+        ],
+        [
+          192.1,
+          16.6
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          221.7,
+          16.6
+        ],
+        [
+          362.1,
+          16.6
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          86.8,
+          11.1
+        ],
+        [
+          86.8,
+          16.6
+        ]
+      ]
+    },
+    {
+      "type": "arrow",
+      "at": [
+        86.8,
+        10.3
+      ],
+      "direction": "up"
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          168.1,
+          11.1
+        ],
+        [
+          168.1,
+          16.6
+        ]
+      ]
+    },
+    {
+      "type": "arrow",
+      "at": [
+        168.1,
+        10.3
+      ],
+      "direction": "up"
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          328.8,
+          11.1
+        ],
+        [
+          328.8,
+          16.6
+        ]
+      ]
+    },
+    {
+      "type": "arrow",
+      "at": [
+        328.8,
+        10.3
+      ],
+      "direction": "up"
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          86.8,
+          16.6
+        ],
+        [
+          86.8,
+          22.9
+        ]
+      ]
+    },
+    {
+      "type": "bracket",
+      "points": [
+        [
+          55.4,
+          22.9
+        ],
+        [
+          118.2,
+          22.9
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          171.8,
+          16.6
+        ],
+        [
+          171.8,
+          22.9
+        ]
+      ]
+    },
+    {
+      "type": "bracket",
+      "points": [
+        [
+          162.6,
+          22.9
+        ],
+        [
+          181.0,
+          22.9
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          242.0,
+          16.6
+        ],
+        [
+          242.0,
+          22.9
+        ]
+      ]
+    },
+    {
+      "type": "bracket",
+      "points": [
+        [
+          232.8,
+          22.9
+        ],
+        [
+          251.2,
+          22.9
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          328.8,
+          16.6
+        ],
+        [
+          328.8,
+          22.9
+        ]
+      ]
+    },
+    {
+      "type": "bracket",
+      "points": [
+        [
+          299.3,
+          22.9
+        ],
+        [
+          358.4,
+          22.9
+        ]
+      ]
+    },
+    {
+      "type": "text",
+      "at": [
+        86.8,
+        25.9
+      ],
+      "text": "L TK PUMPS",
+      "size": 5
+    },
+    {
+      "type": "text",
+      "at": [
+        175.5,
+        25.9
+      ],
+      "text": "CTR TK",
+      "size": 5
+    },
+    {
+      "type": "text",
+      "at": [
+        238.3,
+        25.9
+      ],
+      "text": "CTR TK",
+      "size": 5
+    },
+    {
+      "type": "text",
+      "at": [
+        328.8,
+        25.9
+      ],
+      "text": "R TK PUMPS",
+      "size": 5
+    },
+    {
+      "type": "text",
+      "at": [
+        9.2,
+        29.6
+      ],
+      "text": "FUEL",
+      "size": 7,
+      "vertical": true
+    },
+    {
+      "type": "text",
+      "at": [
+        406.4,
+        29.6
+      ],
+      "text": "FUEL",
+      "size": 7,
+      "vertical": true
+    }
+  ],
   "controls": [
     {
       "id": "fuel.l_pump1",
-      "label": "L TK PUMP 1",
+      "label": "1",
       "kind": "korry",
       "positions": [
         "OFF",
@@ -37,14 +319,14 @@
           "onValue": 0
         }
       },
-      "col": 0,
-      "row": 0,
       "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "x": 68.3,
+      "y": 39.9
     },
     {
       "id": "fuel.l_pump2",
-      "label": "L TK PUMP 2",
+      "label": "2",
       "kind": "korry",
       "positions": [
         "OFF",
@@ -74,14 +356,14 @@
           "onValue": 0
         }
       },
-      "col": 1,
-      "row": 0,
       "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "x": 103.4,
+      "y": 39.9
     },
     {
       "id": "fuel.ctr_pump1",
-      "label": "CTR TK PUMP 1",
+      "label": "PUMP 1",
       "kind": "korry",
       "positions": [
         "OFF",
@@ -111,154 +393,10 @@
           "onValue": 0
         }
       },
-      "col": 2,
-      "row": 0,
       "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
-    },
-    {
-      "id": "fuel.mode_sel",
-      "label": "MODE SEL",
-      "kind": "korry",
-      "positions": [
-        "MAN",
-        "AUTO"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/FuelOHPArray",
-        "index": 6
-      },
-      "lamps": {
-        "top": {
-          "text": "FAULT",
-          "color": "amber",
-          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
-          "index": 6,
-          "onValue": 3
-        },
-        "bottom": {
-          "text": "MAN",
-          "color": "white",
-          "dataref": "AirbusFBW/FuelOHPArray",
-          "index": 6,
-          "onValue": 0
-        }
-      },
-      "col": 3,
-      "row": 0,
-      "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). 0 = MAN, 1 = AUTO. Sin comando: escritura directa."
-    },
-    {
-      "id": "fuel.ctr_pump2",
-      "label": "CTR TK PUMP 2",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/FuelOHPArray",
-        "index": 3
-      },
-      "commands": {
-        "up": "toliss_airbus/fuelcommands/PumpRCenterOn",
-        "down": "toliss_airbus/fuelcommands/PumpRCenterOff"
-      },
-      "lamps": {
-        "top": {
-          "text": "FAULT",
-          "color": "amber",
-          "dataref": "AirbusFBW/FuelAutoPumpOHPArray",
-          "index": 3,
-          "onValue": 3
-        },
-        "bottom": {
-          "text": "OFF",
-          "color": "white",
-          "dataref": "AirbusFBW/FuelAutoPumpOHPArray",
-          "index": 3,
-          "onValue": 0
-        }
-      },
-      "col": 4,
-      "row": 0,
-      "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
-    },
-    {
-      "id": "fuel.r_pump1",
-      "label": "R TK PUMP 1",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/FuelOHPArray",
-        "index": 4
-      },
-      "commands": {
-        "up": "toliss_airbus/fuelcommands/PumpRWing1On",
-        "down": "toliss_airbus/fuelcommands/PumpRWing1Off"
-      },
-      "lamps": {
-        "top": {
-          "text": "FAULT",
-          "color": "amber",
-          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
-          "index": 2,
-          "onValue": 3
-        },
-        "bottom": {
-          "text": "OFF",
-          "color": "white",
-          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
-          "index": 2,
-          "onValue": 0
-        }
-      },
-      "col": 5,
-      "row": 0,
-      "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
-    },
-    {
-      "id": "fuel.r_pump2",
-      "label": "R TK PUMP 2",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/FuelOHPArray",
-        "index": 5
-      },
-      "commands": {
-        "up": "toliss_airbus/fuelcommands/PumpRWing2On",
-        "down": "toliss_airbus/fuelcommands/PumpRWing2Off"
-      },
-      "lamps": {
-        "top": {
-          "text": "FAULT",
-          "color": "amber",
-          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
-          "index": 3,
-          "onValue": 3
-        },
-        "bottom": {
-          "text": "OFF",
-          "color": "white",
-          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
-          "index": 3,
-          "onValue": 0
-        }
-      },
-      "col": 6,
-      "row": 0,
-      "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "x": 171.8,
+      "y": 39.9
     },
     {
       "id": "fuel.x_feed",
@@ -293,10 +431,154 @@
         }
       },
       "readOnly": true,
-      "col": 3,
-      "row": 1,
       "verified": false,
-      "notes": "Lámparas de FuelXFVOHPArray (confirmado, bits supuestos). Escritura en FuelOHPArray[7] supuesta. Bloqueado."
+      "notes": "Lámparas de FuelXFVOHPArray (confirmado, bits supuestos). Escritura en FuelOHPArray[7] supuesta. Bloqueado.",
+      "x": 206.9,
+      "y": 16.6
+    },
+    {
+      "id": "fuel.mode_sel",
+      "label": "MODE SEL",
+      "kind": "korry",
+      "positions": [
+        "MAN",
+        "AUTO"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 6
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 6,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "MAN",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelOHPArray",
+          "index": 6,
+          "onValue": 0
+        }
+      },
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). 0 = MAN, 1 = AUTO. Sin comando: escritura directa.",
+      "x": 206.9,
+      "y": 45.1
+    },
+    {
+      "id": "fuel.ctr_pump2",
+      "label": "PUMP 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 3
+      },
+      "commands": {
+        "up": "toliss_airbus/fuelcommands/PumpRCenterOn",
+        "down": "toliss_airbus/fuelcommands/PumpRCenterOff"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpOHPArray",
+          "index": 3,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelAutoPumpOHPArray",
+          "index": 3,
+          "onValue": 0
+        }
+      },
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "x": 242.0,
+      "y": 39.9
+    },
+    {
+      "id": "fuel.r_pump1",
+      "label": "1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 4
+      },
+      "commands": {
+        "up": "toliss_airbus/fuelcommands/PumpRWing1On",
+        "down": "toliss_airbus/fuelcommands/PumpRWing1Off"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 2,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 2,
+          "onValue": 0
+        }
+      },
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "x": 310.3,
+      "y": 39.9
+    },
+    {
+      "id": "fuel.r_pump2",
+      "label": "2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 5
+      },
+      "commands": {
+        "up": "toliss_airbus/fuelcommands/PumpRWing2On",
+        "down": "toliss_airbus/fuelcommands/PumpRWing2Off"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 3,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 3,
+          "onValue": 0
+        }
+      },
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "x": 345.4,
+      "y": 39.9
     }
   ]
 }

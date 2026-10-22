@@ -1,13 +1,38 @@
 {
   "id": "wiper_l",
-  "title": "WIPER",
+  "title": "",
   "group": "overhead",
   "order": 28,
-  "notes": "Limpiaparabrisas del capitán. Dataref confirmado; orden de valores por confirmar.",
+  "frame": {
+    "x": 14,
+    "y": 534,
+    "w": 176,
+    "h": 66
+  },
+  "titleHidden": true,
+  "notes": "Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
   "controls": [
     {
+      "id": "wiper.rain_l",
+      "label": "RAIN RPLNT",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "round",
+      "state": {
+        "dataref": "AirbusFBW/RainEffectsSelected"
+      },
+      "readOnly": true,
+      "notes": "Sin comando de repelente en el volcado. Bloqueado.",
+      "x": 67.7,
+      "y": 33.9,
+      "verified": false
+    },
+    {
       "id": "wiper.left",
-      "label": "WIPER L",
+      "label": "WIPER",
       "kind": "rotary",
       "positions": [
         "OFF",
@@ -17,10 +42,11 @@
       "state": {
         "dataref": "AirbusFBW/LeftWiperSwitch"
       },
-      "col": 0,
-      "row": 0,
       "verified": false,
-      "notes": "Confirmado (Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).); orden de valores por confirmar."
+      "notes": "Confirmado (Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).); orden de valores por confirmar.",
+      "size": 28,
+      "x": 130.2,
+      "y": 39.2
     }
   ]
 }

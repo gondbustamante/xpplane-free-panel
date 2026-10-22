@@ -23,13 +23,18 @@ struct PanelCanvas: View {
                 ForEach(model.layout.groups) { group in
                     let visible = model.visibleSubpanels(in: group.id)
                     if !visible.isEmpty {
-                        PanelFace {
-                            if let arrangement = model.layout.arrangement(for: group.id) {
-                                ArrangedGroupView(arrangement: arrangement, panels: visible)
-                            } else {
-                                FlowLayout(spacing: 26) {
-                                    ForEach(visible.values.sorted { ($0.order ?? .max, $0.title) < ($1.order ?? .max, $1.title) }) { panel in
-                                        SubpanelView(panel: panel)
+                        let absolute = visible.values.filter(\.isAbsolute)
+                        if let canvas = model.layout.canvas(for: group.id), !absolute.isEmpty {
+                            AbsoluteGroupView(canvas: canvas, panels: absolute.sorted { $0.id < $1.id })
+                        } else {
+                            PanelFace {
+                                if let arrangement = model.layout.arrangement(for: group.id) {
+                                    ArrangedGroupView(arrangement: arrangement, panels: visible)
+                                } else {
+                                    FlowLayout(spacing: 26) {
+                                        ForEach(visible.values.sorted { ($0.order ?? .max, $0.title) < ($1.order ?? .max, $1.title) }) { panel in
+                                            SubpanelView(panel: panel)
+                                        }
                                     }
                                 }
                             }

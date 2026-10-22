@@ -1,13 +1,20 @@
 {
   "id": "wiper_r",
-  "title": "WIPER",
+  "title": "",
   "group": "overhead",
-  "order": 78,
-  "notes": "Limpiaparabrisas del copiloto. Dataref escribible (volcado); orden de valores por confirmar.",
+  "order": 44,
+  "frame": {
+    "x": 626,
+    "y": 534,
+    "w": 190,
+    "h": 66
+  },
+  "titleHidden": true,
+  "notes": "Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
   "controls": [
     {
       "id": "wiper.right",
-      "label": "WIPER R",
+      "label": "WIPER",
       "kind": "rotary",
       "positions": [
         "OFF",
@@ -17,10 +24,29 @@
       "state": {
         "dataref": "AirbusFBW/RightWiperSwitch"
       },
-      "col": 0,
-      "row": 0,
       "verified": false,
-      "notes": "Escribible (volcado); orden de valores por confirmar."
+      "notes": "Escribible (volcado); orden de valores por confirmar.",
+      "size": 28,
+      "x": 62,
+      "y": 36
+    },
+    {
+      "id": "wiper.rain_r",
+      "label": "RAIN RPLNT",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "round",
+      "state": {
+        "dataref": "AirbusFBW/RainEffectsSelected"
+      },
+      "readOnly": true,
+      "notes": "Sin comando de repelente en el volcado. Bloqueado.",
+      "x": 140,
+      "y": 28,
+      "verified": false
     }
   ]
 }

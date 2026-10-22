@@ -30,6 +30,41 @@ Un grupo puede declarar además su **disposición física** en `arrangements`: c
 
 La barra lateral de la app lista primero las fases y después los grupos. Para añadir un panel nuevo (pedestal, glareshield…): crea la carpeta `mapping/<grupo>/`, declara el grupo en `groups`, pon `"group": "<grupo>"` en cada subpanel y, si procede, añádelo a las fases. Los iconos son nombres de SF Symbols.
 
+## Geometría real (`frame`, `x`, `y`, `decorations`)
+
+Cuando un grupo declara un lienzo en `layout.json` (`"canvases": {"overhead": {"width": 828, "height": 633}}`), cada subpanel puede fijar su posición y tamaño con `frame` y cada control su centro con `x`/`y`, todo en **unidades de lienzo** relativas al subpanel. El lienzo del overhead son 828 × 633 unidades, las proporciones del panel real medidas sobre las fotos del A32NX de FlyByWire (`docs/pilots-corner/a32nx/assets/a32nx-briefing/overhead-panel/` en su repositorio de documentación) y la captura del ToLiss. Una unidad son unos 1,3 mm de avión y 2,5 puntos en pantalla antes del zoom.
+
+```jsonc
+{
+  "id": "hyd", "title": "", "group": "overhead", "titleHidden": true,
+  "frame": { "x": 200, "y": 152, "w": 416, "h": 54 },        // posición en el lienzo del grupo
+  "decorations": [                                             // arte estático, coordenadas locales
+    { "type": "box",     "at": [86.8, 5.6], "text": "GREEN" },        // etiqueta con recuadro blanco
+    { "type": "line",    "points": [[70, 13], [384, 13]] },           // sinóptico verde
+    { "type": "arrow",   "at": [86.8, 9.3], "direction": "up" },      // flecha verde
+    { "type": "bracket", "points": [[70, 22], [103, 22]] },           // línea con tics en los extremos
+    { "type": "text",    "at": [9, 29], "text": "HYD", "size": 7, "vertical": true },
+    { "type": "divider", "points": [[162, 4], [162, 64]] }            // separador blanco fino
+  ],
+  "controls": [
+    { "id": "hyd.ptu", "label": "PTU", "kind": "korry", "positions": ["OFF", "AUTO"],
+      "x": 269.7, "y": 30.4,                                   // centro del cuerpo del control
+      "sideLabel": "AUTO",                                     // leyenda vertical a la derecha (korry)
+      "guarded": true, "guardStyle": "cage",                   // guarda: "cage" (jaula negra) o "red" (tapa roja)
+      "style": "round",                                        // korry: "round" (pulsador redondo) o "fire" (pulsador de fuego)
+      "size": 22,                                              // tamaño del cuerpo en unidades (opcional)
+      "state": { "dataref": "…" } }
+  ]
+}
+```
+
+Tipos de control añadidos para la geometría real:
+
+- `knob`: selector continuo (temperaturas, LDG ELEV, OVHD INTEG LT). Necesita `range: {min, max}`; `positions` son las leyendas de los extremos (`["COLD", "HOT"]`). Se gira arrastrando.
+- `display`: ventana numérica. `format` al estilo printf (`"%.1fV"` para los voltímetros de batería). Sin `format`, muestra la última posición cuando el valor está activo (ventana ON BAT del ADIRS).
+
+Los subpaneles sin `frame` siguen usando `col`/`row` en rejilla y la disposición por columnas de `arrangements`.
+
 ## Esquema
 
 ```jsonc
@@ -70,7 +105,7 @@ La barra lateral de la app lista primero las fases y después los grupos. Para a
       "guarded": true,           // solo korry: hay que levantar la guarda (un toque) antes de pulsar
       "readOnly": true,          // muestra el estado pero no acepta entrada; para candidatos sin verificar
 
-      "col": 0, "row": 0,        // posición en la rejilla del subpanel
+      "col": 0, "row": 0,        // posición en la rejilla del subpanel (solo sin "frame")
       "verified": false,         // true solo tras confirmarlo en el simulador
       "notes": "fuente y dudas"
     }

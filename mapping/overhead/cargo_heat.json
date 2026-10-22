@@ -2,9 +2,45 @@
   "id": "cargo_heat",
   "title": "CARGO HEAT",
   "group": "overhead",
-  "order": 56,
-  "notes": "Calefacción de bodega. CargoHotAir escribible (volcado).",
+  "order": 40,
+  "frame": {
+    "x": 626,
+    "y": 318,
+    "w": 190,
+    "h": 62
+  },
+  "notes": "Según la captura del ToLiss (el A32NX muestra aquí CARGO VENT). Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
   "controls": [
+    {
+      "id": "cargo.fwd_isol",
+      "label": "FWD ISOL VALVE",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FwdIsolValve"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FwdIsolValve",
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FwdIsolValve",
+          "onValue": 0
+        }
+      },
+      "notes": "FwdIsolValve escribible (volcado); semántica por confirmar.",
+      "x": 40,
+      "y": 22,
+      "verified": false
+    },
     {
       "id": "cargo.hot_air",
       "label": "HOT AIR",
@@ -24,10 +60,84 @@
           "onValue": 0
         }
       },
-      "col": 0,
-      "row": 0,
       "verified": false,
-      "notes": "CargoHotAir escribible (volcado)."
+      "notes": "CargoHotAir escribible (volcado).",
+      "x": 95,
+      "y": 22
+    },
+    {
+      "id": "cargo.aft_isol",
+      "label": "AFT ISOL VALVE",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/AftIsolValve"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/AftIsolValve",
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/AftIsolValve",
+          "onValue": 0
+        }
+      },
+      "notes": "AftIsolValve escribible (volcado); semántica por confirmar.",
+      "x": 150,
+      "y": 22,
+      "verified": false
+    },
+    {
+      "id": "cargo.fwd_temp",
+      "label": "FWD",
+      "kind": "knob",
+      "positions": [
+        "COLD",
+        "HOT"
+      ],
+      "size": 18,
+      "state": {
+        "dataref": "AirbusFBW/FwdCargoTemp"
+      },
+      "range": {
+        "min": 0,
+        "max": 1
+      },
+      "readOnly": true,
+      "notes": "FwdCargoTemp (float, rw); rango por confirmar. Bloqueado.",
+      "x": 60,
+      "y": 48,
+      "verified": false
+    },
+    {
+      "id": "cargo.aft_temp",
+      "label": "AFT",
+      "kind": "knob",
+      "positions": [
+        "COLD",
+        "HOT"
+      ],
+      "size": 18,
+      "state": {
+        "dataref": "AirbusFBW/AftCargoTemp"
+      },
+      "range": {
+        "min": 0,
+        "max": 1
+      },
+      "readOnly": true,
+      "notes": "AftCargoTemp (float, rw); rango por confirmar. Bloqueado.",
+      "x": 130,
+      "y": 48,
+      "verified": false
     }
   ]
 }

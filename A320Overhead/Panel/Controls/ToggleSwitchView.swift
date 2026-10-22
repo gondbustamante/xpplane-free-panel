@@ -10,6 +10,9 @@ struct ToggleSwitchView: View {
     let position: Int
     let enabled: Bool
     var dimmed = false
+    var inline = true
+    /// Absolute mode: diameter of the round bezel.
+    var bezel: CGFloat = 55
     let onMove: (Int) -> Void
 
     private let bodyWidth: CGFloat = 42
@@ -25,6 +28,56 @@ struct ToggleSwitchView: View {
     }
 
     var body: some View {
+        if inline {
+            inlineBody
+        } else {
+            absoluteBody
+        }
+    }
+
+    /// Round dark bezel with the lever in it; legends hang around it as overlays.
+    private var absoluteBody: some View {
+        let dy = -tilt * bezel * 0.26
+        return ZStack {
+            Circle()
+                .fill(RadialGradient(colors: [Color(white: 0.16), Color(white: 0.05)], center: .center,
+                                     startRadius: 1, endRadius: bezel * 0.55))
+                .overlay(Circle().stroke(Color.black.opacity(0.8), lineWidth: 1))
+                .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
+            Circle().fill(Color.black).frame(width: bezel * 0.34, height: bezel * 0.34)
+            Capsule()
+                .fill(LinearGradient(colors: [Color(white: 0.30), Color(white: 0.62), Color(white: 0.26)],
+                                     startPoint: .leading, endPoint: .trailing))
+                .frame(width: bezel * 0.18, height: abs(dy) + bezel * 0.18)
+                .offset(y: dy / 2)
+            Circle()
+                .fill(RadialGradient(colors: [Color(white: 0.55), Color(white: 0.18)],
+                                     center: UnitPoint(x: 0.35, y: 0.30), startRadius: 1, endRadius: bezel * 0.25))
+                .frame(width: bezel * 0.36, height: bezel * 0.36)
+                .scaleEffect(1 - 0.10 * abs(tilt))
+                .shadow(color: .black.opacity(0.6), radius: 2, y: 1.5)
+                .offset(y: dy)
+        }
+        .frame(width: bezel, height: bezel)
+        .contentShape(Circle())
+        .animation(.spring(response: 0.18, dampingFraction: 0.65), value: position)
+        .onTapGesture { location in onMove(location.y < bezel / 2 ? 1 : -1) }
+        .overlay(alignment: .top) {
+            VStack(spacing: 1) {
+                ControlLabel(text: label)
+                ControlLabel(text: positions.last ?? "", size: 8)
+            }
+            .offset(y: -26)
+        }
+        .overlay(alignment: .bottom) { ControlLabel(text: positions.first ?? "", size: 8).offset(y: 12) }
+        .overlay(alignment: .trailing) {
+            if count == 3 { ControlLabel(text: positions[1], size: 8).offset(x: 20) }
+        }
+        .opacity(dimmed ? 0.5 : 1)
+        .disabled(!enabled)
+    }
+
+    private var inlineBody: some View {
         VStack(spacing: 3) {
             PanelLabel(text: label)
             PanelLabel(text: positions.last ?? "", small: true)

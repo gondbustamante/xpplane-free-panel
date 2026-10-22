@@ -3,8 +3,40 @@
   "title": "ADIRS",
   "group": "overhead",
   "order": 10,
-  "notes": "Selectores IR con comandos confirmados; pulsadores IR/ADR con datarefs escribibles pendientes de confirmar semántica.",
+  "frame": {
+    "x": 14,
+    "y": 58,
+    "w": 176,
+    "h": 134
+  },
+  "notes": "Selectores IR con comandos confirmados. Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
   "controls": [
+    {
+      "id": "adirs.on_bat",
+      "label": "ON BAT",
+      "kind": "display",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ADIRUOnBat"
+      },
+      "lamps": {
+        "top": {
+          "text": "ON BAT",
+          "color": "amber",
+          "dataref": "AirbusFBW/ADIRUOnBat"
+        }
+      },
+      "readOnly": true,
+      "verified": true,
+      "notes": "Ventana del ADIRS: aquí se muestra ON BAT. Solo indicador.",
+      "size": 36,
+      "format": "",
+      "x": 87.7,
+      "y": 17.1
+    },
     {
       "id": "adirs.ir1_pb",
       "label": "IR 1",
@@ -32,10 +64,10 @@
           "onValue": 0
         }
       },
-      "col": 0,
-      "row": 0,
       "verified": false,
-      "notes": "IRSwitchArray existe y es escribible (volcado); semántica 0/1 y lámpara FAULT por confirmar."
+      "notes": "IRSwitchArray existe y es escribible (volcado); semántica 0/1 y lámpara FAULT por confirmar.",
+      "x": 36.4,
+      "y": 47.0
     },
     {
       "id": "adirs.ir3_pb",
@@ -64,10 +96,10 @@
           "onValue": 0
         }
       },
-      "col": 1,
-      "row": 0,
       "verified": false,
-      "notes": "IRSwitchArray existe y es escribible (volcado); semántica 0/1 y lámpara FAULT por confirmar."
+      "notes": "IRSwitchArray existe y es escribible (volcado); semántica 0/1 y lámpara FAULT por confirmar.",
+      "x": 87.7,
+      "y": 47.0
     },
     {
       "id": "adirs.ir2_pb",
@@ -96,34 +128,79 @@
           "onValue": 0
         }
       },
-      "col": 2,
-      "row": 0,
       "verified": false,
-      "notes": "IRSwitchArray existe y es escribible (volcado); semántica 0/1 y lámpara FAULT por confirmar."
+      "notes": "IRSwitchArray existe y es escribible (volcado); semántica 0/1 y lámpara FAULT por confirmar.",
+      "x": 139.3,
+      "y": 47.0
     },
     {
-      "id": "adirs.on_bat",
-      "label": "ON BAT",
-      "kind": "korry",
+      "id": "adirs.ir1",
+      "label": "ADIR 1",
+      "kind": "rotary",
       "positions": [
         "OFF",
-        "ON"
+        "NAV",
+        "ATT"
       ],
       "state": {
-        "dataref": "AirbusFBW/ADIRUOnBat"
+        "dataref": "AirbusFBW/ADIRUSwitchArray",
+        "index": 0
       },
-      "lamps": {
-        "top": {
-          "text": "ON BAT",
-          "color": "amber",
-          "dataref": "AirbusFBW/ADIRUOnBat"
-        }
+      "commands": {
+        "up": "toliss_airbus/adirucommands/ADIRU1SwitchUp",
+        "down": "toliss_airbus/adirucommands/ADIRU1SwitchDown"
       },
-      "readOnly": true,
-      "col": 3,
-      "row": 0,
       "verified": true,
-      "notes": "Solo indicador. Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Up = girar a la derecha.",
+      "size": 26,
+      "x": 36.4,
+      "y": 85.5
+    },
+    {
+      "id": "adirs.ir3",
+      "label": "ADIR 3",
+      "kind": "rotary",
+      "positions": [
+        "OFF",
+        "NAV",
+        "ATT"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ADIRUSwitchArray",
+        "index": 2
+      },
+      "commands": {
+        "up": "toliss_airbus/adirucommands/ADIRU3SwitchUp",
+        "down": "toliss_airbus/adirucommands/ADIRU3SwitchDown"
+      },
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Up = girar a la derecha.",
+      "size": 26,
+      "x": 87.7,
+      "y": 85.5
+    },
+    {
+      "id": "adirs.ir2",
+      "label": "ADIR 2",
+      "kind": "rotary",
+      "positions": [
+        "OFF",
+        "NAV",
+        "ATT"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ADIRUSwitchArray",
+        "index": 1
+      },
+      "commands": {
+        "up": "toliss_airbus/adirucommands/ADIRU2SwitchUp",
+        "down": "toliss_airbus/adirucommands/ADIRU2SwitchDown"
+      },
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Up = girar a la derecha.",
+      "size": 26,
+      "x": 139.3,
+      "y": 85.5
     },
     {
       "id": "adirs.adr1_pb",
@@ -153,10 +230,10 @@
           "onValue": 0
         }
       },
-      "col": 0,
-      "row": 1,
       "verified": false,
-      "notes": "ADRSwitchArray existe y es escribible (volcado); semántica por confirmar."
+      "notes": "ADRSwitchArray existe y es escribible (volcado); semántica por confirmar.",
+      "x": 36.4,
+      "y": 116.9
     },
     {
       "id": "adirs.adr3_pb",
@@ -186,10 +263,10 @@
           "onValue": 0
         }
       },
-      "col": 1,
-      "row": 1,
       "verified": false,
-      "notes": "ADRSwitchArray existe y es escribible (volcado); semántica por confirmar."
+      "notes": "ADRSwitchArray existe y es escribible (volcado); semántica por confirmar.",
+      "x": 87.7,
+      "y": 116.9
     },
     {
       "id": "adirs.adr2_pb",
@@ -219,154 +296,10 @@
           "onValue": 0
         }
       },
-      "col": 2,
-      "row": 1,
       "verified": false,
-      "notes": "ADRSwitchArray existe y es escribible (volcado); semántica por confirmar."
-    },
-    {
-      "id": "adirs.ir1",
-      "label": "IR 1 MODE",
-      "kind": "rotary",
-      "positions": [
-        "OFF",
-        "NAV",
-        "ATT"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/ADIRUSwitchArray",
-        "index": 0
-      },
-      "commands": {
-        "up": "toliss_airbus/adirucommands/ADIRU1SwitchUp",
-        "down": "toliss_airbus/adirucommands/ADIRU1SwitchDown"
-      },
-      "col": 0,
-      "row": 2,
-      "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Up = girar a la derecha."
-    },
-    {
-      "id": "adirs.ir3",
-      "label": "IR 3 MODE",
-      "kind": "rotary",
-      "positions": [
-        "OFF",
-        "NAV",
-        "ATT"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/ADIRUSwitchArray",
-        "index": 2
-      },
-      "commands": {
-        "up": "toliss_airbus/adirucommands/ADIRU3SwitchUp",
-        "down": "toliss_airbus/adirucommands/ADIRU3SwitchDown"
-      },
-      "col": 1,
-      "row": 2,
-      "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Up = girar a la derecha."
-    },
-    {
-      "id": "adirs.ir2",
-      "label": "IR 2 MODE",
-      "kind": "rotary",
-      "positions": [
-        "OFF",
-        "NAV",
-        "ATT"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/ADIRUSwitchArray",
-        "index": 1
-      },
-      "commands": {
-        "up": "toliss_airbus/adirucommands/ADIRU2SwitchUp",
-        "down": "toliss_airbus/adirucommands/ADIRU2SwitchDown"
-      },
-      "col": 2,
-      "row": 2,
-      "verified": true,
-      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Up = girar a la derecha."
-    },
-    {
-      "id": "adirs.align1",
-      "label": "ALIGN 1",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/OHPLightsATA34_Raw",
-        "index": 6
-      },
-      "lamps": {
-        "top": {
-          "text": "ALIGN",
-          "color": "white",
-          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
-          "index": 6
-        }
-      },
-      "readOnly": true,
-      "col": 0,
-      "row": 3,
-      "verified": true,
-      "notes": "Solo indicador. Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
-    },
-    {
-      "id": "adirs.align3",
-      "label": "ALIGN 3",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/OHPLightsATA34_Raw",
-        "index": 10
-      },
-      "lamps": {
-        "top": {
-          "text": "ALIGN",
-          "color": "white",
-          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
-          "index": 10
-        }
-      },
-      "readOnly": true,
-      "col": 1,
-      "row": 3,
-      "verified": true,
-      "notes": "Solo indicador. Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
-    },
-    {
-      "id": "adirs.align2",
-      "label": "ALIGN 2",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/OHPLightsATA34_Raw",
-        "index": 8
-      },
-      "lamps": {
-        "top": {
-          "text": "ALIGN",
-          "color": "white",
-          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
-          "index": 8
-        }
-      },
-      "readOnly": true,
-      "col": 2,
-      "row": 3,
-      "verified": true,
-      "notes": "Solo indicador. Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+      "notes": "ADRSwitchArray existe y es escribible (volcado); semántica por confirmar.",
+      "x": 139.3,
+      "y": 116.9
     }
   ]
 }

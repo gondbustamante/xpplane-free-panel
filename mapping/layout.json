@@ -35,6 +35,7 @@
         "air_cond",
         "fuel",
         "anti_ice",
+        "probe_window",
         "hyd",
         "eng",
         "cabin_press",
@@ -50,6 +51,7 @@
         "ext_lt",
         "eng",
         "anti_ice",
+        "probe_window",
         "air_cond",
         "apu",
         "elec"
@@ -64,6 +66,7 @@
         "ext_lt",
         "signs",
         "anti_ice",
+        "probe_window",
         "air_cond",
         "cabin_press"
       ]
@@ -77,6 +80,7 @@
         "ext_lt",
         "signs",
         "anti_ice",
+        "probe_window",
         "air_cond",
         "gpws",
         "wiper_l",
@@ -167,6 +171,7 @@
           ],
           [
             "anti_ice",
+            "probe_window",
             "cabin_press"
           ],
           [
@@ -197,6 +202,12 @@
           ]
         ]
       ]
+    }
+  },
+  "canvases": {
+    "overhead": {
+      "width": 828,
+      "height": 633
     }
   }
 }

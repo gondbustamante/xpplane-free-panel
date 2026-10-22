@@ -2,9 +2,35 @@
   "id": "cabin_press",
   "title": "CABIN PRESS",
   "group": "overhead",
-  "order": 52,
-  "notes": "Presurización. Datarefs y comandos confirmados en el volcado; semántica por confirmar.",
+  "order": 37,
+  "frame": {
+    "x": 444,
+    "y": 474,
+    "w": 172,
+    "h": 52
+  },
+  "notes": "Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
   "controls": [
+    {
+      "id": "press.man_vs",
+      "label": "MAN V/S CTL",
+      "kind": "toggle3",
+      "positions": [
+        "DN",
+        "",
+        "UP"
+      ],
+      "size": 20,
+      "commands": {
+        "up": "AirbusFBW/CabVSUp",
+        "down": "AirbusFBW/CabVSDown",
+        "duration": 1
+      },
+      "verified": true,
+      "notes": "Palanca de muelle: cada toque mantiene el comando 1 s.",
+      "x": 20.4,
+      "y": 31.3
+    },
     {
       "id": "press.mode_sel",
       "label": "MODE SEL",
@@ -30,44 +56,32 @@
           "bit": 1
         }
       },
-      "col": 0,
-      "row": 0,
       "verified": false,
-      "notes": "CabPressMode escribible. Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
+      "notes": "CabPressMode escribible. Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref.",
+      "x": 56.0,
+      "y": 31.3
     },
     {
-      "id": "press.vs_up",
-      "label": "MAN V/S UP",
-      "kind": "korry",
+      "id": "press.ldg_elev",
+      "label": "LDG ELEV",
+      "kind": "knob",
       "positions": [
-        "OFF",
-        "ON"
+        "AUTO",
+        "14"
       ],
-      "commands": {
-        "press": "AirbusFBW/CabVSUp",
-        "duration": 1
+      "size": 24,
+      "state": {
+        "dataref": "AirbusFBW/LandElev"
       },
-      "col": 1,
-      "row": 0,
-      "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Cada toque mantiene 1 s."
-    },
-    {
-      "id": "press.vs_dn",
-      "label": "MAN V/S DN",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "commands": {
-        "press": "AirbusFBW/CabVSDown",
-        "duration": 1
+      "range": {
+        "min": -2000,
+        "max": 14000
       },
-      "col": 2,
-      "row": 0,
-      "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Cada toque mantiene 1 s."
+      "readOnly": true,
+      "notes": "LandElev (float, rw) en pies; AUTO por debajo de -2. Bloqueado hasta confirmar semántica.",
+      "x": 98.0,
+      "y": 31.3,
+      "verified": false
     },
     {
       "id": "press.ditching",
@@ -89,10 +103,11 @@
         }
       },
       "guarded": true,
-      "col": 3,
-      "row": 0,
       "verified": false,
-      "notes": "DitchSwitch escribible. Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref."
+      "notes": "DitchSwitch escribible. Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref.",
+      "guardStyle": "cage",
+      "x": 138.7,
+      "y": 31.3
     }
   ]
 }

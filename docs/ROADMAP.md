@@ -50,11 +50,14 @@ Adelantado desde la fase 2 porque es el panel que más se toca en vuelo y reutil
 
 Hecho el 2026-10-22: barra lateral con fases de vuelo y grupos de paneles (`mapping/layout.json`), selector rotatorio, pulsador guardado, y **21 subpaneles del overhead con 124 controles**. Con el volcado real de ToLiss en `mapping/reference/`, los 74 datarefs y 101 comandos del mapeo están comprobados por nombre (el validador lo exige). 59 controles verificados; 65 pendientes de confirmar semántica de valores o índice, de los cuales 24 bloqueados como solo lectura.
 
+Hecho el 2026-10-23: **geometría real del overhead**. 27 subpaneles con `frame` y controles con `x`/`y` medidos sobre las fotos del A32NX y la captura del ToLiss; sinópticos verdes de HYD, FUEL, ELEC y AIR COND; separadores y rótulos de rail; voltímetros BAT, ventana ON BAT, selectores de temperatura, LDG ELEV, OVHD INTEG LT, válvulas de aislamiento de carga, RAIN RPLNT, PASSENGER, GEN 1 LINE, RAT & EMER GEN, indicadores de humo de carga; pulsadores de fuego rojos, guardas rojas y de jaula, pulsadores redondos. 153 controles, 60 verificados.
+
 Pendiente por subpanel (verificar en Diagnóstico y desbloquear):
 - ELEC: índices de `ElecOHPArray` para GEN 1/2, APU GEN, BUS TIE, AC ESS FEED, GALLEY, COMMERCIAL (sin comando en ToLiss, solo escritura).
 - HYD: índices de `HydOHPArray` y `HydPumpOHPArray`. FLT CTL: índices de `FCCSwitchArray`. FIRE: índices de `FireExOHPArray` (agentes) y dataref del pulsador de fuego del APU. FUEL: X FEED.
 - Semántica 0/1/2 de los interruptores de 3 posiciones (EXT LT, SIGNS, ADIRS, X BLEED, PACK FLOW, WIPER, ANN LT) y de las lámparas en bits (`*SwitchLights`, `*Illum`).
-- Faltan: voltímetros BAT, LDG ELEV, selectores de temperatura, OVHD INTEG LT (brillo), RAIN RPLNT, APU fire pb.
+- Rangos de los selectores continuos (temperaturas de cabina y carga, LDG ELEV); comando de RAIN RPLNT; dataref del pulsador de fuego del APU y de GEN 1 LINE / RAT & EMER GEN FAULT.
+- Falta el panel de audio (3er ACP) y PA / COCKPIT DOOR VIDEO de la esquina superior; el panel de CARGO HEAT sigue la captura del ToLiss y hay que confirmar sus controles sobre el avión.
 
 Orden original propuesto por valor para el flujo de vuelo y por riesgo de mapeo:
 

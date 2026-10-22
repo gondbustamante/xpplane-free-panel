@@ -3,11 +3,89 @@
   "title": "CALLS",
   "group": "overhead",
   "order": 27,
-  "notes": "Llamadas a cabina y mecánico. Comandos confirmados en el volcado.",
+  "frame": {
+    "x": 14,
+    "y": 492,
+    "w": 176,
+    "h": 36
+  },
+  "notes": "Geometría tomada de las fotos del overhead del A32NX (FlyByWire docs) y de la captura del ToLiss.",
   "controls": [
     {
+      "id": "calls.mech",
+      "label": "MECH",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/purser/mech",
+        "duration": 1
+      },
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt).",
+      "style": "round",
+      "x": 26.0,
+      "y": 22.1
+    },
+    {
+      "id": "calls.all",
+      "label": "ALL",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "round",
+      "commands": {
+        "press": "AirbusFBW/CheckCabin",
+        "duration": 1
+      },
+      "verified": true,
+      "notes": "CheckCabin: \"Press any of the purser buttons\" (volcado).",
+      "x": 56.0,
+      "y": 22.1
+    },
+    {
+      "id": "calls.fwd",
+      "label": "FWD",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/purser/fwd",
+        "duration": 1
+      },
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt).",
+      "style": "round",
+      "x": 85.9,
+      "y": 22.1
+    },
+    {
+      "id": "calls.aft",
+      "label": "AFT",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/purser/aft",
+        "duration": 1
+      },
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt).",
+      "style": "round",
+      "x": 117.2,
+      "y": 22.1
+    },
+    {
       "id": "calls.emer",
-      "label": "EMER CALL",
+      "label": "EMER",
       "kind": "korry",
       "positions": [
         "OFF",
@@ -29,61 +107,11 @@
         }
       },
       "guarded": true,
-      "col": 0,
-      "row": 0,
       "verified": false,
-      "notes": "EmerCallOHPButton escribible (volcado)."
-    },
-    {
-      "id": "calls.mech",
-      "label": "MECH",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "commands": {
-        "press": "AirbusFBW/purser/mech",
-        "duration": 1
-      },
-      "col": 1,
-      "row": 0,
-      "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
-    },
-    {
-      "id": "calls.fwd",
-      "label": "FWD",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "commands": {
-        "press": "AirbusFBW/purser/fwd",
-        "duration": 1
-      },
-      "col": 2,
-      "row": 0,
-      "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
-    },
-    {
-      "id": "calls.aft",
-      "label": "AFT",
-      "kind": "korry",
-      "positions": [
-        "OFF",
-        "ON"
-      ],
-      "commands": {
-        "press": "AirbusFBW/purser/aft",
-        "duration": 1
-      },
-      "col": 3,
-      "row": 0,
-      "verified": true,
-      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
+      "notes": "EmerCallOHPButton escribible (volcado).",
+      "guardStyle": "cage",
+      "x": 145.8,
+      "y": 21.0
     }
   ]
 }
