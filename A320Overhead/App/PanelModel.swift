@@ -132,7 +132,11 @@ final class PanelModel {
     }
 
     func toggleConnection() {
-        status.isActive ? disconnect() : connect()
+        if status.isActive {
+            disconnect()
+        } else {
+            connect()
+        }
     }
 
     private func performConnect() async {
