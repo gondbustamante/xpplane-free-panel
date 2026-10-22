@@ -2,6 +2,31 @@ import Foundation
 import Observation
 import XPlaneKit
 
+/// What the main canvas shows: every subpanel, one panel group, or the subpanels of a flight phase.
+enum PanelSelection: Hashable {
+    case all
+    case group(String)
+    case phase(String)
+
+    var storageValue: String {
+        switch self {
+        case .all: return "all"
+        case .group(let id): return "group:\(id)"
+        case .phase(let id): return "phase:\(id)"
+        }
+    }
+
+    init(storageValue: String) {
+        if storageValue.hasPrefix("group:") {
+            self = .group(String(storageValue.dropFirst(6)))
+        } else if storageValue.hasPrefix("phase:") {
+            self = .phase(String(storageValue.dropFirst(6)))
+        } else {
+            self = .all
+        }
+    }
+}
+
 /// Single source of truth for the UI: connection status, loaded subpanels and the live
 /// position of every control. Owns the `XPlaneClient` and its update streams.
 @MainActor
@@ -41,6 +66,9 @@ final class PanelModel {
     var showVerificationBadges: Bool {
         didSet { UserDefaults.standard.set(showVerificationBadges, forKey: Keys.badges) }
     }
+    var selection: PanelSelection {
+        didSet { UserDefaults.standard.set(selection.storageValue, forKey: Keys.selection) }
+    }
     /// Datarefs added from the diagnostics screen, on top of the ones the mapping needs.
     private(set) var extraDatarefs: [String] {
         didSet { UserDefaults.standard.set(extraDatarefs, forKey: Keys.extras) }
@@ -48,6 +76,7 @@ final class PanelModel {
 
     private(set) var status: Status = .disconnected
     private(set) var subpanels: [SubpanelDefinition] = []
+    private(set) var layout: PanelLayout = .empty
     /// Control id → current position index (0 = bottom).
     private(set) var positions: [String: Int] = [:]
     /// Latest raw value for each lamp binding.
@@ -72,6 +101,7 @@ final class PanelModel {
         static let port = "xp.port"
         static let badges = "ui.verificationBadges"
         static let extras = "diag.extraDatarefs"
+        static let selection = "ui.selection"
     }
 
     init() {
@@ -81,6 +111,7 @@ final class PanelModel {
         port = storedPort == 0 ? 8087 : storedPort   // 8087 = xp_relay.py default
         showVerificationBadges = defaults.object(forKey: Keys.badges) as? Bool ?? true
         extraDatarefs = defaults.stringArray(forKey: Keys.extras) ?? []
+        selection = PanelSelection(storageValue: defaults.string(forKey: Keys.selection) ?? "group:overhead")
         loadMappings()
     }
 
@@ -93,8 +124,30 @@ final class PanelModel {
         }
         do {
             subpanels = try PanelLoader.loadAll(in: directory)
+            layout = try PanelLoader.loadLayout(in: directory)
         } catch {
             lastError = "Error leyendo mapping: \(error.localizedDescription)"
+        }
+    }
+
+    /// Subpanels for the current sidebar selection, in display order.
+    var visibleSubpanels: [SubpanelDefinition] {
+        switch selection {
+        case .all:
+            return subpanels
+        case .group(let id):
+            return subpanels.filter { $0.groupID == id }
+        case .phase(let id):
+            guard let phase = layout.phases.first(where: { $0.id == id }) else { return [] }
+            return phase.subpanels.compactMap { wanted in subpanels.first { $0.id == wanted } }
+        }
+    }
+
+    var selectionTitle: String {
+        switch selection {
+        case .all: return "Todos los paneles"
+        case .group(let id): return layout.groups.first { $0.id == id }?.title ?? id
+        case .phase(let id): return layout.phases.first { $0.id == id }?.title ?? id
         }
     }
 
@@ -247,7 +300,7 @@ final class PanelModel {
     }
 
     func isAvailable(_ control: ControlDefinition) -> Bool {
-        guard status == .connected else { return false }
+        guard status == .connected, !control.isReadOnly else { return false }
         guard let state = control.state else { return control.commands != nil }
         return !unresolved.contains(state.dataref)
     }
@@ -265,7 +318,7 @@ final class PanelModel {
             do {
                 if let command = delta > 0 ? control.commands?.up : control.commands?.down {
                     for _ in 0..<abs(target - current) {
-                        try await client.fire(command: command)
+                        try await client.fire(command: command, duration: control.commands?.duration ?? 0)
                     }
                 } else if let binding = control.writeBinding {
                     try await client.write(binding.key, XPValue(binding.value(for: target, count: count)))
@@ -277,16 +330,20 @@ final class PanelModel {
         }
     }
 
-    /// Pushbutton press: fires `press` or cycles the bound value.
+    /// Pushbutton press: fires `press`, or `up`/`down` (on/off) from the current state,
+    /// or cycles the bound value.
     func press(_ control: ControlDefinition) {
         guard let client else { return }
         let count = max(control.positions.count, 2)
         let current = position(of: control)
         let next = (current + 1) % count
+        let duration = control.commands?.duration ?? 0
         Task {
             do {
                 if let command = control.commands?.press {
-                    try await client.fire(command: command)
+                    try await client.fire(command: command, duration: duration)
+                } else if let on = control.commands?.up, let off = control.commands?.down {
+                    try await client.fire(command: current == 0 ? on : off, duration: duration)
                 } else if let binding = control.writeBinding {
                     try await client.write(binding.key, XPValue(binding.value(for: next, count: count)))
                 }

@@ -2,7 +2,7 @@
 
 Panel overhead del Airbus A320 para iPad que controla el ToLiss A320 en X-Plane 12 a través de la red local. Interfaz 2.5D en SwiftUI con interruptores y pulsadores que se mueven como los reales, estado bidireccional (lo que cambias en el simulador se refleja en el iPad y viceversa) y mapeo de controles en archivos JSON para sobrevivir a las actualizaciones de ToLiss.
 
-**Estado:** fase 1 (MVP). Conectividad verificada de extremo a extremo, subpaneles EXT LT y SIGNS, reconexión automática y pantalla de diagnóstico para verificar mapeos desde el iPad. Ver [docs/ROADMAP.md](docs/ROADMAP.md).
+**Estado:** fase 2 en curso. Conectividad verificada de extremo a extremo, 12 subpaneles del overhead (74 controles, 34 verificados), barra lateral por fases de vuelo y grupos de paneles, reconexión automática y pantalla de diagnóstico para verificar mapeos desde el iPad. Ver [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Cómo funciona
 
@@ -63,7 +63,9 @@ Cuando un control esté confirmado, pon `"verified": true` en su JSON y desapare
 ```
 A320Overhead/          App iPad (SwiftUI): modelo, tema, controles 2.5D, vistas
 Packages/XPlaneKit/    Cliente de la Web API de X-Plane (REST + WebSocket) y modelos de mapeo, con tests
-mapping/overhead/      Un JSON por subpanel del overhead
+mapping/layout.json    Grupos de paneles y fases de vuelo (alimenta la barra lateral)
+mapping/overhead/      Un JSON por subpanel del overhead; otros grupos (pedestal…) van en carpetas hermanas
+mapping/reference/     Volcado de datarefs y comandos de ToLiss (xp.py dump)
 tools/                 xp_relay.py (relay LAN), xp.py (CLI de descubrimiento), validate_mapping.py
 docs/                  Arquitectura, roadmap y guía de mapeo
 project.yml            Especificación XcodeGen (el .xcodeproj no se versiona)

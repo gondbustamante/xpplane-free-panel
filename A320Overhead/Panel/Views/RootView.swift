@@ -5,18 +5,28 @@ struct RootView: View {
     @Environment(PanelModel.self) private var model
     @State private var showSettings = false
     @State private var showDiagnostics = false
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
-        VStack(spacing: 0) {
-            ConnectionBar(showSettings: $showSettings, showDiagnostics: $showDiagnostics)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-            ScrollView([.horizontal, .vertical], showsIndicators: false) {
-                OverheadView()
-                    .padding(24)
+        NavigationSplitView(columnVisibility: $columnVisibility) {
+            SidebarView()
+        } detail: {
+            VStack(spacing: 0) {
+                ConnectionBar(showSettings: $showSettings, showDiagnostics: $showDiagnostics)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                ScrollView(.vertical, showsIndicators: false) {
+                    PanelCanvas()
+                        .padding(20)
+                }
             }
+            .background(PanelTheme.cockpitBackground.ignoresSafeArea())
+            .navigationTitle(model.selectionTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(PanelTheme.cockpitBackground, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
-        .background(PanelTheme.cockpitBackground.ignoresSafeArea())
+        .navigationSplitViewStyle(.balanced)
         .sheet(isPresented: $showSettings) {
             ConnectionSettingsView()
         }
@@ -28,22 +38,24 @@ struct RootView: View {
     }
 }
 
-/// The overhead face: subpanels laid out left to right. Grows as more mapping files are added.
-struct OverheadView: View {
+/// The panel face for the current selection: subpanels flow left to right and wrap.
+struct PanelCanvas: View {
     @Environment(PanelModel.self) private var model
 
     var body: some View {
-        HStack(alignment: .top, spacing: 28) {
-            if model.subpanels.isEmpty {
-                Text("No hay subpaneles cargados. Revisa la carpeta mapping/.")
+        let panels = model.visibleSubpanels
+        FlowLayout(spacing: 26) {
+            if panels.isEmpty {
+                Text("No hay subpaneles para esta selección. Revisa mapping/layout.json.")
                     .foregroundStyle(.white.opacity(0.7))
                     .padding(40)
             }
-            ForEach(model.subpanels) { panel in
+            ForEach(panels) { panel in
                 SubpanelView(panel: panel)
             }
         }
-        .padding(28)
+        .padding(26)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(LinearGradient(colors: [PanelTheme.panelFaceHighlight, PanelTheme.panelFace],
@@ -102,10 +114,10 @@ struct ControlView: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             widget
-            if model.showVerificationBadges && !control.isVerified {
-                Circle()
-                    .fill(PanelTheme.verificationBadge)
-                    .frame(width: 7, height: 7)
+            if model.showVerificationBadges && (!control.isVerified || control.isReadOnly) {
+                Image(systemName: control.isReadOnly ? "lock.fill" : "circle.fill")
+                    .font(.system(size: control.isReadOnly ? 9 : 7))
+                    .foregroundStyle(PanelTheme.verificationBadge)
                     .offset(x: 6, y: -2)
                     .help(control.notes ?? "Mapeo pendiente de verificar")
             }
@@ -120,6 +132,13 @@ struct ControlView: View {
                              positions: control.positions,
                              position: model.position(of: control),
                              enabled: model.isAvailable(control)) { delta in
+                model.move(control, by: delta)
+            }
+        case .rotary:
+            RotarySelectorView(label: control.label,
+                               positions: control.positions,
+                               position: model.position(of: control),
+                               enabled: model.isAvailable(control)) { delta in
                 model.move(control, by: delta)
             }
         case .korry:

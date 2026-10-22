@@ -1,0 +1,159 @@
+{
+  "id": "anti_ice",
+  "title": "ANTI ICE",
+  "group": "overhead",
+  "order": 55,
+  "notes": "Antihielo. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss.",
+  "controls": [
+    {
+      "id": "anti_ice.wing",
+      "label": "WING",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/WAILights",
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "2": 0,
+          "3": 1
+        }
+      },
+      "commands": {
+        "up": "toliss_airbus/antiicecommands/WingOn",
+        "down": "toliss_airbus/antiicecommands/WingOff"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/WAILights",
+          "bit": 2
+        },
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/WAILights",
+          "bit": 1
+        }
+      },
+      "col": 0,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Valor en bits: 1 = ON, 2 = FAULT."
+    },
+    {
+      "id": "anti_ice.eng1",
+      "label": "ENG 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENG1AILights",
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "2": 0,
+          "3": 1
+        }
+      },
+      "commands": {
+        "up": "toliss_airbus/antiicecommands/ENG1On",
+        "down": "toliss_airbus/antiicecommands/ENG1Off"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/ENG1AILights",
+          "bit": 2
+        },
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/ENG1AILights",
+          "bit": 1
+        }
+      },
+      "col": 1,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Valor en bits: 1 = ON, 2 = FAULT."
+    },
+    {
+      "id": "anti_ice.eng2",
+      "label": "ENG 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENG2AILights",
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "2": 0,
+          "3": 1
+        }
+      },
+      "commands": {
+        "up": "toliss_airbus/antiicecommands/ENG2On",
+        "down": "toliss_airbus/antiicecommands/ENG2Off"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/ENG2AILights",
+          "bit": 2
+        },
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/ENG2AILights",
+          "bit": 1
+        }
+      },
+      "col": 2,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Valor en bits: 1 = ON, 2 = FAULT."
+    },
+    {
+      "id": "anti_ice.probe_window",
+      "label": "PROBE/WINDOW HEAT",
+      "kind": "korry",
+      "positions": [
+        "AUTO",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ProbeHeatSwitch"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/ProbeHeatSwitch"
+        }
+      },
+      "readOnly": true,
+      "col": 3,
+      "row": 0,
+      "verified": false,
+      "notes": "Dataref candidato sin confirmar. Bloqueado."
+    }
+  ]
+}

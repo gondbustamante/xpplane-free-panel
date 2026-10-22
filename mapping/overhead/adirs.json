@@ -1,0 +1,183 @@
+{
+  "id": "adirs",
+  "title": "ADIRS",
+  "group": "overhead",
+  "order": 10,
+  "notes": "Selectores IR 1/2/3 y luces. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. El orden OFF/NAV/ATT de los valores 0/1/2 está por confirmar.",
+  "controls": [
+    {
+      "id": "adirs.ir1_lights",
+      "label": "IR 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightsATA34_Raw",
+        "index": 7
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
+          "index": 7
+        },
+        "bottom": {
+          "text": "ALIGN",
+          "color": "white",
+          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
+          "index": 6
+        }
+      },
+      "readOnly": true,
+      "col": 0,
+      "row": 0,
+      "verified": true,
+      "notes": "Solo indicador. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+    },
+    {
+      "id": "adirs.on_bat",
+      "label": "ON BAT",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ADIRUOnBat"
+      },
+      "lamps": {
+        "top": {
+          "text": "ON BAT",
+          "color": "amber",
+          "dataref": "AirbusFBW/ADIRUOnBat"
+        }
+      },
+      "readOnly": true,
+      "col": 1,
+      "row": 0,
+      "verified": true,
+      "notes": "Solo indicador. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+    },
+    {
+      "id": "adirs.ir2_lights",
+      "label": "IR 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightsATA34_Raw",
+        "index": 9
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
+          "index": 9
+        },
+        "bottom": {
+          "text": "ALIGN",
+          "color": "white",
+          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
+          "index": 8
+        }
+      },
+      "readOnly": true,
+      "col": 2,
+      "row": 0,
+      "verified": true,
+      "notes": "Solo indicador. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+    },
+    {
+      "id": "adirs.ir3_lights",
+      "label": "IR 3",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightsATA34_Raw",
+        "index": 11
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
+          "index": 11
+        },
+        "bottom": {
+          "text": "ALIGN",
+          "color": "white",
+          "dataref": "AirbusFBW/OHPLightsATA34_Raw",
+          "index": 10
+        }
+      },
+      "readOnly": true,
+      "col": 3,
+      "row": 0,
+      "verified": true,
+      "notes": "Solo indicador. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+    },
+    {
+      "id": "adirs.ir1",
+      "label": "IR 1",
+      "kind": "rotary",
+      "positions": [
+        "OFF",
+        "NAV",
+        "ATT"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ADIRUSwitchArray",
+        "index": 0
+      },
+      "col": 0,
+      "row": 1,
+      "verified": false,
+      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
+    },
+    {
+      "id": "adirs.ir3",
+      "label": "IR 3",
+      "kind": "rotary",
+      "positions": [
+        "OFF",
+        "NAV",
+        "ATT"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ADIRUSwitchArray",
+        "index": 2
+      },
+      "col": 1,
+      "row": 1,
+      "verified": false,
+      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
+    },
+    {
+      "id": "adirs.ir2",
+      "label": "IR 2",
+      "kind": "rotary",
+      "positions": [
+        "OFF",
+        "NAV",
+        "ATT"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ADIRUSwitchArray",
+        "index": 1
+      },
+      "col": 2,
+      "row": 1,
+      "verified": false,
+      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
+    }
+  ]
+}

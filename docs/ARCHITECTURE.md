@@ -48,12 +48,13 @@ Es multiplataforma (iOS 17 / macOS 14) para poder ejecutar los tests con `swift 
 ### 3.2 App (A320Overhead)
 
 - `PanelModel`: único estado observable. Carga los JSON del bundle, suscribe todos los datarefs referenciados, traduce cada actualización a posiciones de control y lámparas, y ejecuta las interacciones con actualización optimista (la UI se mueve al instante y la suscripción confirma o corrige).
-- Controles 2.5D: `ToggleSwitchView` (palanca de 2 o 3 posiciones, tap arriba/abajo o flick) y `KorryButtonView` (pulsador con dos leyendas iluminables y hundimiento al tocar).
-- `SubpanelView` dibuja cada subpanel con el marco blanco y el título al estilo Airbus a partir de `col`/`row` del JSON.
+- Controles 2.5D: `ToggleSwitchView` (palanca de 2 o 3 posiciones, tap arriba/abajo o flick), `KorryButtonView` (pulsador con dos leyendas iluminables, hundimiento al tocar y guarda abatible opcional) y `RotarySelectorView` (selector de N posiciones).
+- `RootView` es un `NavigationSplitView`: `SidebarView` con fases y grupos a la izquierda; a la derecha `PanelCanvas`, que dispone los subpaneles visibles con un `FlowLayout` que salta de fila al agotar el ancho. `SubpanelView` dibuja cada subpanel con el marco blanco y el título al estilo Airbus a partir de `col`/`row` del JSON.
+- `DiagnosticsView`: valores en bruto de todos los datarefs suscritos con resaltado de los índices que cambian, alta de datarefs a vigilar y lanzamiento de comandos. Es la herramienta de verificación del mapeo desde el propio iPad.
 
-### 3.3 Mapeo (`mapping/overhead/*.json`)
+### 3.3 Mapeo (`mapping/layout.json` + `mapping/<grupo>/*.json`)
 
-Un archivo por subpanel. Cada control declara de dónde lee su estado, dónde escribe (por defecto, el mismo dataref) y opcionalmente comandos `up`/`down`/`press` que tienen prioridad sobre la escritura. Esquema completo en [MAPPING.md](MAPPING.md).
+`layout.json` declara los **grupos** de paneles (overhead, y en el futuro pedestal, glareshield…) y las **fases de vuelo**, cada una con la lista ordenada de subpaneles a mostrar. La barra lateral de la app se genera de ahí. Un archivo por subpanel; cada control declara de dónde lee su estado, dónde escribe (por defecto, el mismo dataref) y opcionalmente comandos `up`/`down`/`press` que tienen prioridad sobre la escritura. Los candidatos sin confirmar se marcan `readOnly` y la app los muestra pero no los acciona. Esquema completo en [MAPPING.md](MAPPING.md).
 
 ### 3.4 Herramientas (`tools/`)
 

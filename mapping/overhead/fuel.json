@@ -1,0 +1,274 @@
+{
+  "id": "fuel",
+  "title": "FUEL",
+  "group": "overhead",
+  "order": 40,
+  "notes": "Bombas de combustible. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Ojo: las lámparas de las bombas derechas usan FuelAutoPumpSDArray[2] y [3], no [4] y [5].",
+  "controls": [
+    {
+      "id": "fuel.l_pump1",
+      "label": "L TK PUMP 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 0
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 0,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 0,
+          "onValue": 0
+        }
+      },
+      "col": 0,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+    },
+    {
+      "id": "fuel.l_pump2",
+      "label": "L TK PUMP 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 1
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 1,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 1,
+          "onValue": 0
+        }
+      },
+      "col": 1,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+    },
+    {
+      "id": "fuel.ctr_pump1",
+      "label": "CTR TK PUMP 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 2
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpOHPArray",
+          "index": 2,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelAutoPumpOHPArray",
+          "index": 2,
+          "onValue": 0
+        }
+      },
+      "col": 2,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+    },
+    {
+      "id": "fuel.mode_sel",
+      "label": "MODE SEL",
+      "kind": "korry",
+      "positions": [
+        "MAN",
+        "AUTO"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 6
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 6,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "MAN",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelOHPArray",
+          "index": 6,
+          "onValue": 0
+        }
+      },
+      "col": 3,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. 0 = MAN, 1 = AUTO."
+    },
+    {
+      "id": "fuel.ctr_pump2",
+      "label": "CTR TK PUMP 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 3
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpOHPArray",
+          "index": 3,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelAutoPumpOHPArray",
+          "index": 3,
+          "onValue": 0
+        }
+      },
+      "col": 4,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+    },
+    {
+      "id": "fuel.r_pump1",
+      "label": "R TK PUMP 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 4
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 2,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 2,
+          "onValue": 0
+        }
+      },
+      "col": 5,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+    },
+    {
+      "id": "fuel.r_pump2",
+      "label": "R TK PUMP 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 5
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 3,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 3,
+          "onValue": 0
+        }
+      },
+      "col": 6,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+    },
+    {
+      "id": "fuel.x_feed",
+      "label": "X FEED",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 7
+      },
+      "lamps": {
+        "top": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/FuelOHPArray",
+          "index": 7,
+          "onValue": 1
+        },
+        "bottom": {
+          "text": "OPEN",
+          "color": "green",
+          "dataref": "AirbusFBW/FuelOHPArray",
+          "index": 7,
+          "onValue": 1
+        }
+      },
+      "readOnly": true,
+      "col": 3,
+      "row": 1,
+      "verified": false,
+      "notes": "Índice 7 de FuelOHPArray supuesto. Bloqueado hasta verificar."
+    }
+  ]
+}

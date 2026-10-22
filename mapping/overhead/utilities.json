@@ -1,0 +1,129 @@
+{
+  "id": "utilities",
+  "title": "RCDR · OXYGEN · CALLS · WIPER · ANN LT",
+  "group": "overhead",
+  "order": 80,
+  "notes": "Controles sueltos del overhead. GND CTL, CREW SUPPLY, CALLS FWD y WIPER L confirmados (Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss.). ANN LT usa comandos citados en el foro.",
+  "controls": [
+    {
+      "id": "util.gnd_ctl",
+      "label": "GND CTL",
+      "kind": "korry",
+      "positions": [
+        "AUTO",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/CvrGndCtrl"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/CvrGndCtrl"
+        }
+      },
+      "col": 0,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+    },
+    {
+      "id": "util.crew_supply",
+      "label": "CREW SUPPLY",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/CrewOxySwitch"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/CrewOxySwitch",
+          "onValue": 0
+        }
+      },
+      "col": 1,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+    },
+    {
+      "id": "util.calls_fwd",
+      "label": "CALLS FWD",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/purser/fwd",
+        "duration": 2
+      },
+      "col": 2,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Comando mantenido 2 s."
+    },
+    {
+      "id": "util.wiper_l",
+      "label": "WIPER L",
+      "kind": "rotary",
+      "positions": [
+        "OFF",
+        "SLOW",
+        "FAST"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/LeftWiperSwitch"
+      },
+      "col": 3,
+      "row": 0,
+      "verified": false,
+      "notes": "Dataref confirmado (Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss.); orden de valores por confirmar."
+    },
+    {
+      "id": "util.wiper_r",
+      "label": "WIPER R",
+      "kind": "rotary",
+      "positions": [
+        "OFF",
+        "SLOW",
+        "FAST"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/RightWiperSwitch"
+      },
+      "readOnly": true,
+      "col": 4,
+      "row": 0,
+      "verified": false,
+      "notes": "Nombre supuesto por simetría con LeftWiperSwitch. Bloqueado."
+    },
+    {
+      "id": "util.ann_lt",
+      "label": "ANN LT",
+      "kind": "toggle3",
+      "positions": [
+        "DIM",
+        "BRT",
+        "TEST"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/AnnunMode"
+      },
+      "commands": {
+        "up": "toliss_airbus/lightcommands/AnnunUp",
+        "down": "toliss_airbus/lightcommands/AnnunDown"
+      },
+      "col": 5,
+      "row": 0,
+      "verified": false,
+      "notes": "Comandos AnnunUp/AnnunDown y dataref AnnunMode citados en el foro de X-Plane.org. Orden de valores por confirmar."
+    }
+  ]
+}

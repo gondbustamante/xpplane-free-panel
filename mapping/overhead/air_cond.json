@@ -1,0 +1,221 @@
+{
+  "id": "air_cond",
+  "title": "AIR COND",
+  "group": "overhead",
+  "order": 50,
+  "notes": "Packs y sangrados. PACK 1/2 y APU BLEED verificados (Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss.). ENG BLEED usa datarefs citados por usuarios; X BLEED, HOT AIR y RAM AIR son candidatos bloqueados.",
+  "controls": [
+    {
+      "id": "air_cond.pack1",
+      "label": "PACK 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/Pack1Switch"
+      },
+      "commands": {
+        "up": "toliss_airbus/aircondcommands/Pack1On",
+        "down": "toliss_airbus/aircondcommands/Pack1Off"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/OHPLightsATA21_Raw",
+          "index": 7
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/OHPLightsATA21_Raw",
+          "index": 6
+        }
+      },
+      "col": 0,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+    },
+    {
+      "id": "air_cond.eng1_bleed",
+      "label": "ENG 1 BLEED",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENG1BleedSwitch"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/ENG1BleedSwitch",
+          "onValue": 0
+        }
+      },
+      "col": 1,
+      "row": 0,
+      "verified": false,
+      "notes": "Dataref citado en listas de usuarios; escritura y lámpara FAULT por confirmar."
+    },
+    {
+      "id": "air_cond.x_bleed",
+      "label": "X BLEED",
+      "kind": "rotary",
+      "positions": [
+        "SHUT",
+        "AUTO",
+        "OPEN"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/XBleedSwitch"
+      },
+      "readOnly": true,
+      "col": 2,
+      "row": 0,
+      "verified": false,
+      "notes": "Dataref candidato sin confirmar. Bloqueado."
+    },
+    {
+      "id": "air_cond.eng2_bleed",
+      "label": "ENG 2 BLEED",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENG2BleedSwitch"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/ENG2BleedSwitch",
+          "onValue": 0
+        }
+      },
+      "col": 3,
+      "row": 0,
+      "verified": false,
+      "notes": "Dataref citado en listas de usuarios; escritura y lámpara FAULT por confirmar."
+    },
+    {
+      "id": "air_cond.pack2",
+      "label": "PACK 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/Pack2Switch"
+      },
+      "commands": {
+        "up": "toliss_airbus/aircondcommands/Pack2On",
+        "down": "toliss_airbus/aircondcommands/Pack2Off"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/OHPLightsATA21_Raw",
+          "index": 9
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/OHPLightsATA21_Raw",
+          "index": 8
+        }
+      },
+      "col": 4,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+    },
+    {
+      "id": "air_cond.hot_air",
+      "label": "HOT AIR",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/HotAirSwitch"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/HotAirSwitch",
+          "onValue": 0
+        }
+      },
+      "readOnly": true,
+      "col": 1,
+      "row": 1,
+      "verified": false,
+      "notes": "Dataref candidato sin confirmar. Bloqueado."
+    },
+    {
+      "id": "air_cond.apu_bleed",
+      "label": "APU BLEED",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/APUBleedSwitch"
+      },
+      "commands": {
+        "up": "toliss_airbus/apucommands/BleedOn",
+        "down": "toliss_airbus/apucommands/BleedOff"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/OHPLightsATA21_Raw",
+          "index": 4
+        }
+      },
+      "col": 2,
+      "row": 1,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Comandos citados en el foro de X-Plane.org."
+    },
+    {
+      "id": "air_cond.ram_air",
+      "label": "RAM AIR",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/RamAirSwitch"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/RamAirSwitch"
+        }
+      },
+      "guarded": true,
+      "readOnly": true,
+      "col": 3,
+      "row": 1,
+      "verified": false,
+      "notes": "Dataref candidato sin confirmar. Bloqueado."
+    }
+  ]
+}

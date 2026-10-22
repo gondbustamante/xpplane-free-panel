@@ -1,0 +1,67 @@
+{
+  "id": "apu",
+  "title": "APU",
+  "group": "overhead",
+  "order": 30,
+  "notes": "Arranque y control del APU. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss.",
+  "controls": [
+    {
+      "id": "apu.master",
+      "label": "MASTER SW",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/APUMaster"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/OHPLightsATA49_Raw",
+          "index": 1
+        },
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/OHPLightsATA49_Raw",
+          "index": 0
+        }
+      },
+      "col": 0,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+    },
+    {
+      "id": "apu.start",
+      "label": "START",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/APUStarter"
+      },
+      "lamps": {
+        "top": {
+          "text": "AVAIL",
+          "color": "green",
+          "dataref": "AirbusFBW/APUAvail"
+        },
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/APUStarter"
+        }
+      },
+      "col": 1,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. APUStarter queda en 1 hasta AVAIL o MASTER OFF; ToLiss ignora pulsaciones entre 0,3 y 5 s tras MASTER ON con ECB frío."
+    }
+  ]
+}

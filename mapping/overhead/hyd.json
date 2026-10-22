@@ -1,0 +1,198 @@
+{
+  "id": "hyd",
+  "title": "HYD",
+  "group": "overhead",
+  "order": 45,
+  "notes": "Hidráulica. AirbusFBW/HydOHPArray existe pero los índices son supuestos; todo bloqueado hasta verificar en Diagnóstico.",
+  "controls": [
+    {
+      "id": "hyd.eng1_pump",
+      "label": "ENG 1 PUMP",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/HydOHPArray",
+        "index": 0
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/HydOHPArray",
+          "index": 0,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/HydOHPArray",
+          "index": 0,
+          "onValue": 0
+        }
+      },
+      "readOnly": true,
+      "col": 0,
+      "row": 0,
+      "verified": false,
+      "notes": "Índice supuesto de HydOHPArray (dataref confirmado, índice no). Bloqueado hasta verificar."
+    },
+    {
+      "id": "hyd.elec_pump_b",
+      "label": "ELEC PUMP (B)",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "AUTO"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/HydOHPArray",
+        "index": 1
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/HydOHPArray",
+          "index": 1,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/HydOHPArray",
+          "index": 1,
+          "onValue": 0
+        }
+      },
+      "readOnly": true,
+      "col": 1,
+      "row": 0,
+      "verified": false,
+      "notes": "Índice supuesto de HydOHPArray (dataref confirmado, índice no). Bloqueado hasta verificar."
+    },
+    {
+      "id": "hyd.ptu",
+      "label": "PTU",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "AUTO"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/HydOHPArray",
+        "index": 2
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/HydOHPArray",
+          "index": 2,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/HydOHPArray",
+          "index": 2,
+          "onValue": 0
+        }
+      },
+      "readOnly": true,
+      "col": 2,
+      "row": 0,
+      "verified": false,
+      "notes": "Índice supuesto de HydOHPArray (dataref confirmado, índice no). Bloqueado hasta verificar."
+    },
+    {
+      "id": "hyd.eng2_pump",
+      "label": "ENG 2 PUMP",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/HydOHPArray",
+        "index": 3
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/HydOHPArray",
+          "index": 3,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/HydOHPArray",
+          "index": 3,
+          "onValue": 0
+        }
+      },
+      "readOnly": true,
+      "col": 3,
+      "row": 0,
+      "verified": false,
+      "notes": "Índice supuesto de HydOHPArray (dataref confirmado, índice no). Bloqueado hasta verificar."
+    },
+    {
+      "id": "hyd.elec_pump_y",
+      "label": "ELEC PUMP (Y)",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "AUTO"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/HydOHPArray",
+        "index": 4
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/HydOHPArray",
+          "index": 4,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/HydOHPArray",
+          "index": 4,
+          "onValue": 0
+        }
+      },
+      "readOnly": true,
+      "col": 4,
+      "row": 0,
+      "verified": false,
+      "notes": "Índice supuesto de HydOHPArray (dataref confirmado, índice no). Bloqueado hasta verificar."
+    },
+    {
+      "id": "hyd.rat_man_on",
+      "label": "RAT MAN ON",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/HydOHPArray",
+        "index": 5
+      },
+      "guarded": true,
+      "readOnly": true,
+      "col": 1,
+      "row": 1,
+      "verified": false,
+      "notes": "Índice supuesto de HydOHPArray (dataref confirmado, índice no). Bloqueado hasta verificar."
+    }
+  ]
+}

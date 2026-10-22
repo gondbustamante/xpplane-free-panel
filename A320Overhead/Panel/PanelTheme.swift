@@ -15,6 +15,7 @@ enum PanelTheme {
         case "amber": return Color(red: 1.00, green: 0.69, blue: 0.00)
         case "green": return Color(red: 0.25, green: 0.95, blue: 0.45)
         case "blue": return Color(red: 0.45, green: 0.72, blue: 1.00)
+        case "red": return Color(red: 1.00, green: 0.22, blue: 0.15)
         default: return Color.white
         }
     }

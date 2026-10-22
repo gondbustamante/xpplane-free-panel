@@ -1,0 +1,153 @@
+{
+  "id": "gpws",
+  "title": "GPWS",
+  "group": "overhead",
+  "order": 85,
+  "notes": "GPWS. LDG FLAP 3 verificado (Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss.); el resto son índices supuestos bloqueados.",
+  "controls": [
+    {
+      "id": "gpws.sys",
+      "label": "SYS",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/GPWSSwitchArray",
+        "index": 0
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/GPWSSwitchArray",
+          "index": 0,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/GPWSSwitchArray",
+          "index": 0,
+          "onValue": 0
+        }
+      },
+      "readOnly": true,
+      "col": 0,
+      "row": 0,
+      "verified": false,
+      "notes": "Índice supuesto de GPWSSwitchArray. Bloqueado hasta verificar."
+    },
+    {
+      "id": "gpws.gs_mode",
+      "label": "G/S MODE",
+      "kind": "korry",
+      "positions": [
+        "ON",
+        "OFF"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/GPWSSwitchArray",
+        "index": 1
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/GPWSSwitchArray",
+          "index": 1,
+          "onValue": 1
+        }
+      },
+      "readOnly": true,
+      "col": 1,
+      "row": 0,
+      "verified": false,
+      "notes": "Índice supuesto de GPWSSwitchArray. Bloqueado hasta verificar."
+    },
+    {
+      "id": "gpws.flap_mode",
+      "label": "FLAP MODE",
+      "kind": "korry",
+      "positions": [
+        "ON",
+        "OFF"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/GPWSSwitchArray",
+        "index": 2
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/GPWSSwitchArray",
+          "index": 2,
+          "onValue": 1
+        }
+      },
+      "readOnly": true,
+      "col": 2,
+      "row": 0,
+      "verified": false,
+      "notes": "Índice supuesto de GPWSSwitchArray. Bloqueado hasta verificar."
+    },
+    {
+      "id": "gpws.ldg_flap3",
+      "label": "LDG FLAP 3",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/GPWSSwitchArray",
+        "index": 3
+      },
+      "commands": {
+        "up": "toliss_airbus/gpwscommands/Flap3On",
+        "down": "toliss_airbus/gpwscommands/Flap3Off"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/GPWSSwitchArray",
+          "index": 3
+        }
+      },
+      "col": 3,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
+    },
+    {
+      "id": "gpws.terr",
+      "label": "TERR",
+      "kind": "korry",
+      "positions": [
+        "ON",
+        "OFF"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/GPWSSwitchArray",
+        "index": 4
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/GPWSSwitchArray",
+          "index": 4,
+          "onValue": 1
+        }
+      },
+      "readOnly": true,
+      "col": 4,
+      "row": 0,
+      "verified": false,
+      "notes": "Índice supuesto de GPWSSwitchArray. Bloqueado hasta verificar."
+    }
+  ]
+}

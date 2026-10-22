@@ -29,9 +29,19 @@ Objetivo: demostrar el camino completo iPad → relay → Web API → ToLiss con
 
 **Aceptación:** vuelo completo usando solo el iPad para luces exteriores y signos, sin tocar el ratón.
 
-## Fase 2 · Overhead completo (2 a 3 meses)
+## Fase 2 · Overhead completo (2 a 3 meses) — en curso
 
-Orden propuesto por valor para el flujo de vuelo y por riesgo de mapeo:
+Hecho el 2026-10-22: barra lateral con fases de vuelo y grupos de paneles (`mapping/layout.json`), selector rotatorio, pulsador guardado, 12 subpaneles del overhead con 74 controles (34 verificados por un proyecto de hardware que funciona contra ToLiss, 40 pendientes, de los cuales 26 bloqueados como solo lectura hasta confirmar índice).
+
+Pendiente por subpanel (verificar en Diagnóstico y desbloquear):
+- ELEC: índices de `ElecOHPArray` para GEN 1/2, BUS TIE, AC ESS FEED, GALLEY, COMMERCIAL, IDG 1/2; escritura de APU GEN.
+- HYD: índices de `HydOHPArray`.
+- AIR COND: X BLEED, HOT AIR, RAM AIR; lámparas FAULT de ENG BLEED.
+- FUEL: X FEED. ANTI ICE: PROBE/WINDOW HEAT. GPWS: SYS, G/S MODE, FLAP MODE, TERR.
+- Orden de valores de todos los controles de 3 posiciones (EXT LT, SIGNS, ADIRS, WIPER, ANN LT).
+- FIRE: pulsador de fuego del APU y agentes. Faltan por crear: FLT CTL, CABIN PRESS, VENTILATION, CARGO HEAT/SMOKE, ENG MAN START, EMER ELEC PWR, EVAC, INT LT, BAT voltímetros.
+
+Orden original propuesto por valor para el flujo de vuelo y por riesgo de mapeo:
 
 1. **ELEC** (BAT 1/2, EXT PWR, APU GEN, GEN 1/2, BUS TIE, GALLEY) — ya hay hilos de usuarios con `ElecOHPArray`
 2. **APU** (MASTER SW, START) con anunciadores AVAIL/ON/FAULT
@@ -43,7 +53,9 @@ Orden propuesto por valor para el flujo de vuelo y por riesgo de mapeo:
 8. **FIRE** (ENG 1/2, APU) → requiere control **guardado** y pulsador con tirador
 9. **FLT CTL**, **OXYGEN**, **CALLS**, **WIPER**, **INT LT**, **CABIN PRESS**, **GPWS**, **RCDR**, **EVAC**, **EMER ELEC PWR**, **VENTILATION**, **CARGO HEAT/SMOKE**, **ENG MAN START**
 
-Componentes nuevos: selector rotatorio (gesto circular), interruptor guardado (levantar la guarda y luego actuar), pulsador con tirador de fuego, y disposición fiel del overhead completo con zoom y desplazamiento.
+Componentes nuevos pendientes: pulsador con tirador de fuego, voltímetros de batería, disposición fiel del overhead completo con zoom y desplazamiento.
+
+**Otros grupos de paneles** (pedestal, glareshield/FCU, MCDU, instrumentos) se añaden como carpetas en `mapping/` y entradas en `layout.json`, sin tocar la interfaz; pueden trabajarse en paralelo.
 
 **Aceptación:** cold & dark → listo para rodar hecho íntegramente desde el iPad siguiendo el flujo normal del ToLiss.
 

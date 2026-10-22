@@ -1,0 +1,124 @@
+{
+  "id": "fire",
+  "title": "FIRE",
+  "group": "overhead",
+  "order": 5,
+  "notes": "Panel de fuego. Pulsadores ENG 1/2 y pruebas verificados (Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss.). El pulsador de fuego del APU no tiene dataref localizado todavía.",
+  "controls": [
+    {
+      "id": "fire.eng1",
+      "label": "ENG 1 FIRE",
+      "kind": "korry",
+      "positions": [
+        "NORM",
+        "PUSHED"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENGFireSwitchArray",
+        "index": 0
+      },
+      "lamps": {
+        "top": {
+          "text": "FIRE",
+          "color": "red",
+          "dataref": "AirbusFBW/OHPLightsATA70_Raw",
+          "index": 11
+        },
+        "bottom": {
+          "text": "PUSHED",
+          "color": "white",
+          "dataref": "AirbusFBW/ENGFireSwitchArray",
+          "index": 0
+        }
+      },
+      "guarded": true,
+      "col": 0,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Lámpara de fuego en OHPLightsATA70_Raw[11]."
+    },
+    {
+      "id": "fire.eng1_test",
+      "label": "TEST 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/FireTestENG1",
+        "duration": 2
+      },
+      "col": 1,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Comando mantenido 2 s."
+    },
+    {
+      "id": "fire.apu_test",
+      "label": "APU TEST",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/FireTestAPU",
+        "duration": 2
+      },
+      "col": 2,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Comando mantenido 2 s."
+    },
+    {
+      "id": "fire.eng2_test",
+      "label": "TEST 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/FireTestENG2",
+        "duration": 2
+      },
+      "col": 3,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Comando mantenido 2 s."
+    },
+    {
+      "id": "fire.eng2",
+      "label": "ENG 2 FIRE",
+      "kind": "korry",
+      "positions": [
+        "NORM",
+        "PUSHED"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENGFireSwitchArray",
+        "index": 1
+      },
+      "lamps": {
+        "top": {
+          "text": "FIRE",
+          "color": "red",
+          "dataref": "AirbusFBW/OHPLightsATA70_Raw",
+          "index": 13
+        },
+        "bottom": {
+          "text": "PUSHED",
+          "color": "white",
+          "dataref": "AirbusFBW/ENGFireSwitchArray",
+          "index": 1
+        }
+      },
+      "guarded": true,
+      "col": 4,
+      "row": 0,
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Lámpara de fuego en OHPLightsATA70_Raw[13]."
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "groups": [
+    {
+      "id": "overhead",
+      "title": "Overhead",
+      "icon": "square.grid.3x3.topleft.filled"
+    }
+  ],
+  "phases": [
+    {
+      "id": "cold_dark",
+      "title": "Cold & Dark",
+      "icon": "snowflake",
+      "subpanels": [
+        "elec",
+        "apu",
+        "adirs",
+        "ext_lt",
+        "signs",
+        "fuel"
+      ]
+    },
+    {
+      "id": "before_start",
+      "title": "Antes de arranque",
+      "icon": "power",
+      "subpanels": [
+        "apu",
+        "air_cond",
+        "fuel",
+        "anti_ice",
+        "hyd",
+        "signs"
+      ]
+    },
+    {
+      "id": "start_taxi",
+      "title": "Arranque y rodaje",
+      "icon": "airplane.departure",
+      "subpanels": [
+        "ext_lt",
+        "anti_ice",
+        "air_cond",
+        "apu",
+        "elec"
+      ]
+    },
+    {
+      "id": "takeoff_cruise",
+      "title": "Despegue y crucero",
+      "icon": "airplane",
+      "subpanels": [
+        "ext_lt",
+        "signs",
+        "anti_ice",
+        "air_cond"
+      ]
+    },
+    {
+      "id": "approach",
+      "title": "Aproximación",
+      "icon": "airplane.arrival",
+      "subpanels": [
+        "ext_lt",
+        "signs",
+        "anti_ice",
+        "air_cond",
+        "gpws"
+      ]
+    },
+    {
+      "id": "shutdown",
+      "title": "Apagado",
+      "icon": "moon.zzz",
+      "subpanels": [
+        "ext_lt",
+        "signs",
+        "air_cond",
+        "apu",
+        "fuel",
+        "adirs",
+        "elec"
+      ]
+    }
+  ]
+}

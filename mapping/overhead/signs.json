@@ -1,30 +1,63 @@
 {
   "id": "signs",
   "title": "SIGNS",
-  "order": 20,
-  "notes": "Panel SIGNS. SEAT BELTS y NO SMOKING usan AirbusFBW/OHPLightSwitches[11] y [12] con 0=OFF, 1=AUTO, 2=ON según usuarios del foro de X-Plane.org. EMER EXIT LT pendiente de localizar su dataref.",
+  "group": "overhead",
+  "order": 70,
+  "notes": "Señales de cabina. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss.",
   "controls": [
     {
       "id": "signs.seat_belts",
       "label": "SEAT BELTS",
       "kind": "toggle3",
-      "positions": ["OFF", "AUTO", "ON"],
-      "state": { "dataref": "AirbusFBW/OHPLightSwitches", "index": 11 },
+      "positions": [
+        "OFF",
+        "AUTO",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightSwitches",
+        "index": 11
+      },
       "col": 0,
       "row": 0,
       "verified": false,
-      "notes": "Índice 11 y valores 0/1/2 reportados por usuarios. Confirmar en el simulador."
+      "notes": "Índice 11 confirmado. Usuarios reportan 0=OFF, 1=AUTO, 2=ON; en hardware se usa como 0/1. Confirmar."
     },
     {
       "id": "signs.no_smoking",
       "label": "NO SMOKING",
       "kind": "toggle3",
-      "positions": ["OFF", "AUTO", "ON"],
-      "state": { "dataref": "AirbusFBW/OHPLightSwitches", "index": 12 },
+      "positions": [
+        "OFF",
+        "AUTO",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightSwitches",
+        "index": 12
+      },
       "col": 1,
       "row": 0,
       "verified": false,
-      "notes": "Índice 12 reportado por usuarios. Confirmar en el simulador."
+      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
+    },
+    {
+      "id": "signs.emer_exit_lt",
+      "label": "EMER EXIT LT",
+      "kind": "toggle3",
+      "positions": [
+        "OFF",
+        "ARM",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightSwitches",
+        "index": 10
+      },
+      "col": 2,
+      "row": 0,
+      "verified": false,
+      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador. Lámpara OFF en OHPLightsATA31_Raw[12]."
     }
   ]
 }

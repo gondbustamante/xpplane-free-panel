@@ -1,96 +1,150 @@
 {
   "id": "ext_lt",
   "title": "EXT LT",
-  "order": 10,
-  "notes": "Panel de luces exteriores del A320. Estado y escritura en el array AirbusFBW/OHPLightSwitches. Índices 0, 2, 3, 4, 5 y 7 proceden de scripts publicados por usuarios en el foro de X-Plane.org; 1 y 6 son suposiciones por el orden físico del panel. Significado de los valores de LAND y NOSE pendiente de confirmar en el simulador. Comandos toliss_airbus/lightcommands/* existen pero no están listados aquí hasta volcarlos con tools/xp.py dump --grep lightcommands.",
+  "group": "overhead",
+  "order": 60,
+  "notes": "Luces exteriores. Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss. Los interruptores de dos posiciones están verificados; en los de tres falta confirmar el orden de los valores.",
   "controls": [
     {
       "id": "ext_lt.strobe",
       "label": "STROBE",
       "kind": "toggle3",
-      "positions": ["OFF", "AUTO", "ON"],
-      "state": { "dataref": "AirbusFBW/OHPLightSwitches", "index": 7 },
+      "positions": [
+        "OFF",
+        "AUTO",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightSwitches",
+        "index": 7
+      },
       "col": 0,
       "row": 0,
       "verified": false,
-      "notes": "Índice 7 reportado por usuarios. Valores 0/1/2 por confirmar."
+      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
     },
     {
       "id": "ext_lt.beacon",
       "label": "BEACON",
       "kind": "toggle2",
-      "positions": ["OFF", "ON"],
-      "state": { "dataref": "AirbusFBW/OHPLightSwitches", "index": 0 },
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightSwitches",
+        "index": 0
+      },
       "col": 1,
       "row": 0,
-      "verified": false,
-      "notes": "Índice 0 reportado por usuarios."
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
     },
     {
       "id": "ext_lt.wing",
       "label": "WING",
       "kind": "toggle2",
-      "positions": ["OFF", "ON"],
-      "state": { "dataref": "AirbusFBW/OHPLightSwitches", "index": 1 },
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightSwitches",
+        "index": 1
+      },
       "col": 2,
       "row": 0,
-      "verified": false,
-      "notes": "Índice 1 es una suposición. Confirmar con tools/xp.py watch."
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
     },
     {
       "id": "ext_lt.nav_logo",
       "label": "NAV & LOGO",
       "kind": "toggle3",
-      "positions": ["OFF", "1", "2"],
-      "state": { "dataref": "AirbusFBW/OHPLightSwitches", "index": 2 },
+      "positions": [
+        "OFF",
+        "1",
+        "2"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightSwitches",
+        "index": 2
+      },
       "col": 3,
       "row": 0,
       "verified": false,
-      "notes": "Índice 2 reportado por usuarios."
+      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
     },
     {
       "id": "ext_lt.rwy_turn_off",
       "label": "RWY TURN OFF",
       "kind": "toggle2",
-      "positions": ["OFF", "ON"],
-      "state": { "dataref": "AirbusFBW/OHPLightSwitches", "index": 6 },
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightSwitches",
+        "index": 6
+      },
       "col": 4,
       "row": 0,
-      "verified": false,
-      "notes": "Índice 6 es una suposición. Confirmar con tools/xp.py watch."
+      "verified": true,
+      "notes": "Índices tomados del proyecto XSchenFly (hardware Rowsfire A107, X-Plane 12, Web API), que funciona contra ToLiss."
     },
     {
       "id": "ext_lt.land_l",
       "label": "LAND L",
       "kind": "toggle3",
-      "positions": ["RETRACT", "OFF", "ON"],
-      "state": { "dataref": "AirbusFBW/OHPLightSwitches", "index": 4, "values": [0, 1, 2] },
+      "positions": [
+        "RETRACT",
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightSwitches",
+        "index": 4
+      },
       "col": 5,
       "row": 0,
       "verified": false,
-      "notes": "Índice 4 reportado por usuarios. Orden RETRACT/OFF/ON = 0/1/2 por confirmar."
+      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
     },
     {
       "id": "ext_lt.land_r",
       "label": "LAND R",
       "kind": "toggle3",
-      "positions": ["RETRACT", "OFF", "ON"],
-      "state": { "dataref": "AirbusFBW/OHPLightSwitches", "index": 5, "values": [0, 1, 2] },
+      "positions": [
+        "RETRACT",
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightSwitches",
+        "index": 5
+      },
       "col": 6,
       "row": 0,
       "verified": false,
-      "notes": "Índice 5 reportado por usuarios. Orden RETRACT/OFF/ON = 0/1/2 por confirmar."
+      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
     },
     {
       "id": "ext_lt.nose",
       "label": "NOSE",
       "kind": "toggle3",
-      "positions": ["OFF", "TAXI", "T.O"],
-      "state": { "dataref": "AirbusFBW/OHPLightSwitches", "index": 3 },
+      "positions": [
+        "OFF",
+        "TAXI",
+        "T.O"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/OHPLightSwitches",
+        "index": 3
+      },
       "col": 7,
       "row": 0,
       "verified": false,
-      "notes": "Índice 3 reportado como TAXI por usuarios. Valores 0/1/2 por confirmar."
+      "notes": "Índice confirmado por XSchenFly; orden de valores 0/1/2 por confirmar en el simulador."
     }
   ]
 }

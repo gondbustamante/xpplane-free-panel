@@ -95,7 +95,7 @@ final class PanelMappingTests: XCTestCase {
     }
 
     func testPositionMappingIsNearestValue() {
-        let binding = ValueBinding(dataref: "x", index: nil, values: [0, 1, 2])
+        let binding = ValueBinding(dataref: "x", index: nil, values: [0, 1, 2], aliases: nil)
         XCTAssertEqual(binding.position(for: .number(1), count: 3), 1)
         XCTAssertEqual(binding.position(for: .number(1.9), count: 3), 2)
         XCTAssertNil(binding.position(for: .string("abc"), count: 3))
@@ -103,12 +103,42 @@ final class PanelMappingTests: XCTestCase {
     }
 
     func testLampThreshold() {
-        let lamp = Lamp(text: "FAULT", color: "amber", dataref: "d", index: nil, onValue: nil)
+        let lamp = Lamp(text: "FAULT", color: "amber", dataref: "d", index: nil, onValue: nil, bit: nil, invert: nil)
         XCTAssertTrue(lamp.isLit(.number(1)))
         XCTAssertFalse(lamp.isLit(.number(0)))
         XCTAssertFalse(lamp.isLit(nil))
-        let exact = Lamp(text: "AVAIL", color: "green", dataref: "d", index: nil, onValue: 2)
+        let exact = Lamp(text: "AVAIL", color: "green", dataref: "d", index: nil, onValue: 2, bit: nil, invert: nil)
         XCTAssertTrue(exact.isLit(.number(2)))
         XCTAssertFalse(exact.isLit(.number(1)))
+    }
+}
+
+final class PanelMappingExtrasTests: XCTestCase {
+    func testAliasesWinOverNearest() {
+        // EXT PWR: 0 = off, 1 = on, 2 = available (switch off)
+        let binding = ValueBinding(dataref: "x", index: 0, values: [0, 1], aliases: ["2": 0])
+        XCTAssertEqual(binding.position(for: .number(2), count: 2), 0)
+        XCTAssertEqual(binding.position(for: .number(1), count: 2), 1)
+    }
+
+    func testBitAndInvertLamps() {
+        let on = Lamp(text: "ON", color: "blue", dataref: "d", index: nil, onValue: nil, bit: 1, invert: nil)
+        let fault = Lamp(text: "FAULT", color: "amber", dataref: "d", index: nil, onValue: nil, bit: 2, invert: nil)
+        let off = Lamp(text: "OFF", color: "white", dataref: "d", index: nil, onValue: nil, bit: 1, invert: true)
+        XCTAssertTrue(on.isLit(.number(3)))
+        XCTAssertTrue(fault.isLit(.number(2)))
+        XCTAssertFalse(fault.isLit(.number(1)))
+        XCTAssertTrue(off.isLit(.number(0)))
+        XCTAssertFalse(off.isLit(.number(1)))
+    }
+
+    func testLayoutDecodes() throws {
+        let json = """
+        {"groups":[{"id":"overhead","title":"Overhead","icon":"square.grid.3x3"}],
+         "phases":[{"id":"cold","title":"Cold & Dark","icon":"snowflake","subpanels":["elec","apu"]}]}
+        """
+        let layout = try JSONDecoder().decode(PanelLayout.self, from: Data(json.utf8))
+        XCTAssertEqual(layout.groups.first?.id, "overhead")
+        XCTAssertEqual(layout.phases.first?.subpanels, ["elec", "apu"])
     }
 }
