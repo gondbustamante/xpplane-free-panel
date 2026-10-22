@@ -118,9 +118,12 @@
   ],
   "arrangements": {
     "overhead": {
-      "notes": "Disposición física del overhead del A320 visto desde los asientos: columna del capitán, columna central y columna del copiloto, de arriba (popa) a abajo (parabrisas). Cada columna es una lista de filas; cada fila, una lista de ids de subpanel que van lado a lado.",
+      "notes": "Disposición del overhead del ToLiss A320 visto desde los asientos (captura de la cabina virtual): columna del capitán con ADIRS arriba, columna central encabezada por FIRE, columna del copiloto. Cada columna es una lista de filas; cada fila, ids de subpanel lado a lado.",
       "columns": [
         [
+          [
+            "adirs"
+          ],
           [
             "flt_ctl_1"
           ],
@@ -148,9 +151,6 @@
         ],
         [
           [
-            "adirs"
-          ],
-          [
             "fire"
           ],
           [
@@ -170,12 +170,10 @@
             "cabin_press"
           ],
           [
-            "ext_lt"
-          ],
-          [
+            "ext_lt",
             "apu",
-            "signs",
-            "int_lt"
+            "int_lt",
+            "signs"
           ]
         ],
         [
@@ -183,13 +181,13 @@
             "flt_ctl_2"
           ],
           [
+            "cargo_heat"
+          ],
+          [
             "cargo_smoke"
           ],
           [
             "ventilation"
-          ],
-          [
-            "cargo_heat"
           ],
           [
             "eng"

@@ -129,8 +129,8 @@
         "up": "toliss_airbus/lightcommands/LLandLightUp",
         "down": "toliss_airbus/lightcommands/LLandLightDown"
       },
-      "col": 5,
-      "row": 0,
+      "col": 1,
+      "row": 1,
       "verified": false,
       "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina."
     },
@@ -151,8 +151,8 @@
         "up": "toliss_airbus/lightcommands/RLandLightUp",
         "down": "toliss_airbus/lightcommands/RLandLightDown"
       },
-      "col": 6,
-      "row": 0,
+      "col": 2,
+      "row": 1,
       "verified": false,
       "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina."
     },
@@ -173,8 +173,8 @@
         "up": "toliss_airbus/lightcommands/NoseLightUp",
         "down": "toliss_airbus/lightcommands/NoseLightDown"
       },
-      "col": 7,
-      "row": 0,
+      "col": 3,
+      "row": 1,
       "verified": false,
       "notes": "Índice confirmado; el orden de los valores 0/1/2 para mostrar la posición está por confirmar. Los comandos Up/Down mueven el interruptor igual que en la cabina."
     }

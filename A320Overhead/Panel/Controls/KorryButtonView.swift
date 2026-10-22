@@ -18,7 +18,6 @@ struct KorryButtonView: View {
     var dimmed = false
     let onPress: () -> Void
 
-    @State private var pressed = false
     @State private var guardOpen = false
     @State private var guardTimer: Task<Void, Never>?
 
@@ -37,38 +36,31 @@ struct KorryButtonView: View {
     }
 
     private var button: some View {
-        VStack(spacing: 0) {
-            half(top)
-            Rectangle().fill(Color(white: 0.22)).frame(height: 1)
-            half(bottom)
+        Button {
+            onPress()
+            if guarded { closeGuard() }
+        } label: {
+            VStack(spacing: 0) {
+                half(top)
+                Rectangle().fill(Color(white: 0.22)).frame(height: 1)
+                half(bottom)
+            }
+            .padding(3)
+            .background(
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(PanelTheme.korryFace)
+            )
+            .padding(4)
+            .frame(width: size, height: size)
+            .background(
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(LinearGradient(colors: [PanelTheme.bezel, Color(white: 0.24)],
+                                         startPoint: .topLeading, endPoint: .bottomTrailing))
+            )
+            .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black.opacity(0.8), lineWidth: 1))
+            .contentShape(Rectangle())
         }
-        .padding(3)
-        .background(
-            RoundedRectangle(cornerRadius: 2)
-                .fill(PanelTheme.korryFace)
-        )
-        .padding(4)
-        .frame(width: size, height: size)
-        .background(
-            RoundedRectangle(cornerRadius: 4)
-                .fill(LinearGradient(colors: [PanelTheme.bezel, Color(white: 0.24)],
-                                     startPoint: .topLeading, endPoint: .bottomTrailing))
-        )
-        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black.opacity(0.8), lineWidth: 1))
-        .shadow(color: .black.opacity(pressed ? 0.15 : 0.55), radius: pressed ? 1 : 3, y: pressed ? 0.5 : 2.5)
-        .scaleEffect(pressed ? 0.965 : 1)
-        .offset(y: pressed ? 1.5 : 0)
-        .animation(.easeOut(duration: 0.08), value: pressed)
-        .contentShape(Rectangle())
-        .gesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in if !pressed { pressed = true } }
-                .onEnded { _ in
-                    pressed = false
-                    onPress()
-                    if guarded { closeGuard() }
-                }
-        )
+        .buttonStyle(KorryPressStyle())
         .disabled(!enabled)
     }
 
@@ -153,4 +145,17 @@ struct KorryButtonView: View {
     }
     .padding(30)
     .background(PanelTheme.panelFace)
+}
+
+/// Sinks the button while touched. A `Button` (unlike a zero-distance drag) cooperates with the
+/// surrounding scroll view: a tap presses, a swipe scrolls.
+struct KorryPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .shadow(color: .black.opacity(configuration.isPressed ? 0.15 : 0.55),
+                    radius: configuration.isPressed ? 1 : 3, y: configuration.isPressed ? 0.5 : 2.5)
+            .scaleEffect(configuration.isPressed ? 0.965 : 1)
+            .offset(y: configuration.isPressed ? 1.5 : 0)
+            .animation(.easeOut(duration: 0.08), value: configuration.isPressed)
+    }
 }

@@ -5,8 +5,8 @@ import SwiftUI
 enum PanelTheme {
     static let cockpitBackground = Color(red: 0.07, green: 0.08, blue: 0.10)
     /// Airbus cockpit grey: a dark, slightly blue grey.
-    static let panelFace = Color(red: 0.24, green: 0.26, blue: 0.29)
-    static let panelFaceHighlight = Color(red: 0.29, green: 0.31, blue: 0.34)
+    static let panelFace = Color(red: 0.23, green: 0.27, blue: 0.33)
+    static let panelFaceHighlight = Color(red: 0.28, green: 0.32, blue: 0.38)
     static let panelEdge = Color(red: 0.16, green: 0.17, blue: 0.19)
     static let bezel = Color(red: 0.42, green: 0.44, blue: 0.46)
     static let korryFace = Color(red: 0.07, green: 0.07, blue: 0.08)
