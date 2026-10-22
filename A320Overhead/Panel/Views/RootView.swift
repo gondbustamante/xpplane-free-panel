@@ -61,8 +61,8 @@ struct SubpanelView: View {
         .padding(.top, 24)
         .padding(.bottom, 18)
         .overlay(
-            RoundedRectangle(cornerRadius: 4)
-                .stroke(Color.white.opacity(0.9), lineWidth: 1.5)
+            RoundedRectangle(cornerRadius: 3)
+                .stroke(Color.white.opacity(0.92), lineWidth: 1.4)
         )
         .overlay(alignment: .topLeading) {
             Text(panel.title.uppercased())
@@ -73,6 +73,10 @@ struct SubpanelView: View {
                 .background(PanelTheme.panelFace)
                 .offset(x: 12, y: -9)
         }
+        .overlay(alignment: .topTrailing) { ScrewView().offset(x: -5, y: -4) }
+        .overlay(alignment: .bottomLeading) { ScrewView().offset(x: 5, y: 4) }
+        .overlay(alignment: .bottomTrailing) { ScrewView().offset(x: -5, y: 4) }
+        .padding(4)
     }
 }
 

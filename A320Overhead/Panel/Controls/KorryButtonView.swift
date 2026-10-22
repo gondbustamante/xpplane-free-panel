@@ -36,18 +36,24 @@ struct KorryButtonView: View {
     }
 
     private var button: some View {
-        VStack(spacing: 2) {
+        VStack(spacing: 0) {
             half(top)
+            Rectangle().fill(Color(white: 0.22)).frame(height: 1)
             half(bottom)
         }
+        .padding(3)
+        .background(
+            RoundedRectangle(cornerRadius: 2)
+                .fill(PanelTheme.korryFace)
+        )
         .padding(4)
         .frame(width: size, height: size)
         .background(
             RoundedRectangle(cornerRadius: 4)
-                .fill(LinearGradient(colors: [Color(white: 0.16), Color(white: 0.08)],
-                                     startPoint: .top, endPoint: .bottom))
+                .fill(LinearGradient(colors: [PanelTheme.bezel, Color(white: 0.24)],
+                                     startPoint: .topLeading, endPoint: .bottomTrailing))
         )
-        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color(white: 0.45), lineWidth: 1.2))
+        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black.opacity(0.8), lineWidth: 1))
         .shadow(color: .black.opacity(pressed ? 0.15 : 0.55), radius: pressed ? 1 : 3, y: pressed ? 0.5 : 2.5)
         .scaleEffect(pressed ? 0.965 : 1)
         .offset(y: pressed ? 1.5 : 0)
@@ -107,13 +113,14 @@ struct KorryButtonView: View {
     @ViewBuilder
     private func half(_ lamp: KorryLamp?) -> some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 2)
-                .fill(lamp?.lit == true ? lamp!.color.opacity(0.22) : Color.black.opacity(0.35))
+            Rectangle()
+                .fill(lamp?.lit == true ? lamp!.color.opacity(0.28) : Color.clear)
             if let lamp {
                 Text(lamp.text)
-                    .font(.system(size: 10.5, weight: .bold))
+                    .font(.system(size: 10.5, weight: .heavy))
                     .foregroundStyle(lamp.lit ? lamp.color : PanelTheme.unlitLegend)
-                    .shadow(color: lamp.lit ? lamp.color.opacity(0.9) : .clear, radius: 4)
+                    .shadow(color: lamp.lit ? lamp.color.opacity(1) : .clear, radius: 5)
+                    .shadow(color: lamp.lit ? lamp.color.opacity(0.6) : .clear, radius: 1)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
             }

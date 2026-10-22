@@ -40,16 +40,24 @@ struct RotarySelectorView: View {
                     .rotationEffect(.degrees(angle(for: index)))
             }
             Circle()
-                .fill(RadialGradient(colors: [Color(white: 0.34), Color(white: 0.10)],
+                .fill(RadialGradient(colors: [Color(white: 0.30), Color(white: 0.08)],
                                      center: UnitPoint(x: 0.4, y: 0.35), startRadius: 2, endRadius: 28))
                 .frame(width: 52, height: 52)
-                .overlay(Circle().stroke(Color.black.opacity(0.75), lineWidth: 1))
-                .shadow(color: .black.opacity(0.55), radius: 3, y: 2)
-            Capsule()
-                .fill(Color.white)
-                .frame(width: 4, height: 18)
-                .offset(y: -15)
-                .rotationEffect(.degrees(angle(for: min(max(position, 0), count - 1))))
+                .overlay(Circle().stroke(Color.black.opacity(0.8), lineWidth: 1))
+                .shadow(color: .black.opacity(0.6), radius: 3, y: 2)
+            // Bar handle with a white pointer line, as on the ADIRS and X BLEED selectors.
+            ZStack {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(LinearGradient(colors: [Color(white: 0.22), Color(white: 0.10)],
+                                         startPoint: .leading, endPoint: .trailing))
+                    .frame(width: 14, height: 44)
+                    .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black.opacity(0.7), lineWidth: 0.8))
+                Capsule()
+                    .fill(Color.white)
+                    .frame(width: 3, height: 20)
+                    .offset(y: -11)
+            }
+            .rotationEffect(.degrees(angle(for: min(max(position, 0), count - 1))))
         }
         .frame(width: 74, height: 74)
         .contentShape(Rectangle())

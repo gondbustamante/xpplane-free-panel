@@ -49,8 +49,12 @@ struct ToggleSwitchView: View {
                 .shadow(color: .black.opacity(0.45), radius: 2, y: 1)
 
             Circle()
+                .fill(LinearGradient(colors: [PanelTheme.bezel, Color(white: 0.20)],
+                                     startPoint: .top, endPoint: .bottom))
+                .frame(width: 21, height: 21)
+            Circle()
                 .fill(Color.black)
-                .frame(width: 17, height: 17)
+                .frame(width: 15, height: 15)
 
             Capsule()
                 .fill(LinearGradient(colors: [Color(white: 0.42), Color(white: 0.88), Color(white: 0.38)],

@@ -49,10 +49,17 @@ struct PanelFace<Content: View>: View {
         content()
             .padding(26)
             .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(LinearGradient(colors: [PanelTheme.panelFaceHighlight, PanelTheme.panelFace],
-                                         startPoint: .top, endPoint: .bottom))
-                    .shadow(color: .black.opacity(0.6), radius: 12, y: 6)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(LinearGradient(colors: [PanelTheme.panelFaceHighlight, PanelTheme.panelFace],
+                                             startPoint: .top, endPoint: .bottom))
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(RadialGradient(colors: [Color.clear, Color.black.opacity(0.22)],
+                                             center: .center, startRadius: 200, endRadius: 900))
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(PanelTheme.panelEdge, lineWidth: 3)
+                }
+                .shadow(color: .black.opacity(0.65), radius: 14, y: 8)
             )
     }
 }
@@ -104,28 +111,21 @@ struct ArrangedGroupView: View {
 }
 
 /// Scrolls in both directions and scales its content with a pinch or the model's zoom.
-/// The content is laid out at its natural size and then scaled, so the scroll area matches.
+/// `ScaledLayout` reports the scaled size to the scroll view while the content is laid out at its
+/// natural size, so there is no measuring round-trip and the scroll area always matches.
 struct ZoomableCanvas<Content: View>: View {
     @Environment(PanelModel.self) private var model
     @ViewBuilder let content: () -> Content
 
-    @State private var contentSize: CGSize = .zero
     @State private var pinchBase: Double?
 
     var body: some View {
-        let scale = model.canvasScale
         ScrollView([.horizontal, .vertical], showsIndicators: true) {
-            content()
-                .fixedSize()
-                .background(
-                    GeometryReader { proxy in
-                        Color.clear.preference(key: CanvasSizeKey.self, value: proxy.size)
-                    }
-                )
-                .onPreferenceChange(CanvasSizeKey.self) { contentSize = $0 }
-                .scaleEffect(scale, anchor: .topLeading)
-                .frame(width: contentSize.width * scale, height: contentSize.height * scale, alignment: .topLeading)
-                .padding(20)
+            ScaledLayout(scale: model.canvasScale) {
+                content()
+                    .scaleEffect(model.canvasScale, anchor: .topLeading)
+            }
+            .padding(20)
         }
         .simultaneousGesture(
             MagnificationGesture()
@@ -139,9 +139,19 @@ struct ZoomableCanvas<Content: View>: View {
     }
 }
 
-private struct CanvasSizeKey: PreferenceKey {
-    static var defaultValue: CGSize = .zero
-    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
-        value = nextValue()
+/// Lays out its single child at its ideal size and claims that size multiplied by `scale`.
+/// Pair it with `.scaleEffect(scale, anchor: .topLeading)` on the child.
+struct ScaledLayout: Layout {
+    var scale: Double
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        guard let child = subviews.first else { return .zero }
+        let size = child.sizeThatFits(.unspecified)
+        return CGSize(width: size.width * scale, height: size.height * scale)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard let child = subviews.first else { return }
+        child.place(at: bounds.origin, anchor: .topLeading, proposal: .unspecified)
     }
 }
