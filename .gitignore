@@ -17,8 +17,5 @@ DerivedData/
 __pycache__/
 *.pyc
 
-# Tool output
-tools/dump/
-
 # OS
 .DS_Store

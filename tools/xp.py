@@ -5,6 +5,7 @@ Standard library only. Run it on the PC with X-Plane (default 127.0.0.1:8086) or
 relay from any machine with --host/--port.
 
   xp.py dump  [--grep REGEX] [--out DIR]     dump datarefs/commands matching REGEX to text files
+                                             (default DIR: mapping/reference, versioned in git)
   xp.py get   NAME [--index I]               print a dataref value
   xp.py watch NAME [NAME...] [--interval S]  poll datarefs and print what changes (flip a switch
                                              in the sim and see which array index moves)
@@ -19,6 +20,7 @@ Examples:
 """
 import argparse
 import json
+import os
 import re
 import sys
 import time
@@ -99,8 +101,10 @@ def parse_value(text):
         return text
 
 
+DEFAULT_DUMP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "mapping", "reference")
+
+
 def cmd_dump(xp, args):
-    import os
     pattern = re.compile(args.grep, re.IGNORECASE) if args.grep else None
     os.makedirs(args.out, exist_ok=True)
     datarefs = [d for d in xp.datarefs() if not pattern or pattern.search(d["name"])]
@@ -112,7 +116,8 @@ def cmd_dump(xp, args):
     with open(os.path.join(args.out, "commands.txt"), "w", encoding="utf-8") as handle:
         for row in sorted(commands, key=lambda r: r["name"]):
             handle.write(f"{row['name']}\t{row.get('description') or ''}\n")
-    print(f"{len(datarefs)} datarefs y {len(commands)} comandos escritos en {args.out}/")
+    print(f"{len(datarefs)} datarefs y {len(commands)} comandos escritos en {os.path.relpath(args.out)}/")
+    print("Súbelos al repo con:  git add -A && git commit -m \"Volcado ToLiss\" && git push")
 
 
 def cmd_get(xp, args):
@@ -160,7 +165,7 @@ def main():
     parser.add_argument("--port", type=int, default=8086)
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p = sub.add_parser("dump"); p.add_argument("--grep"); p.add_argument("--out", default="dump"); p.set_defaults(fn=cmd_dump)
+    p = sub.add_parser("dump"); p.add_argument("--grep"); p.add_argument("--out", default=DEFAULT_DUMP_DIR); p.set_defaults(fn=cmd_dump)
     p = sub.add_parser("get"); p.add_argument("name"); p.add_argument("--index", type=int); p.set_defaults(fn=cmd_get)
     p = sub.add_parser("watch"); p.add_argument("names", nargs="+"); p.add_argument("--interval", type=float, default=0.2); p.set_defaults(fn=cmd_watch)
     p = sub.add_parser("set"); p.add_argument("name"); p.add_argument("value"); p.add_argument("--index", type=int); p.set_defaults(fn=cmd_set)

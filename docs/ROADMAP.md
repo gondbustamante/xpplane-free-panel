@@ -9,11 +9,11 @@ Objetivo: demostrar el camino completo iPad → relay → Web API → ToLiss con
 - [x] Cliente Web API (REST + WebSocket) con tests
 - [x] Relay LAN y CLI de descubrimiento
 - [x] Esqueleto de app con conexión persistida
-- [ ] Primer `xp.py dump --grep "AirbusFBW|toliss"` en el PC y volcado archivado en `tools/dump/` (ignorado por git, compartir por otro canal)
-- [ ] Confirmar que X-Plane acepta el tráfico vía relay (Host reescrito)
+- [ ] Primer `xp.py dump --grep "AirbusFBW|toliss"` y volcado versionado en `mapping/reference/`
+- [x] Confirmar que X-Plane acepta el tráfico vía relay (Host reescrito)
 - [ ] Confirmar la forma real de `dataref_update_values` y `result` contra la doc oficial
 
-**Aceptación:** mover STROBE en el iPad cambia la luz en el simulador, y moverlo en el simulador mueve la palanca en el iPad.
+**Aceptación:** mover STROBE en el iPad cambia la luz en el simulador, y moverlo en el simulador mueve la palanca en el iPad. **Cumplido el 2026-10-22** con X-Plane 12 y ToLiss en el mismo Mac.
 
 ## Fase 1 · MVP: EXT LT + SIGNS (2 semanas)
 
@@ -23,8 +23,9 @@ Objetivo: demostrar el camino completo iPad → relay → Web API → ToLiss con
 - [ ] Verificar los 10 controles (`verified: true`) con `xp.py watch`
 - [ ] Añadir comandos `toliss_airbus/lightcommands/*` al JSON donde existan
 - [ ] EMER EXIT LT (localizar dataref)
-- [ ] Reconexión automática al perder el WebSocket
-- [ ] Pantalla de diagnóstico: valores en bruto de los datarefs suscritos
+- [x] Reconexión automática al perder el WebSocket (backoff 2, 4, 8, 15 s)
+- [x] Pantalla de diagnóstico: valores en bruto, resaltado de índices que cambian, vigilar datarefs extra y lanzar comandos
+- [x] Pulsador Korry con guarda (necesario en ELEC, APU, FIRE)
 
 **Aceptación:** vuelo completo usando solo el iPad para luces exteriores y signos, sin tocar el ratón.
 

@@ -11,6 +11,7 @@ final class PanelModel {
         case disconnected
         case connecting
         case connected
+        case reconnecting(attempt: Int)
         case error(String)
 
         var label: String {
@@ -18,7 +19,15 @@ final class PanelModel {
             case .disconnected: return "Desconectado"
             case .connecting: return "Conectando…"
             case .connected: return "Conectado"
+            case .reconnecting(let attempt): return "Reconectando… (intento \(attempt))"
             case .error(let message): return message
+            }
+        }
+
+        var isActive: Bool {
+            switch self {
+            case .connected, .connecting, .reconnecting: return true
+            case .disconnected, .error: return false
             }
         }
     }
@@ -32,6 +41,10 @@ final class PanelModel {
     var showVerificationBadges: Bool {
         didSet { UserDefaults.standard.set(showVerificationBadges, forKey: Keys.badges) }
     }
+    /// Datarefs added from the diagnostics screen, on top of the ones the mapping needs.
+    private(set) var extraDatarefs: [String] {
+        didSet { UserDefaults.standard.set(extraDatarefs, forKey: Keys.extras) }
+    }
 
     private(set) var status: Status = .disconnected
     private(set) var subpanels: [SubpanelDefinition] = []
@@ -39,17 +52,26 @@ final class PanelModel {
     private(set) var positions: [String: Int] = [:]
     /// Latest raw value for each lamp binding.
     private(set) var lampValues: [DatarefKey: XPValue] = [:]
+    /// Latest raw value of every subscribed dataref, keyed by name.
+    private(set) var rawValues: [String: XPValue] = [:]
+    /// When each dataref element last changed, keyed by "name" or "name[index]".
+    private(set) var changeStamps: [String: Date] = [:]
     /// Datarefs the simulator did not recognise on the last connect.
     private(set) var unresolved: Set<String> = []
     private(set) var lastError: String?
+    private(set) var lastCommandResult: String?
 
     @ObservationIgnored private var client: XPlaneClient?
     @ObservationIgnored private var listeners: [Task<Void, Never>] = []
+    @ObservationIgnored private var reconnectTask: Task<Void, Never>?
+    @ObservationIgnored private var wantsConnection = false
+    @ObservationIgnored private var reconnectAttempt = 0
 
     private enum Keys {
         static let host = "xp.host"
         static let port = "xp.port"
         static let badges = "ui.verificationBadges"
+        static let extras = "diag.extraDatarefs"
     }
 
     init() {
@@ -58,6 +80,7 @@ final class PanelModel {
         let storedPort = defaults.integer(forKey: Keys.port)
         port = storedPort == 0 ? 8087 : storedPort   // 8087 = xp_relay.py default
         showVerificationBadges = defaults.object(forKey: Keys.badges) as? Bool ?? true
+        extraDatarefs = defaults.stringArray(forKey: Keys.extras) ?? []
         loadMappings()
     }
 
@@ -75,36 +98,46 @@ final class PanelModel {
         }
     }
 
-    private var subscribedDatarefNames: [String] {
+    var allControls: [ControlDefinition] {
+        subpanels.flatMap(\.controls)
+    }
+
+    private var mappedDatarefNames: Set<String> {
         var names = Set<String>()
-        for control in subpanels.flatMap(\.controls) {
+        for control in allControls {
             if let state = control.state { names.insert(state.dataref) }
             if let top = control.lamps?.top?.dataref { names.insert(top) }
             if let bottom = control.lamps?.bottom?.dataref { names.insert(bottom) }
         }
-        return Array(names)
+        return names
+    }
+
+    var subscribedDatarefNames: [String] {
+        Array(mappedDatarefNames.union(extraDatarefs)).sorted()
     }
 
     // MARK: Connection
 
     func connect() {
+        wantsConnection = true
+        reconnectAttempt = 0
         Task { await self.performConnect() }
     }
 
     func disconnect() {
+        wantsConnection = false
+        reconnectTask?.cancel()
+        reconnectTask = nil
         Task { await self.performDisconnect() }
     }
 
     func toggleConnection() {
-        switch status {
-        case .connected, .connecting: disconnect()
-        case .disconnected, .error: connect()
-        }
+        status.isActive ? disconnect() : connect()
     }
 
     private func performConnect() async {
         await performDisconnect()
-        status = .connecting
+        status = reconnectAttempt == 0 ? .connecting : .reconnecting(attempt: reconnectAttempt)
         lastError = nil
 
         let client = XPlaneClient(host: host.trimmingCharacters(in: .whitespacesAndNewlines), port: port)
@@ -115,9 +148,11 @@ final class PanelModel {
             try await client.connect()
             let missing = try await client.subscribe(datarefs: subscribedDatarefNames)
             unresolved = Set(missing)
+            reconnectAttempt = 0
             status = .connected
         } catch {
             status = .error(describe(error))
+            scheduleReconnect()
         }
     }
 
@@ -129,6 +164,19 @@ final class PanelModel {
         }
         client = nil
         status = .disconnected
+    }
+
+    /// Exponential backoff (2, 4, 8, then 15 s) while the user still wants a connection.
+    private func scheduleReconnect() {
+        guard wantsConnection, reconnectTask == nil else { return }
+        reconnectAttempt += 1
+        let delay = min(pow(2.0, Double(reconnectAttempt)), 15)
+        reconnectTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(delay))
+            guard let self, !Task.isCancelled, self.wantsConnection else { return }
+            self.reconnectTask = nil
+            await self.performConnect()
+        }
     }
 
     private func listen(to client: XPlaneClient) {
@@ -148,6 +196,7 @@ final class PanelModel {
         switch state {
         case .failed(let message):
             status = .error(message)
+            scheduleReconnect()
         case .disconnected:
             if status == .connected { status = .disconnected }
         case .connecting, .connected:
@@ -156,7 +205,10 @@ final class PanelModel {
     }
 
     private func apply(_ update: DatarefUpdate) {
-        for control in subpanels.flatMap(\.controls) {
+        stampChanges(for: update)
+        rawValues[update.name] = update.value
+
+        for control in allControls {
             if let state = control.state, state.dataref == update.name,
                let element = update.value.element(at: state.index),
                let position = state.position(for: element, count: control.positions.count) {
@@ -171,6 +223,19 @@ final class PanelModel {
         }
     }
 
+    private func stampChanges(for update: DatarefUpdate) {
+        let now = Date()
+        let previous = rawValues[update.name]
+        if let newArray = update.value.arrayValue {
+            let oldArray = previous?.arrayValue ?? []
+            for (index, value) in newArray.enumerated() where index >= oldArray.count || oldArray[index] != value {
+                if previous != nil { changeStamps["\(update.name)[\(index)]"] = now }
+            }
+        } else if let previous, previous != update.value {
+            changeStamps[update.name] = now
+        }
+    }
+
     // MARK: Interaction
 
     func position(of control: ControlDefinition) -> Int {
@@ -178,7 +243,8 @@ final class PanelModel {
     }
 
     func isAvailable(_ control: ControlDefinition) -> Bool {
-        guard status == .connected, let state = control.state else { return false }
+        guard status == .connected else { return false }
+        guard let state = control.state else { return control.commands != nil }
         return !unresolved.contains(state.dataref)
     }
 
@@ -229,6 +295,54 @@ final class PanelModel {
     func isLit(_ lamp: Lamp?) -> Bool {
         guard let lamp, let key = lamp.key else { return false }
         return lamp.isLit(lampValues[key])
+    }
+
+    // MARK: Diagnostics
+
+    /// Subscribes to an additional dataref for inspection; persists across launches.
+    func watch(dataref rawName: String) {
+        let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, !subscribedDatarefNames.contains(name) else { return }
+        extraDatarefs.append(name)
+        guard let client, status == .connected else { return }
+        Task {
+            do {
+                let missing = try await client.subscribe(datarefs: [name])
+                self.unresolved.formUnion(missing)
+            } catch {
+                self.lastError = self.describe(error)
+            }
+        }
+    }
+
+    func unwatch(dataref name: String) {
+        extraDatarefs.removeAll { $0 == name }
+        rawValues[name] = nil
+        unresolved.remove(name)
+    }
+
+    func isExtra(_ name: String) -> Bool {
+        extraDatarefs.contains(name)
+    }
+
+    /// Fires a command by name from the diagnostics screen.
+    func fire(command rawName: String) {
+        let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, let client else { return }
+        lastCommandResult = "Enviando \(name)…"
+        Task {
+            do {
+                try await client.fire(command: name)
+                self.lastCommandResult = "OK  \(name)"
+            } catch {
+                self.lastCommandResult = "Error en \(name): \(self.describe(error))"
+            }
+        }
+    }
+
+    func recentlyChanged(_ key: String, within seconds: TimeInterval = 3, now: Date = Date()) -> Bool {
+        guard let stamp = changeStamps[key] else { return false }
+        return now.timeIntervalSince(stamp) < seconds
     }
 
     private func describe(_ error: Error) -> String {

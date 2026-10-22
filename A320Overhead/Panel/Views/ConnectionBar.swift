@@ -3,11 +3,12 @@ import SwiftUI
 struct ConnectionBar: View {
     @Environment(PanelModel.self) private var model
     @Binding var showSettings: Bool
+    @Binding var showDiagnostics: Bool
 
     private var statusColor: Color {
         switch model.status {
         case .connected: return .green
-        case .connecting: return .yellow
+        case .connecting, .reconnecting: return .yellow
         case .disconnected: return .gray
         case .error: return .red
         }
@@ -29,10 +30,17 @@ struct ConnectionBar: View {
             Text("\(model.host):\(String(model.port))")
                 .font(.footnote.monospaced())
                 .foregroundStyle(.white.opacity(0.7))
-            Button(model.status == .connected || model.status == .connecting ? "Desconectar" : "Conectar") {
+            Button(model.status.isActive ? "Desconectar" : "Conectar") {
                 model.toggleConnection()
             }
             .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+            Button {
+                showDiagnostics = true
+            } label: {
+                Image(systemName: "stethoscope")
+            }
+            .buttonStyle(.bordered)
             .controlSize(.small)
             Button {
                 showSettings = true

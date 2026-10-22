@@ -32,6 +32,8 @@ public struct ControlDefinition: Codable, Identifiable, Sendable {
     /// Optional commands; when present they take precedence over `write`.
     public let commands: CommandBinding?
     public let lamps: Lamps?
+    /// Korry only: a cover must be lifted before the button accepts a press.
+    public let guarded: Bool?
     public let col: Int
     public let row: Int
     public let verified: Bool?

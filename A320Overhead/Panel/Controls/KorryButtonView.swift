@@ -7,20 +7,30 @@ struct KorryLamp {
 }
 
 /// Square Airbus pushbutton with an upper and lower legend. Unlit legends are barely visible,
-/// lit ones glow in their colour. Depresses while touched.
+/// lit ones glow in their colour. Depresses while touched. When `guarded`, a hinged cover sits
+/// over the button: one tap lifts it, the next tap presses, and it drops back after a few seconds.
 struct KorryButtonView: View {
     let label: String
     let top: KorryLamp?
     let bottom: KorryLamp?
+    var guarded = false
     let enabled: Bool
     let onPress: () -> Void
 
     @State private var pressed = false
+    @State private var guardOpen = false
+    @State private var guardTimer: Task<Void, Never>?
+
+    private let size: CGFloat = 58
 
     var body: some View {
         VStack(spacing: 5) {
             PanelLabel(text: label)
-            button
+            ZStack(alignment: .top) {
+                button
+                if guarded { guardCover }
+            }
+            .frame(width: size, height: size)
         }
         .opacity(enabled ? 1 : 0.45)
     }
@@ -31,7 +41,7 @@ struct KorryButtonView: View {
             half(bottom)
         }
         .padding(4)
-        .frame(width: 58, height: 58)
+        .frame(width: size, height: size)
         .background(
             RoundedRectangle(cornerRadius: 4)
                 .fill(LinearGradient(colors: [Color(white: 0.16), Color(white: 0.08)],
@@ -49,9 +59,49 @@ struct KorryButtonView: View {
                 .onEnded { _ in
                     pressed = false
                     onPress()
+                    if guarded { closeGuard() }
                 }
         )
         .disabled(!enabled)
+    }
+
+    /// Transparent red cover hinged on its top edge, with the diagonal stripe Airbus uses.
+    private var guardCover: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color(red: 0.85, green: 0.12, blue: 0.10).opacity(0.55))
+            Rectangle()
+                .fill(Color.white.opacity(0.85))
+                .frame(width: size * 1.6, height: 5)
+                .rotationEffect(.degrees(-45))
+            RoundedRectangle(cornerRadius: 4)
+                .stroke(Color(red: 0.95, green: 0.25, blue: 0.20), lineWidth: 1.5)
+        }
+        .frame(width: size, height: size)
+        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .shadow(color: .black.opacity(guardOpen ? 0.1 : 0.5), radius: 3, y: 2)
+        .rotation3DEffect(.degrees(guardOpen ? -105 : 0), axis: (x: 1, y: 0, z: 0), anchor: .top, perspective: 0.7)
+        .animation(.spring(response: 0.25, dampingFraction: 0.7), value: guardOpen)
+        .allowsHitTesting(!guardOpen)
+        .onTapGesture { openGuard() }
+        .disabled(!enabled)
+    }
+
+    private func openGuard() {
+        guardOpen = true
+        guardTimer?.cancel()
+        guardTimer = Task {
+            try? await Task.sleep(for: .seconds(6))
+            if !Task.isCancelled { guardOpen = false }
+        }
+    }
+
+    private func closeGuard() {
+        guardTimer?.cancel()
+        guardTimer = Task {
+            try? await Task.sleep(for: .milliseconds(400))
+            if !Task.isCancelled { guardOpen = false }
+        }
     }
 
     @ViewBuilder
@@ -81,6 +131,11 @@ struct KorryButtonView: View {
         KorryButtonView(label: "APU START",
                         top: KorryLamp(text: "AVAIL", color: PanelTheme.lamp("green"), lit: true),
                         bottom: KorryLamp(text: "ON", color: PanelTheme.lamp("blue"), lit: true),
+                        enabled: true) {}
+        KorryButtonView(label: "IDG 1",
+                        top: KorryLamp(text: "FAULT", color: PanelTheme.lamp("amber"), lit: false),
+                        bottom: nil,
+                        guarded: true,
                         enabled: true) {}
     }
     .padding(30)

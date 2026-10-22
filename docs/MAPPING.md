@@ -33,6 +33,8 @@ El mapeo vive en `mapping/overhead/*.json`, un archivo por subpanel. La app los 
       },
       // color: amber | green | white | blue. Sin onValue, la lámpara se enciende con valor > 0.5.
 
+      "guarded": true,           // solo korry: hay que levantar la guarda (un toque) antes de pulsar
+
       "col": 0, "row": 0,        // posición en la rejilla del subpanel
       "verified": false,         // true solo tras confirmarlo en el simulador
       "notes": "fuente y dudas"
@@ -45,13 +47,19 @@ Valida siempre con `python3 tools/validate_mapping.py` antes de hacer commit.
 
 ## Procedimiento de verificación
 
-Se hace en el PC del simulador con el ToLiss cargado y, idealmente, en tierra con motores apagados.
+Se hace con el ToLiss cargado y, idealmente, en tierra con motores apagados. Hay dos caminos equivalentes.
+
+### Desde el iPad (sin Terminal)
+
+Pulsa el icono del estetoscopio en la barra superior de la app. La pantalla de diagnóstico muestra todos los datarefs suscritos con el valor de cada índice; los que cambian se iluminan en amarillo durante 3 segundos. Haz clic en un interruptor de la cabina virtual y mira qué índice se ilumina: ese es el índice del control. En la misma pantalla puedes añadir cualquier dataref a vigilar (por ejemplo `AirbusFBW/ElecOHPArray`) y lanzar comandos por nombre para comprobar que hacen lo esperado.
+
+### Desde la Terminal del Mac
 
 1. **Volcar el inventario de ToLiss** (una vez por versión de ToLiss):
    ```bash
    python3 tools/xp.py dump --grep "AirbusFBW|toliss"
    ```
-   Genera `dump/datarefs.txt` (nombre, tipo, escribible) y `dump/commands.txt`. Busca ahí los nombres candidatos; por ejemplo `grep -i light dump/commands.txt`.
+   Genera `mapping/reference/datarefs.txt` (nombre, tipo, escribible) y `mapping/reference/commands.txt`, que se versionan en git para que todo el mapeo parta de la misma referencia. Busca ahí los nombres candidatos; por ejemplo `grep -i light mapping/reference/commands.txt`.
 
 2. **Localizar el índice de un control:**
    ```bash

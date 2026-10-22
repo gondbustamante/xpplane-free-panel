@@ -43,6 +43,8 @@ def validate(path):
             errors.append(f"{where}: kind '{kind}' no soportado")
         elif KINDS[kind] and len(positions) != KINDS[kind]:
             errors.append(f"{where}: {kind} necesita {KINDS[kind]} posiciones, tiene {len(positions)}")
+        if control.get("guarded") and kind != "korry":
+            errors.append(f"{where}: 'guarded' solo aplica a korry")
         for name in ("state", "write"):
             if name in control:
                 check_binding(control[name], f"{where}.{name}", positions, errors)

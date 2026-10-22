@@ -4,10 +4,11 @@ import XPlaneKit
 struct RootView: View {
     @Environment(PanelModel.self) private var model
     @State private var showSettings = false
+    @State private var showDiagnostics = false
 
     var body: some View {
         VStack(spacing: 0) {
-            ConnectionBar(showSettings: $showSettings)
+            ConnectionBar(showSettings: $showSettings, showDiagnostics: $showDiagnostics)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
             ScrollView([.horizontal, .vertical], showsIndicators: false) {
@@ -18,6 +19,9 @@ struct RootView: View {
         .background(PanelTheme.cockpitBackground.ignoresSafeArea())
         .sheet(isPresented: $showSettings) {
             ConnectionSettingsView()
+        }
+        .sheet(isPresented: $showDiagnostics) {
+            DiagnosticsView()
         }
         .preferredColorScheme(.dark)
         .persistentSystemOverlays(.hidden)
@@ -122,7 +126,8 @@ struct ControlView: View {
             KorryButtonView(label: control.label,
                             top: lamp(control.lamps?.top),
                             bottom: lamp(control.lamps?.bottom),
-                            enabled: model.isAvailable(control) || control.state == nil && model.status == .connected) {
+                            guarded: control.guarded ?? false,
+                            enabled: model.isAvailable(control)) {
                 model.press(control)
             }
         }

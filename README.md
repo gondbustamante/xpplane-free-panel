@@ -2,7 +2,7 @@
 
 Panel overhead del Airbus A320 para iPad que controla el ToLiss A320 en X-Plane 12 a través de la red local. Interfaz 2.5D en SwiftUI con interruptores y pulsadores que se mueven como los reales, estado bidireccional (lo que cambias en el simulador se refleja en el iPad y viceversa) y mapeo de controles en archivos JSON para sobrevivir a las actualizaciones de ToLiss.
 
-**Estado:** fase 1 (MVP). Capa de red completa, subpaneles EXT LT y SIGNS, mapeos pendientes de verificar en el simulador. Ver [docs/ROADMAP.md](docs/ROADMAP.md).
+**Estado:** fase 1 (MVP). Conectividad verificada de extremo a extremo, subpaneles EXT LT y SIGNS, reconexión automática y pantalla de diagnóstico para verificar mapeos desde el iPad. Ver [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Cómo funciona
 
@@ -47,12 +47,12 @@ Pulsa el engranaje, introduce la IP del PC y el puerto 8087, y *Guardar y conect
 
 ## Verificar y ampliar el mapeo
 
-Los índices del array `AirbusFBW/OHPLightSwitches` proceden de scripts publicados por usuarios y hay que confirmarlos en tu versión de ToLiss. El flujo está en [docs/MAPPING.md](docs/MAPPING.md); en resumen:
+Los índices del array `AirbusFBW/OHPLightSwitches` proceden de scripts publicados por usuarios y hay que confirmarlos en tu versión de ToLiss. El flujo está en [docs/MAPPING.md](docs/MAPPING.md). Desde el iPad: icono del estetoscopio, haz clic en un interruptor de la cabina virtual y mira qué índice se ilumina. Desde la Terminal:
 
 ```bash
-# En el PC, con el ToLiss cargado:
+# Con el ToLiss cargado:
+python3 tools/xp.py dump --grep "AirbusFBW|toliss"        # vuelca datarefs y comandos del ToLiss en mapping/reference/
 python3 tools/xp.py watch AirbusFBW/OHPLightSwitches     # mueve un interruptor en el sim y mira qué índice cambia
-python3 tools/xp.py dump --grep "AirbusFBW|toliss"        # vuelca todos los datarefs y comandos del ToLiss
 python3 tools/validate_mapping.py                         # comprueba los JSON y lista lo pendiente
 ```
 
