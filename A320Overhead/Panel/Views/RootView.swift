@@ -43,15 +43,20 @@ struct PanelCanvas: View {
     @Environment(PanelModel.self) private var model
 
     var body: some View {
-        let panels = model.visibleSubpanels
+        let items = model.visibleItems
         FlowLayout(spacing: 26) {
-            if panels.isEmpty {
-                Text("No hay subpaneles para esta selección. Revisa mapping/layout.json.")
+            if items.isEmpty {
+                Text("No hay paneles para esta selección. Revisa mapping/layout.json.")
                     .foregroundStyle(.white.opacity(0.7))
                     .padding(40)
             }
-            ForEach(panels) { panel in
-                SubpanelView(panel: panel)
+            ForEach(items) { item in
+                switch item {
+                case .subpanel(let panel):
+                    SubpanelView(panel: panel)
+                case .fcu:
+                    FCUView()
+                }
             }
         }
         .padding(26)

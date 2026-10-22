@@ -169,8 +169,9 @@ public enum PanelLoader {
         try JSONDecoder().decode(SubpanelDefinition.self, from: Data(contentsOf: url))
     }
 
-    /// Loads every subpanel `*.json` under `directory` (recursively, skipping `layout.json`
-    /// and the `reference` folder), sorted by `order` then title.
+    /// Loads every subpanel `*.json` under `directory` (recursively, skipping `layout.json`,
+    /// the `reference` folder and files without a `controls` array, such as the FCU),
+    /// sorted by `order` then title.
     public static func loadAll(in directory: URL) throws -> [SubpanelDefinition] {
         let fileManager = FileManager.default
         guard let enumerator = fileManager.enumerator(at: directory, includingPropertiesForKeys: nil) else { return [] }
@@ -178,7 +179,10 @@ public enum PanelLoader {
         for case let url as URL in enumerator where url.pathExtension.lowercased() == "json" {
             if url.lastPathComponent == "layout.json" { continue }
             if url.pathComponents.contains("reference") { continue }
-            panels.append(try load(from: url))
+            let data = try Data(contentsOf: url)
+            guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  object["controls"] != nil else { continue }
+            panels.append(try JSONDecoder().decode(SubpanelDefinition.self, from: data))
         }
         return panels.sorted {
             let lhs = $0.order ?? Int.max

@@ -9,6 +9,8 @@ enum PanelTheme {
     static let legend = Color.white
     static let unlitLegend = Color(white: 0.30)
     static let verificationBadge = Color(red: 1.0, green: 0.62, blue: 0.0)
+    /// LCD digits of the FCU windows (warm amber, like the ToLiss unit).
+    static let fcuDigits = Color(red: 1.0, green: 0.66, blue: 0.18)
 
     static func lamp(_ name: String) -> Color {
         switch name.lowercased() {

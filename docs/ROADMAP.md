@@ -29,6 +29,23 @@ Objetivo: demostrar el camino completo iPad → relay → Web API → ToLiss con
 
 **Aceptación:** vuelo completo usando solo el iPad para luces exteriores y signos, sin tocar el ratón.
 
+## Fase 1b · FCU (1 semana) — en curso
+
+Adelantado desde la fase 2 porque es el panel que más se toca en vuelo y reutiliza toda la infraestructura.
+
+- [x] Esquema de mapeo propio (`mapping/fcu/fcu.json`) y validador
+- [x] Ventanas SPD/MACH, HDG/TRK, ALT, V/S-FPA con punto de gestionado y rayas
+- [x] Rueda 2.5D arrastrable, − / + con repetición, PUSH / PULL
+- [x] Entrada directa de valor tocando la ventana (acotada al rango)
+- [x] Pulsadores AP1, AP2, A/THR, LOC, APPR, EXPED, SPD/MACH, HDG-V/S / TRK-FPA, METRIC ALT y selector 100/1000
+- [x] Grupo FCU en la barra lateral e incluido en las fases de rodaje, crucero y aproximación
+- [ ] Verificar en el simulador los datarefs `sim/cockpit/autopilot/*` y qué contiene `vertical_velocity` en modo FPA
+- [ ] Verificar que la escritura directa de los datarefs es aceptada por ToLiss (si no, pasar la entrada directa a ráfagas de comandos)
+- [ ] Iluminación de EXPED (localizar dataref)
+- [ ] Botones FD y LS de los paneles EFIS adyacentes (opcional)
+
+**Aceptación:** ejecutar una salida y una aproximación ILS completas con el autopiloto tocando solo el iPad: selected speed/heading/altitude, V/S, managed con push, LOC y APPR.
+
 ## Fase 2 · Overhead completo (2 a 3 meses) — en curso
 
 Hecho el 2026-10-22: barra lateral con fases de vuelo y grupos de paneles (`mapping/layout.json`), selector rotatorio, pulsador guardado, y **21 subpaneles del overhead con 124 controles**. Con el volcado real de ToLiss en `mapping/reference/`, los 74 datarefs y 101 comandos del mapeo están comprobados por nombre (el validador lo exige). 59 controles verificados; 65 pendientes de confirmar semántica de valores o índice, de los cuales 24 bloqueados como solo lectura.

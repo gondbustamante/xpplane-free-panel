@@ -4,6 +4,11 @@
       "id": "overhead",
       "title": "Overhead",
       "icon": "square.grid.3x3.topleft.filled"
+    },
+    {
+      "id": "fcu",
+      "title": "FCU",
+      "icon": "slider.horizontal.3"
     }
   ],
   "phases": [
@@ -41,6 +46,7 @@
       "title": "Arranque y rodaje",
       "icon": "airplane.departure",
       "subpanels": [
+        "fcu",
         "ext_lt",
         "eng",
         "anti_ice",
@@ -54,6 +60,7 @@
       "title": "Despegue y crucero",
       "icon": "airplane",
       "subpanels": [
+        "fcu",
         "ext_lt",
         "signs",
         "anti_ice",
@@ -66,6 +73,7 @@
       "title": "Aproximación",
       "icon": "airplane.arrival",
       "subpanels": [
+        "fcu",
         "ext_lt",
         "signs",
         "anti_ice",

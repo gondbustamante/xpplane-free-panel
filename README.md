@@ -2,7 +2,7 @@
 
 Panel overhead del Airbus A320 para iPad que controla el ToLiss A320 en X-Plane 12 a través de la red local. Interfaz 2.5D en SwiftUI con interruptores y pulsadores que se mueven como los reales, estado bidireccional (lo que cambias en el simulador se refleja en el iPad y viceversa) y mapeo de controles en archivos JSON para sobrevivir a las actualizaciones de ToLiss.
 
-**Estado:** fase 2 en curso. Conectividad verificada de extremo a extremo, 21 subpaneles del overhead (124 controles, 59 verificados, todos los nombres comprobados contra el volcado real de ToLiss), barra lateral por fases de vuelo y grupos de paneles, reconexión automática y pantalla de diagnóstico para verificar mapeos desde el iPad. Ver [docs/ROADMAP.md](docs/ROADMAP.md).
+**Estado:** fase 2 en curso. Conectividad verificada de extremo a extremo, 21 subpaneles del overhead (124 controles, 59 verificados, todos los nombres comprobados contra el volcado real de ToLiss), FCU completo (SPD/MACH, HDG/TRK, ALT, V/S-FPA, AP1/AP2, A/THR, LOC, APPR, EXPED) con ruedas, push/pull y entrada directa de valores, barra lateral por fases de vuelo y grupos de paneles, reconexión automática y pantalla de diagnóstico para verificar mapeos desde el iPad. Ver [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Cómo funciona
 
@@ -43,7 +43,9 @@ En Xcode: selecciona tu equipo en *Signing & Capabilities* (o rellena `DEVELOPME
 
 **3. En el iPad**
 
-Pulsa el engranaje, introduce la IP del PC y el puerto 8087, y *Guardar y conectar*. Con el ToLiss cargado, los interruptores de EXT LT y SIGNS reflejan el estado del avión.
+Pulsa el engranaje, introduce la IP del PC y el puerto 8087, y *Guardar y conectar*. Con el ToLiss cargado, los interruptores reflejan el estado del avión.
+
+La barra lateral elige qué ver: una fase de vuelo (solo los paneles de ese momento) o un grupo completo (Overhead, FCU). En el FCU cada ventana muestra el valor real del avión (con el punto de modo gestionado y las rayas cuando toca); la rueda se gira arrastrando o con − / +, PUSH y PULL hacen lo mismo que empujar o tirar de la rueda, y tocar la ventana permite teclear un valor exacto.
 
 ## Verificar y ampliar el mapeo
 
@@ -65,6 +67,7 @@ A320Overhead/          App iPad (SwiftUI): modelo, tema, controles 2.5D, vistas
 Packages/XPlaneKit/    Cliente de la Web API de X-Plane (REST + WebSocket) y modelos de mapeo, con tests
 mapping/layout.json    Grupos de paneles y fases de vuelo (alimenta la barra lateral)
 mapping/overhead/      Un JSON por subpanel del overhead; otros grupos (pedestal…) van en carpetas hermanas
+mapping/fcu/           Mapeo del FCU (ventanas, ruedas y pulsadores), con esquema propio
 mapping/reference/     Volcado de datarefs y comandos de ToLiss (xp.py dump)
 tools/                 xp_relay.py (relay LAN), xp.py (CLI de descubrimiento), validate_mapping.py
 docs/                  Arquitectura, roadmap y guía de mapeo
