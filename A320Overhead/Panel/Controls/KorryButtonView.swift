@@ -15,6 +15,7 @@ struct KorryButtonView: View {
     let bottom: KorryLamp?
     var guarded = false
     let enabled: Bool
+    var dimmed = false
     let onPress: () -> Void
 
     @State private var pressed = false
@@ -32,7 +33,7 @@ struct KorryButtonView: View {
             }
             .frame(width: size, height: size)
         }
-        .opacity(enabled ? 1 : 0.45)
+        .opacity(dimmed ? 0.5 : 1)
     }
 
     private var button: some View {
@@ -71,21 +72,26 @@ struct KorryButtonView: View {
         .disabled(!enabled)
     }
 
-    /// Transparent red cover hinged on its top edge, with the diagonal stripe Airbus uses.
+    /// Clear plastic guard hinged on its top edge, with the red and white diagonal stripes of the
+    /// real switch guards. Translucent so the button legend stays readable underneath.
     private var guardCover: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 4)
-                .fill(Color(red: 0.85, green: 0.12, blue: 0.10).opacity(0.55))
-            Rectangle()
-                .fill(Color.white.opacity(0.85))
-                .frame(width: size * 1.6, height: 5)
-                .rotationEffect(.degrees(-45))
+                .fill(Color.white.opacity(0.18))
+            ForEach(0..<5, id: \.self) { index in
+                Rectangle()
+                    .fill(index % 2 == 0 ? Color(red: 0.90, green: 0.12, blue: 0.10).opacity(0.85)
+                                         : Color.white.opacity(0.75))
+                    .frame(width: 9, height: size * 2)
+                    .offset(x: CGFloat(index - 2) * 18)
+                    .rotationEffect(.degrees(-45))
+            }
             RoundedRectangle(cornerRadius: 4)
-                .stroke(Color(red: 0.95, green: 0.25, blue: 0.20), lineWidth: 1.5)
+                .stroke(Color.white.opacity(0.7), lineWidth: 1.2)
         }
         .frame(width: size, height: size)
         .clipShape(RoundedRectangle(cornerRadius: 4))
-        .shadow(color: .black.opacity(guardOpen ? 0.1 : 0.5), radius: 3, y: 2)
+        .shadow(color: .black.opacity(guardOpen ? 0.1 : 0.45), radius: 3, y: 2)
         .rotation3DEffect(.degrees(guardOpen ? -105 : 0), axis: (x: 1, y: 0, z: 0), anchor: .top, perspective: 0.7)
         .animation(.spring(response: 0.25, dampingFraction: 0.7), value: guardOpen)
         .allowsHitTesting(!guardOpen)

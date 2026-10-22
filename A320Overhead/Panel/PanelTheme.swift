@@ -11,7 +11,7 @@ enum PanelTheme {
     static let bezel = Color(red: 0.42, green: 0.44, blue: 0.46)
     static let korryFace = Color(red: 0.07, green: 0.07, blue: 0.08)
     static let legend = Color.white
-    static let unlitLegend = Color(white: 0.30)
+    static let unlitLegend = Color(white: 0.38)
     static let verificationBadge = Color(red: 1.0, green: 0.62, blue: 0.0)
     /// LCD digits of the FCU windows (warm amber, like the ToLiss unit).
     static let fcuDigits = Color(red: 1.0, green: 0.66, blue: 0.18)

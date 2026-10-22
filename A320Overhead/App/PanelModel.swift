@@ -83,7 +83,9 @@ final class PanelModel {
     var canvasScale: Double {
         didSet { UserDefaults.standard.set(canvasScale, forKey: Keys.scale) }
     }
-    static let scaleRange: ClosedRange<Double> = 0.5...1.6
+    /// Bumped by the "fit" button; the canvas answers by choosing the scale that fits its width.
+    private(set) var fitRequestID = 0
+    static let scaleRange: ClosedRange<Double> = 0.4...1.6
     var selection: PanelSelection {
         didSet { UserDefaults.standard.set(selection.storageValue, forKey: Keys.selection) }
     }
@@ -135,6 +137,7 @@ final class PanelModel {
         selection = PanelSelection(storageValue: defaults.string(forKey: Keys.selection) ?? "group:overhead")
         let storedScale = defaults.double(forKey: Keys.scale)
         canvasScale = storedScale == 0 ? 0.8 : min(max(storedScale, Self.scaleRange.lowerBound), Self.scaleRange.upperBound)
+        if storedScale == 0 { fitRequestID = 1 }   // first launch: fit the selection to the screen
         loadMappings()
     }
 
@@ -182,6 +185,22 @@ final class PanelModel {
 
     func zoom(by factor: Double) {
         canvasScale = min(max(canvasScale * factor, Self.scaleRange.lowerBound), Self.scaleRange.upperBound)
+    }
+
+    func requestFit() {
+        fitRequestID += 1
+    }
+
+    func setScale(_ value: Double) {
+        canvasScale = min(max(value, Self.scaleRange.lowerBound), Self.scaleRange.upperBound)
+    }
+
+    /// Faded controls: candidates locked as read-only, or datarefs this aircraft does not expose.
+    /// Being disconnected does not dim the panel; it only disables interaction.
+    func isDimmed(_ control: ControlDefinition) -> Bool {
+        if control.isReadOnly { return true }
+        if let state = control.state, unresolved.contains(state.dataref) { return true }
+        return false
     }
 
     /// Subpanels of a group that are visible now, keyed by id.

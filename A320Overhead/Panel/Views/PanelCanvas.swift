@@ -54,8 +54,8 @@ struct PanelFace<Content: View>: View {
                         .fill(LinearGradient(colors: [PanelTheme.panelFaceHighlight, PanelTheme.panelFace],
                                              startPoint: .top, endPoint: .bottom))
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(RadialGradient(colors: [Color.clear, Color.black.opacity(0.22)],
-                                             center: .center, startRadius: 200, endRadius: 900))
+                        .fill(RadialGradient(colors: [Color.clear, Color.black.opacity(0.10)],
+                                             center: .center, startRadius: 500, endRadius: 1400))
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(PanelTheme.panelEdge, lineWidth: 3)
                 }
@@ -84,12 +84,12 @@ struct ArrangedGroupView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 26) {
-            HStack(alignment: .top, spacing: 30) {
+            HStack(alignment: .top, spacing: 18) {
                 ForEach(Array(columns.enumerated()), id: \.offset) { _, rows in
                     if !rows.isEmpty {
-                        VStack(alignment: .center, spacing: 24) {
+                        VStack(alignment: .center, spacing: 14) {
                             ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                                HStack(alignment: .top, spacing: 24) {
+                                HStack(alignment: .top, spacing: 14) {
                                     ForEach(row) { panel in
                                         SubpanelView(panel: panel)
                                     }
@@ -118,14 +118,43 @@ struct ZoomableCanvas<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     @State private var pinchBase: Double?
+    @State private var naturalSize: CGSize = .zero
+    @State private var containerSize: CGSize = .zero
+    @State private var pendingFit = false
+
+    private let margin: CGFloat = 20
 
     var body: some View {
         ScrollView([.horizontal, .vertical], showsIndicators: true) {
             ScaledLayout(scale: model.canvasScale) {
                 content()
+                    // Read-only measurement of the natural size, used for "fit to width".
+                    // It feeds nothing back into layout, so there is no oscillation.
+                    .background(GeometryReader { proxy in
+                        Color.clear.preference(key: NaturalSizeKey.self, value: proxy.size)
+                    })
                     .scaleEffect(model.canvasScale, anchor: .topLeading)
             }
-            .padding(20)
+            .padding(margin)
+        }
+        .background(GeometryReader { proxy in
+            Color.clear.preference(key: ContainerSizeKey.self, value: proxy.size)
+        })
+        .onPreferenceChange(NaturalSizeKey.self) { size in
+            naturalSize = size
+            applyFitIfPending()
+        }
+        .onPreferenceChange(ContainerSizeKey.self) { size in
+            containerSize = size
+            applyFitIfPending()
+        }
+        .onChange(of: model.fitRequestID, initial: true) { _, id in
+            guard id > 0 else { return }
+            pendingFit = true
+            applyFitIfPending()
+        }
+        .onChange(of: model.selection) { _, _ in
+            pendingFit = true   // new selection: refit once its size is known
         }
         .simultaneousGesture(
             MagnificationGesture()
@@ -137,6 +166,25 @@ struct ZoomableCanvas<Content: View>: View {
                 .onEnded { _ in pinchBase = nil }
         )
     }
+}
+
+private extension ZoomableCanvas {
+    func applyFitIfPending() {
+        guard pendingFit, naturalSize.width > 0, containerSize.width > 0 else { return }
+        let available = containerSize.width - margin * 2 - 4
+        model.setScale(available / naturalSize.width)
+        pendingFit = false
+    }
+}
+
+private struct NaturalSizeKey: PreferenceKey {
+    static var defaultValue: CGSize = .zero
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) { value = nextValue() }
+}
+
+private struct ContainerSizeKey: PreferenceKey {
+    static var defaultValue: CGSize = .zero
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) { value = nextValue() }
 }
 
 /// Lays out its single child at its ideal size and claims that size multiplied by `scale`.

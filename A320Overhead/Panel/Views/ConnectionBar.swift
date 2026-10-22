@@ -37,6 +37,8 @@ struct ConnectionBar: View {
                     .foregroundStyle(.white.opacity(0.7))
                     .frame(width: 38)
                 Button { model.zoom(by: 1.15) } label: { Image(systemName: "plus.magnifyingglass") }
+                Button { model.requestFit() } label: { Image(systemName: "arrow.down.left.and.arrow.up.right.rectangle") }
+                    .help("Ajustar al ancho")
             }
             .buttonStyle(.bordered)
             .controlSize(.small)

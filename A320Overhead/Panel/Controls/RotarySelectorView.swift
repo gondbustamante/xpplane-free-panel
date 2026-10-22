@@ -7,6 +7,7 @@ struct RotarySelectorView: View {
     let positions: [String]
     let position: Int
     let enabled: Bool
+    var dimmed = false
     let onMove: (Int) -> Void
 
     private let sweep: Double = 120
@@ -27,7 +28,7 @@ struct RotarySelectorView: View {
             }
             knob
         }
-        .opacity(enabled ? 1 : 0.45)
+        .opacity(dimmed ? 0.5 : 1)
     }
 
     private var knob: some View {

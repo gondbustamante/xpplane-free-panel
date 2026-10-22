@@ -9,11 +9,12 @@ struct ToggleSwitchView: View {
     let positions: [String]
     let position: Int
     let enabled: Bool
+    var dimmed = false
     let onMove: (Int) -> Void
 
-    private let bodyWidth: CGFloat = 40
-    private let bodyHeight: CGFloat = 64
-    private let throwDistance: CGFloat = 18
+    private let bodyWidth: CGFloat = 42
+    private let bodyHeight: CGFloat = 70
+    private let throwDistance: CGFloat = 21
 
     private var count: Int { max(positions.count, 2) }
 
@@ -24,19 +25,19 @@ struct ToggleSwitchView: View {
     }
 
     var body: some View {
-        VStack(spacing: 5) {
+        VStack(spacing: 3) {
             PanelLabel(text: label)
             PanelLabel(text: positions.last ?? "", small: true)
-            HStack(spacing: 6) {
-                if count == 3 { Color.clear.frame(width: 34, height: 1) }
+            HStack(spacing: 5) {
+                if count == 3 { Color.clear.frame(width: 30, height: 1) }
                 lever
                 if count == 3 {
-                    PanelLabel(text: positions[1], small: true).frame(width: 34, alignment: .leading)
+                    PanelLabel(text: positions[1], small: true).frame(width: 30, alignment: .leading)
                 }
             }
             PanelLabel(text: positions.first ?? "", small: true)
         }
-        .opacity(enabled ? 1 : 0.45)
+        .opacity(dimmed ? 0.5 : 1)
     }
 
     private var lever: some View {
@@ -59,13 +60,13 @@ struct ToggleSwitchView: View {
             Capsule()
                 .fill(LinearGradient(colors: [Color(white: 0.42), Color(white: 0.88), Color(white: 0.38)],
                                      startPoint: .leading, endPoint: .trailing))
-                .frame(width: 9, height: abs(dy) + 9)
+                .frame(width: 10, height: abs(dy) + 10)
                 .offset(y: dy / 2)
 
             Circle()
                 .fill(RadialGradient(colors: [Color(white: 0.97), Color(white: 0.55)],
-                                     center: UnitPoint(x: 0.35, y: 0.30), startRadius: 1, endRadius: 14))
-                .frame(width: 22, height: 22)
+                                     center: UnitPoint(x: 0.35, y: 0.30), startRadius: 1, endRadius: 16))
+                .frame(width: 25, height: 25)
                 .scaleEffect(1 - 0.12 * abs(tilt))
                 .shadow(color: .black.opacity(0.6), radius: 3, x: 0, y: 2)
                 .offset(y: dy)

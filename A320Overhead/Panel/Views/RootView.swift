@@ -48,7 +48,7 @@ struct SubpanelView: View {
     }
 
     var body: some View {
-        Grid(alignment: .top, horizontalSpacing: 20, verticalSpacing: 18) {
+        Grid(alignment: .top, horizontalSpacing: 12, verticalSpacing: 12) {
             ForEach(rows, id: \.self) { row in
                 GridRow {
                     ForEach(controls(in: row)) { control in
@@ -57,9 +57,9 @@ struct SubpanelView: View {
                 }
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 24)
-        .padding(.bottom, 18)
+        .padding(.horizontal, 14)
+        .padding(.top, 20)
+        .padding(.bottom, 12)
         .overlay(
             RoundedRectangle(cornerRadius: 3)
                 .stroke(Color.white.opacity(0.92), lineWidth: 1.4)
@@ -105,14 +105,16 @@ struct ControlView: View {
             ToggleSwitchView(label: control.label,
                              positions: control.positions,
                              position: model.position(of: control),
-                             enabled: model.isAvailable(control)) { delta in
+                             enabled: model.isAvailable(control),
+                             dimmed: model.isDimmed(control)) { delta in
                 model.move(control, by: delta)
             }
         case .rotary:
             RotarySelectorView(label: control.label,
                                positions: control.positions,
                                position: model.position(of: control),
-                               enabled: model.isAvailable(control)) { delta in
+                               enabled: model.isAvailable(control),
+                               dimmed: model.isDimmed(control)) { delta in
                 model.move(control, by: delta)
             }
         case .korry:
@@ -120,7 +122,8 @@ struct ControlView: View {
                             top: lamp(control.lamps?.top),
                             bottom: lamp(control.lamps?.bottom),
                             guarded: control.guarded ?? false,
-                            enabled: model.isAvailable(control)) {
+                            enabled: model.isAvailable(control),
+                            dimmed: model.isDimmed(control)) {
                 model.press(control)
             }
         }
