@@ -30,6 +30,16 @@ struct ConnectionBar: View {
             Text("\(model.host):\(String(model.port))")
                 .font(.footnote.monospaced())
                 .foregroundStyle(.white.opacity(0.7))
+            HStack(spacing: 2) {
+                Button { model.zoom(by: 1 / 1.15) } label: { Image(systemName: "minus.magnifyingglass") }
+                Text("\(Int((model.canvasScale * 100).rounded()))%")
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(.white.opacity(0.7))
+                    .frame(width: 38)
+                Button { model.zoom(by: 1.15) } label: { Image(systemName: "plus.magnifyingglass") }
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
             Button(model.status.isActive ? "Desconectar" : "Conectar") {
                 model.toggleConnection()
             }

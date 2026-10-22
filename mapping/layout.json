@@ -79,7 +79,8 @@
         "anti_ice",
         "air_cond",
         "gpws",
-        "wiper"
+        "wiper_l",
+        "wiper_r"
       ]
     },
     {
@@ -103,13 +104,101 @@
       "icon": "exclamationmark.triangle",
       "subpanels": [
         "fire",
-        "cargo",
+        "cargo_smoke",
+        "cargo_heat",
         "emer_elec",
-        "evac_calls",
+        "evac",
+        "calls",
         "cabin_press",
         "hyd",
-        "rcdr_oxy"
+        "rcdr",
+        "oxygen"
       ]
     }
-  ]
+  ],
+  "arrangements": {
+    "overhead": {
+      "notes": "Disposición física del overhead del A320 visto desde los asientos: columna del capitán, columna central y columna del copiloto, de arriba (popa) a abajo (parabrisas). Cada columna es una lista de filas; cada fila, una lista de ids de subpanel que van lado a lado.",
+      "columns": [
+        [
+          [
+            "flt_ctl_1"
+          ],
+          [
+            "evac"
+          ],
+          [
+            "emer_elec"
+          ],
+          [
+            "gpws"
+          ],
+          [
+            "rcdr"
+          ],
+          [
+            "oxygen"
+          ],
+          [
+            "calls"
+          ],
+          [
+            "wiper_l"
+          ]
+        ],
+        [
+          [
+            "adirs"
+          ],
+          [
+            "fire"
+          ],
+          [
+            "hyd"
+          ],
+          [
+            "fuel"
+          ],
+          [
+            "elec"
+          ],
+          [
+            "air_cond"
+          ],
+          [
+            "anti_ice",
+            "cabin_press"
+          ],
+          [
+            "ext_lt"
+          ],
+          [
+            "apu",
+            "signs",
+            "int_lt"
+          ]
+        ],
+        [
+          [
+            "flt_ctl_2"
+          ],
+          [
+            "cargo_smoke"
+          ],
+          [
+            "ventilation"
+          ],
+          [
+            "cargo_heat"
+          ],
+          [
+            "eng"
+          ],
+          [
+            "wiper_r"
+          ]
+        ]
+      ]
+    }
+  }
 }

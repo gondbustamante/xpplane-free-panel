@@ -152,15 +152,38 @@ public struct FlightPhase: Codable, Identifiable, Sendable, Hashable {
     public let subpanels: [String]
 }
 
+/// Physical arrangement of a group's subpanels: columns (left → right), each a list of rows
+/// (top → bottom), each a list of subpanel ids drawn side by side.
+public struct PanelArrangement: Codable, Sendable {
+    public let notes: String?
+    public let columns: [[[String]]]
+
+    public init(notes: String? = nil, columns: [[[String]]]) {
+        self.notes = notes
+        self.columns = columns
+    }
+
+    public var placedIDs: Set<String> {
+        Set(columns.flatMap { $0.flatMap { $0 } })
+    }
+}
+
 public struct PanelLayout: Codable, Sendable {
     public let groups: [PanelGroup]
     public let phases: [FlightPhase]
+    /// Optional arrangement per group id. Groups without one flow left to right and wrap.
+    public let arrangements: [String: PanelArrangement]?
 
-    public static let empty = PanelLayout(groups: [], phases: [])
+    public static let empty = PanelLayout(groups: [], phases: [], arrangements: nil)
 
-    public init(groups: [PanelGroup], phases: [FlightPhase]) {
+    public init(groups: [PanelGroup], phases: [FlightPhase], arrangements: [String: PanelArrangement]? = nil) {
         self.groups = groups
         self.phases = phases
+        self.arrangements = arrangements
+    }
+
+    public func arrangement(for group: String) -> PanelArrangement? {
+        arrangements?[group]
     }
 }
 

@@ -224,7 +224,7 @@ def validate(path):
     return panel, rows, errors, names, group
 
 
-def validate_layout(root, panel_ids):
+def validate_layout(root, panel_ids, panel_ids_by_group):
     path = os.path.join(root, "layout.json")
     if not os.path.exists(path):
         return ["falta mapping/layout.json"], set()
@@ -236,6 +236,21 @@ def validate_layout(root, panel_ids):
         for sub in phase.get("subpanels", []):
             if sub not in panel_ids:
                 errors.append(f"layout.json: la fase '{phase.get('id')}' referencia el panel inexistente '{sub}'")
+    for group, arrangement in (layout.get("arrangements") or {}).items():
+        if group not in group_ids:
+            errors.append(f"layout.json: 'arrangements' usa el grupo no declarado '{group}'")
+        placed = []
+        for column in arrangement.get("columns", []):
+            for row in column:
+                placed.extend(row)
+        for sub in placed:
+            if sub not in panel_ids:
+                errors.append(f"layout.json: la disposición de '{group}' coloca el panel inexistente '{sub}'")
+        for sub in {s for s in placed if placed.count(s) > 1}:
+            errors.append(f"layout.json: la disposición de '{group}' coloca '{sub}' más de una vez")
+        missing = sorted(p for p in panel_ids_by_group.get(group, set()) if p not in placed)
+        if missing:
+            print(f"AVISO: la disposición de '{group}' no coloca: {', '.join(missing)} (se dibujarán debajo)")
     return errors, group_ids
 
 
@@ -269,11 +284,13 @@ def main():
     failed = False
     total = verified = 0
     panel_ids, groups_used, all_ids = set(), set(), {}
+    panel_ids_by_group = {}
     used_datarefs, used_commands = set(), set()
     for path in files:
         panel, rows, errors, (datarefs, commands), group = validate(path)
         panel_ids.add(panel.get("id"))
         groups_used.add(group)
+        panel_ids_by_group.setdefault(group, set()).add(panel.get("id"))
         used_datarefs |= datarefs
         used_commands |= commands
         print(f"\n== {panel.get('title', '?')}  ({os.path.relpath(path)})")
@@ -288,7 +305,7 @@ def main():
             print(f"  ERROR: {error}")
             failed = True
 
-    layout_errors, group_ids = validate_layout(root, panel_ids)
+    layout_errors, group_ids = validate_layout(root, panel_ids, panel_ids_by_group)
     for group in groups_used - group_ids - {None}:
         layout_errors.append(f"layout.json: el grupo '{group}' no está declarado en 'groups'")
     for error in layout_errors:

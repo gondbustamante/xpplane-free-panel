@@ -1,0 +1,67 @@
+{
+  "id": "rcdr",
+  "title": "RCDR",
+  "group": "overhead",
+  "order": 25,
+  "notes": "Grabadores. Confirmado por el volcado y por XSchenFly.",
+  "controls": [
+    {
+      "id": "rcdr.gnd_ctl",
+      "label": "GND CTL",
+      "kind": "korry",
+      "positions": [
+        "AUTO",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/CvrGndCtrl"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/CvrGndCtrl"
+        }
+      },
+      "col": 0,
+      "row": 0,
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+    },
+    {
+      "id": "rcdr.cvr_erase",
+      "label": "CVR ERASE",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/CVRErase",
+        "duration": 2
+      },
+      "guarded": true,
+      "col": 1,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+    },
+    {
+      "id": "rcdr.cvr_test",
+      "label": "CVR TEST",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/CVRTest",
+        "duration": 2
+      },
+      "col": 2,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Mantenido 2 s."
+    }
+  ]
+}

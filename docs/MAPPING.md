@@ -14,6 +14,20 @@ El mapeo vive en `mapping/<grupo>/*.json`, un archivo por subpanel, más `mappin
 }
 ```
 
+Un grupo puede declarar además su **disposición física** en `arrangements`: columnas de izquierda a derecha, cada una con filas de arriba abajo, cada fila con los ids que van lado a lado. La app dibuja el grupo así, y en una fase mantiene la misma geografía mostrando solo los subpaneles de la fase. Lo que no esté colocado se dibuja debajo.
+
+```jsonc
+"arrangements": {
+  "overhead": {
+    "columns": [
+      [["flt_ctl_1"], ["evac"], ["emer_elec"], ["gpws"], ["rcdr"], ["oxygen"], ["calls"], ["wiper_l"]],
+      [["adirs"], ["fire"], ["hyd"], ["fuel"], ["elec"], ["air_cond"], ["anti_ice", "cabin_press"], ["ext_lt"], ["apu", "signs", "int_lt"]],
+      [["flt_ctl_2"], ["cargo_smoke"], ["ventilation"], ["cargo_heat"], ["eng"], ["wiper_r"]]
+    ]
+  }
+}
+```
+
 La barra lateral de la app lista primero las fases y después los grupos. Para añadir un panel nuevo (pedestal, glareshield…): crea la carpeta `mapping/<grupo>/`, declara el grupo en `groups`, pon `"group": "<grupo>"` en cada subpanel y, si procede, añádelo a las fases. Los iconos son nombres de SF Symbols.
 
 ## Esquema

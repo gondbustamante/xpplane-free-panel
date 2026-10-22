@@ -1,0 +1,70 @@
+{
+  "id": "evac",
+  "title": "EVAC",
+  "group": "overhead",
+  "order": 15,
+  "notes": "Evacuación. Datarefs y comandos confirmados en el volcado; semántica de valores por confirmar.",
+  "controls": [
+    {
+      "id": "evac.command",
+      "label": "COMMAND",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/EmerEvacButton"
+      },
+      "lamps": {
+        "top": {
+          "text": "EVAC",
+          "color": "red",
+          "dataref": "AirbusFBW/EmerEvacLight"
+        },
+        "bottom": {
+          "text": "ON",
+          "color": "white",
+          "dataref": "AirbusFBW/EmerEvacButton"
+        }
+      },
+      "guarded": true,
+      "col": 0,
+      "row": 0,
+      "verified": false,
+      "notes": "EmerEvacButton escribible (volcado)."
+    },
+    {
+      "id": "evac.capt_purs",
+      "label": "CAPT / PURS",
+      "kind": "toggle2",
+      "positions": [
+        "CAPT",
+        "CAPT & PURS"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/EmerEvacCaptPursSelSwitch"
+      },
+      "col": 1,
+      "row": 0,
+      "verified": false,
+      "notes": "Escribible (volcado). Orden de valores por confirmar."
+    },
+    {
+      "id": "evac.horn_off",
+      "label": "HORN SHUT OFF",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/EvacHornShutoff"
+      },
+      "col": 2,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
+    }
+  ]
+}

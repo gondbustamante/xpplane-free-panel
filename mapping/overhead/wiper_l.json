@@ -1,9 +1,9 @@
 {
-  "id": "wiper",
+  "id": "wiper_l",
   "title": "WIPER",
   "group": "overhead",
-  "order": 80,
-  "notes": "Limpiaparabrisas. Datarefs confirmados como escribibles; orden de valores por confirmar.",
+  "order": 28,
+  "notes": "Limpiaparabrisas del capitán. Dataref confirmado; orden de valores por confirmar.",
   "controls": [
     {
       "id": "wiper.left",
@@ -21,23 +21,6 @@
       "row": 0,
       "verified": false,
       "notes": "Confirmado (Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).); orden de valores por confirmar."
-    },
-    {
-      "id": "wiper.right",
-      "label": "WIPER R",
-      "kind": "rotary",
-      "positions": [
-        "OFF",
-        "SLOW",
-        "FAST"
-      ],
-      "state": {
-        "dataref": "AirbusFBW/RightWiperSwitch"
-      },
-      "col": 1,
-      "row": 0,
-      "verified": false,
-      "notes": "Escribible (volcado); orden de valores por confirmar."
     }
   ]
 }

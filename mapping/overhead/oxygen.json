@@ -1,0 +1,67 @@
+{
+  "id": "oxygen",
+  "title": "OXYGEN",
+  "group": "overhead",
+  "order": 26,
+  "notes": "Oxígeno. Confirmado por el volcado y por XSchenFly.",
+  "controls": [
+    {
+      "id": "oxy.crew_supply",
+      "label": "CREW SUPPLY",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/CrewOxySwitch"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/CrewOxySwitch",
+          "onValue": 0
+        }
+      },
+      "col": 0,
+      "row": 0,
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API)."
+    },
+    {
+      "id": "oxy.pax_mask",
+      "label": "MASK MAN ON",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/PaxOxyReleaseButtonPress"
+      },
+      "guarded": true,
+      "col": 1,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Suelta las máscaras de pasaje."
+    },
+    {
+      "id": "oxy.tmr_reset",
+      "label": "TMR RESET",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/TMRResetButtonPress"
+      },
+      "guarded": true,
+      "col": 2,
+      "row": 0,
+      "verified": true,
+      "notes": "Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt)."
+    }
+  ]
+}

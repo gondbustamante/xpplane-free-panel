@@ -79,6 +79,11 @@ final class PanelModel {
     var showVerificationBadges: Bool {
         didSet { UserDefaults.standard.set(showVerificationBadges, forKey: Keys.badges) }
     }
+    /// Zoom of the panel canvas (1 = native size). Pinch or the − / + buttons change it.
+    var canvasScale: Double {
+        didSet { UserDefaults.standard.set(canvasScale, forKey: Keys.scale) }
+    }
+    static let scaleRange: ClosedRange<Double> = 0.5...1.6
     var selection: PanelSelection {
         didSet { UserDefaults.standard.set(selection.storageValue, forKey: Keys.selection) }
     }
@@ -117,6 +122,7 @@ final class PanelModel {
         static let badges = "ui.verificationBadges"
         static let extras = "diag.extraDatarefs"
         static let selection = "ui.selection"
+        static let scale = "ui.canvasScale"
     }
 
     init() {
@@ -127,6 +133,8 @@ final class PanelModel {
         showVerificationBadges = defaults.object(forKey: Keys.badges) as? Bool ?? true
         extraDatarefs = defaults.stringArray(forKey: Keys.extras) ?? []
         selection = PanelSelection(storageValue: defaults.string(forKey: Keys.selection) ?? "group:overhead")
+        let storedScale = defaults.double(forKey: Keys.scale)
+        canvasScale = storedScale == 0 ? 0.8 : min(max(storedScale, Self.scaleRange.lowerBound), Self.scaleRange.upperBound)
         loadMappings()
     }
 
@@ -170,6 +178,19 @@ final class PanelModel {
                 return subpanels.first { $0.id == wanted }.map { .subpanel($0) }
             }
         }
+    }
+
+    func zoom(by factor: Double) {
+        canvasScale = min(max(canvasScale * factor, Self.scaleRange.lowerBound), Self.scaleRange.upperBound)
+    }
+
+    /// Subpanels of a group that are visible now, keyed by id.
+    func visibleSubpanels(in group: String) -> [String: SubpanelDefinition] {
+        var result: [String: SubpanelDefinition] = [:]
+        for case .subpanel(let panel) in visibleItems where panel.groupID == group {
+            result[panel.id] = panel
+        }
+        return result
     }
 
     var selectionTitle: String {

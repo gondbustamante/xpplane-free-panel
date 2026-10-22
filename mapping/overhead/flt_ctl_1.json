@@ -1,0 +1,111 @@
+{
+  "id": "flt_ctl_1",
+  "title": "FLT CTL",
+  "group": "overhead",
+  "order": 12,
+  "notes": "Computadores de vuelo, lado capitán. FCCSwitchArray es escribible pero los índices son supuestos; bloqueado hasta verificar.",
+  "controls": [
+    {
+      "id": "flt_ctl.elac1",
+      "label": "ELAC 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FCCSwitchArray",
+        "index": 0
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FCCSwitchLightsArray",
+          "index": 0,
+          "bit": 2
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FCCSwitchLightsArray",
+          "index": 0,
+          "bit": 1
+        }
+      },
+      "readOnly": true,
+      "col": 0,
+      "row": 0,
+      "verified": false,
+      "notes": "Índice supuesto de FCCSwitchArray/FCCSwitchLightsArray (orden ELAC1, ELAC2, SEC1, SEC2, SEC3, FAC1, FAC2). Bloqueado."
+    },
+    {
+      "id": "flt_ctl.sec1",
+      "label": "SEC 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FCCSwitchArray",
+        "index": 2
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FCCSwitchLightsArray",
+          "index": 2,
+          "bit": 2
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FCCSwitchLightsArray",
+          "index": 2,
+          "bit": 1
+        }
+      },
+      "readOnly": true,
+      "col": 1,
+      "row": 0,
+      "verified": false,
+      "notes": "Índice supuesto de FCCSwitchArray/FCCSwitchLightsArray (orden ELAC1, ELAC2, SEC1, SEC2, SEC3, FAC1, FAC2). Bloqueado."
+    },
+    {
+      "id": "flt_ctl.fac1",
+      "label": "FAC 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FCCSwitchArray",
+        "index": 5
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FCCSwitchLightsArray",
+          "index": 5,
+          "bit": 2
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FCCSwitchLightsArray",
+          "index": 5,
+          "bit": 1
+        }
+      },
+      "readOnly": true,
+      "col": 2,
+      "row": 0,
+      "verified": false,
+      "notes": "Índice supuesto de FCCSwitchArray/FCCSwitchLightsArray (orden ELAC1, ELAC2, SEC1, SEC2, SEC3, FAC1, FAC2). Bloqueado."
+    }
+  ]
+}

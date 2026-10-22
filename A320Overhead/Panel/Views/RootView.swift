@@ -15,10 +15,7 @@ struct RootView: View {
                 ConnectionBar(showSettings: $showSettings, showDiagnostics: $showDiagnostics)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
-                ScrollView(.vertical, showsIndicators: false) {
-                    PanelCanvas()
-                        .padding(20)
-                }
+                PanelCanvas()
             }
             .background(PanelTheme.cockpitBackground.ignoresSafeArea())
             .navigationTitle(model.selectionTitle)
@@ -35,38 +32,6 @@ struct RootView: View {
         }
         .preferredColorScheme(.dark)
         .persistentSystemOverlays(.hidden)
-    }
-}
-
-/// The panel face for the current selection: subpanels flow left to right and wrap.
-struct PanelCanvas: View {
-    @Environment(PanelModel.self) private var model
-
-    var body: some View {
-        let items = model.visibleItems
-        FlowLayout(spacing: 26) {
-            if items.isEmpty {
-                Text("No hay paneles para esta selección. Revisa mapping/layout.json.")
-                    .foregroundStyle(.white.opacity(0.7))
-                    .padding(40)
-            }
-            ForEach(items) { item in
-                switch item {
-                case .subpanel(let panel):
-                    SubpanelView(panel: panel)
-                case .fcu:
-                    FCUView()
-                }
-            }
-        }
-        .padding(26)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(LinearGradient(colors: [PanelTheme.panelFaceHighlight, PanelTheme.panelFace],
-                                     startPoint: .top, endPoint: .bottom))
-                .shadow(color: .black.opacity(0.6), radius: 12, y: 6)
-        )
     }
 }
 

@@ -1,0 +1,33 @@
+{
+  "id": "cargo_heat",
+  "title": "CARGO HEAT",
+  "group": "overhead",
+  "order": 56,
+  "notes": "Calefacción de bodega. CargoHotAir escribible (volcado).",
+  "controls": [
+    {
+      "id": "cargo.hot_air",
+      "label": "HOT AIR",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/CargoHotAir"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/CargoHotAir",
+          "onValue": 0
+        }
+      },
+      "col": 0,
+      "row": 0,
+      "verified": false,
+      "notes": "CargoHotAir escribible (volcado)."
+    }
+  ]
+}
