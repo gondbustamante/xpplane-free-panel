@@ -45,7 +45,7 @@ En Xcode: selecciona tu equipo en *Signing & Capabilities* (o rellena `DEVELOPME
 
 Pulsa el engranaje, introduce la IP del PC y el puerto 8087, y *Guardar y conectar*. Con el ToLiss cargado, los interruptores reflejan el estado del avión.
 
-La barra lateral elige qué ver: una fase de vuelo (solo los paneles de ese momento) o un grupo completo (Overhead, FCU). En el FCU cada ventana muestra el valor real del avión (con el punto de modo gestionado y las rayas cuando toca); la rueda se gira arrastrando o con − / +, PUSH y PULL hacen lo mismo que empujar o tirar de la rueda, y tocar la ventana permite teclear un valor exacto.
+Un dedo acciona interruptores y pulsadores; dos dedos desplazan y pellizcan para hacer zoom. El botón de ajuste vuelve a encajar el panel en pantalla. La barra lateral elige qué ver: una fase de vuelo (solo los paneles de ese momento) o un grupo completo (Overhead, FCU). En el FCU cada ventana muestra el valor real del avión (con el punto de modo gestionado y las rayas cuando toca); la rueda se gira arrastrando o con − / +, PUSH y PULL hacen lo mismo que empujar o tirar de la rueda, y tocar la ventana permite teclear un valor exacto.
 
 ## Verificar y ampliar el mapeo
 

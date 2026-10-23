@@ -54,6 +54,16 @@ struct RotarySelectorView: View {
         .contentShape(Circle())
         .animation(.spring(response: 0.2, dampingFraction: 0.7), value: position)
         .onTapGesture { location in onMove(location.x < diameter / 2 ? -1 : 1) }
+        .gesture(
+            DragGesture(minimumDistance: 8)
+                .onEnded { value in
+                    if value.translation.width > 8 {
+                        onMove(1)
+                    } else if value.translation.width < -8 {
+                        onMove(-1)
+                    }
+                }
+        )
         .overlay(alignment: labelBelow ? .bottom : .top) {
             if !label.isEmpty {
                 ControlLabel(text: label).offset(y: labelBelow ? diameter * 0.22 + 10 : -diameter * 0.32 - 12)
