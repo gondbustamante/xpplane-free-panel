@@ -62,16 +62,6 @@ struct ToggleSwitchView: View {
         .contentShape(Circle())
         .animation(.spring(response: 0.18, dampingFraction: 0.65), value: position)
         .onTapGesture { location in onMove(location.y < bezel / 2 ? 1 : -1) }
-        .gesture(
-            DragGesture(minimumDistance: 8)
-                .onEnded { value in
-                    if value.translation.height < -8 {
-                        onMove(1)
-                    } else if value.translation.height > 8 {
-                        onMove(-1)
-                    }
-                }
-        )
         .overlay(alignment: .top) {
             VStack(spacing: 0) {
                 if !label.isEmpty { ControlLabel(text: label) }
