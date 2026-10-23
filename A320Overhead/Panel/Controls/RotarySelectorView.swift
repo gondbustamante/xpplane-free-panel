@@ -10,6 +10,7 @@ struct RotarySelectorView: View {
     var dimmed = false
     var inline = true
     var diameter: CGFloat = 52
+    var labelBelow = false
     let onMove: (Int) -> Void
 
     private let sweep: Double = 120
@@ -53,13 +54,17 @@ struct RotarySelectorView: View {
         .contentShape(Circle())
         .animation(.spring(response: 0.2, dampingFraction: 0.7), value: position)
         .onTapGesture { location in onMove(location.x < diameter / 2 ? -1 : 1) }
-        .overlay(alignment: .top) { ControlLabel(text: label).offset(y: -30) }
+        .overlay(alignment: labelBelow ? .bottom : .top) {
+            if !label.isEmpty {
+                ControlLabel(text: label).offset(y: labelBelow ? diameter * 0.22 + 10 : -diameter * 0.32 - 12)
+            }
+        }
         .overlay {
             ForEach(positions.indices, id: \.self) { index in
                 let radians = (angle(for: index) - 90) * .pi / 180
-                ControlLabel(text: positions[index], size: 8)
+                ControlLabel(text: positions[index], size: 7)
                     .opacity(index == position ? 1 : 0.8)
-                    .offset(x: CGFloat(cos(radians)) * diameter * 0.86, y: CGFloat(sin(radians)) * diameter * 0.86)
+                    .offset(x: CGFloat(cos(radians)) * diameter * 0.82, y: CGFloat(sin(radians)) * diameter * 0.82)
             }
         }
         .opacity(dimmed ? 0.5 : 1)

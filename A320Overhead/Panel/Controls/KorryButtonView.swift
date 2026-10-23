@@ -23,6 +23,7 @@ struct KorryButtonView: View {
     /// view's frame is the button itself (absolute panels).
     var inline = true
     var size: CGFloat = 58
+    var labelBelow = false
     let onPress: () -> Void
 
     @State private var guardOpen = false
@@ -37,7 +38,12 @@ struct KorryButtonView: View {
                 }
             } else {
                 guardedButton
-                    .overlay(alignment: .top) { ControlLabel(text: label).offset(y: -14) }
+                    .overlay(alignment: labelBelow ? .bottom : .top) {
+                        if !label.isEmpty {
+                            ControlLabel(text: label)
+                                .offset(y: labelBelow ? PanelMetrics.labelGap + 4 : -PanelMetrics.labelGap - 4)
+                        }
+                    }
                     .overlay(alignment: .trailing) {
                         if let sideLabel {
                             VStack(spacing: -1) {
@@ -45,7 +51,7 @@ struct KorryButtonView: View {
                                     Text(String(letter)).font(.system(size: 7, weight: .semibold)).foregroundStyle(PanelTheme.legend)
                                 }
                             }
-                            .offset(x: 9)
+                            .offset(x: 8)
                         }
                     }
             }

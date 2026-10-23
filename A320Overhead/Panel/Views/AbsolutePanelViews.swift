@@ -7,15 +7,17 @@ enum PanelMetrics {
     static let unit: CGFloat = 2.5
     static func pt(_ units: Double) -> CGFloat { CGFloat(units) * unit }
     /// Default body sizes in units.
-    static let korrySide: Double = 22
-    static let roundButton: Double = 20
-    static let toggleBezel: Double = 22
-    static let rotaryDiameter: Double = 30
-    static let knobDiameter: Double = 30
-    static let fireWidth: Double = 48
-    static let fireHeight: Double = 30
-    static let displayWidth: Double = 36
-    static let displayHeight: Double = 14
+    static let korrySide: Double = 17
+    static let roundButton: Double = 14
+    static let toggleBezel: Double = 18
+    static let rotaryDiameter: Double = 26
+    static let knobDiameter: Double = 26
+    static let fireWidth: Double = 44
+    static let fireHeight: Double = 27
+    static let displayWidth: Double = 32
+    static let displayHeight: Double = 12
+    /// Gap between a control body and its label, in points.
+    static let labelGap: CGFloat = 7
 }
 
 /// Draws the visible subpanels of a group at their true frames, cropped to their bounding box
@@ -77,13 +79,16 @@ struct AbsoluteSubpanelView: View {
             DecorationLayer(decorations: panel.decorations ?? [])
 
             if panel.titleHidden != true {
-                let at = panel.titleAt ?? [frame.w / 2, 7]
+                let at = panel.titleAt ?? [frame.w / 2, 5]
                 Text(panel.title.uppercased())
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 11.5, weight: .bold))
                     .fontWidth(.condensed)
-                    .tracking(0.8)
+                    .tracking(0.6)
                     .foregroundStyle(PanelTheme.legend)
+                    .multilineTextAlignment(.center)
                     .fixedSize()
+                    .padding(.horizontal, 3)
+                    .background(PanelTheme.panelFace.opacity(0.9))
                     .position(x: PanelMetrics.pt(at[0]), y: PanelMetrics.pt(at[1]))
             }
 
@@ -224,7 +229,8 @@ struct AbsoluteControlView: View {
         case .rotary:
             RotarySelectorView(label: control.label, positions: control.positions, position: model.position(of: control),
                                enabled: enabled, dimmed: dimmed, inline: false,
-                               diameter: PanelMetrics.pt(control.size ?? PanelMetrics.rotaryDiameter)) { delta in
+                               diameter: PanelMetrics.pt(control.size ?? PanelMetrics.rotaryDiameter),
+                               labelBelow: control.labelBelow ?? false) { delta in
                 model.move(control, by: delta)
             }
         case .knob:
@@ -254,7 +260,8 @@ struct AbsoluteControlView: View {
                 KorryButtonView(label: control.label, top: lamp(control.lamps?.top), bottom: lamp(control.lamps?.bottom),
                                 guarded: control.guarded ?? false, enabled: enabled, dimmed: dimmed,
                                 guardStyle: control.guardStyle ?? "cage", sideLabel: control.sideLabel, inline: false,
-                                size: PanelMetrics.pt(control.size ?? PanelMetrics.korrySide)) {
+                                size: PanelMetrics.pt(control.size ?? PanelMetrics.korrySide),
+                                labelBelow: control.labelBelow ?? false) {
                     model.press(control)
                 }
             }
@@ -270,7 +277,7 @@ struct AbsoluteControlView: View {
 /// Label text used above controls in absolute mode.
 struct ControlLabel: View {
     let text: String
-    var size: CGFloat = 9.5
+    var size: CGFloat = 8
 
     var body: some View {
         Text(text.uppercased())
@@ -323,12 +330,12 @@ struct KnobView: View {
                 .rotationEffect(.degrees(angle))
         }
         .frame(width: diameter * 1.3, height: diameter * 1.3)
-        .overlay(alignment: .top) { ControlLabel(text: label).offset(y: -14) }
+        .overlay(alignment: .top) { ControlLabel(text: label).offset(y: -PanelMetrics.labelGap - 4) }
         .overlay(alignment: .bottomLeading) {
-            if let first = positions.first { ControlLabel(text: first, size: 8).offset(x: -16, y: 2) }
+            if let first = positions.first { ControlLabel(text: first, size: 7).offset(x: -14, y: 2) }
         }
         .overlay(alignment: .bottomTrailing) {
-            if positions.count > 1 { ControlLabel(text: positions[positions.count - 1], size: 8).offset(x: 16, y: 2) }
+            if positions.count > 1 { ControlLabel(text: positions[positions.count - 1], size: 7).offset(x: 14, y: 2) }
         }
         .opacity(dimmed ? 0.5 : 1)
         .contentShape(Circle())
@@ -364,7 +371,7 @@ struct DisplayView: View {
                 .shadow(color: PanelTheme.fcuDigitsColor.opacity(0.7), radius: 2)
         }
         .frame(width: width, height: height)
-        .overlay(alignment: .top) { ControlLabel(text: label).offset(y: -14) }
+        .overlay(alignment: .top) { if !label.isEmpty { ControlLabel(text: label).offset(y: -PanelMetrics.labelGap - 4) } }
     }
 }
 
@@ -389,7 +396,7 @@ struct RoundButtonView: View {
             .contentShape(Circle())
         }
         .buttonStyle(KorryPressStyle())
-        .overlay(alignment: .top) { ControlLabel(text: label).offset(y: -14) }
+        .overlay(alignment: .top) { ControlLabel(text: label).offset(y: -PanelMetrics.labelGap - 4) }
         .opacity(dimmed ? 0.5 : 1)
         .disabled(!enabled)
     }
@@ -446,8 +453,8 @@ struct FireButtonView: View {
         }
         .frame(width: width, height: height)
         .overlay(alignment: .top) {
-            Text(label.uppercased()).font(.system(size: 13, weight: .bold)).fontWidth(.condensed)
-                .foregroundStyle(PanelTheme.legend).fixedSize().offset(y: -16)
+            Text(label.uppercased()).font(.system(size: 12, weight: .bold)).fontWidth(.condensed)
+                .foregroundStyle(PanelTheme.legend).fixedSize().offset(y: -14)
         }
         .opacity(dimmed ? 0.5 : 1)
         .onChange(of: guardOpen) { _, open in

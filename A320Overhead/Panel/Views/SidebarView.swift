@@ -29,6 +29,18 @@ struct SidebarView: View {
                 Label("Todos", systemImage: "rectangle.3.group")
                     .tag(PanelSelection.all)
             }
+            ForEach(model.layout.groups) { group in
+                let sections = model.sections(of: group.id)
+                if !sections.isEmpty {
+                    Section("Secciones · \(group.title)") {
+                        ForEach(sections) { panel in
+                            Text(panel.title.isEmpty ? panel.id.replacingOccurrences(of: "_", with: " ").uppercased() : panel.title)
+                                .font(.callout)
+                                .tag(PanelSelection.subpanel(panel.id))
+                        }
+                    }
+                }
+            }
         }
         .listStyle(.sidebar)
         .navigationTitle("A320")

@@ -20,12 +20,15 @@ enum PanelSelection: Hashable {
     case all
     case group(String)
     case phase(String)
+    /// One subpanel on its own, fitted to the screen.
+    case subpanel(String)
 
     var storageValue: String {
         switch self {
         case .all: return "all"
         case .group(let id): return "group:\(id)"
         case .phase(let id): return "phase:\(id)"
+        case .subpanel(let id): return "subpanel:\(id)"
         }
     }
 
@@ -34,6 +37,8 @@ enum PanelSelection: Hashable {
             self = .group(String(storageValue.dropFirst(6)))
         } else if storageValue.hasPrefix("phase:") {
             self = .phase(String(storageValue.dropFirst(6)))
+        } else if storageValue.hasPrefix("subpanel:") {
+            self = .subpanel(String(storageValue.dropFirst(9)))
         } else {
             self = .all
         }
@@ -180,6 +185,21 @@ final class PanelModel {
                 if wanted == "fcu" { return fcuItem.first }
                 return subpanels.first { $0.id == wanted }.map { .subpanel($0) }
             }
+        case .subpanel(let id):
+            if id == "fcu" { return fcuItem }
+            return subpanels.first { $0.id == id }.map { [.subpanel($0)] } ?? []
+        }
+    }
+
+    /// Subpanels of a group for the sidebar's section list, in reading order (top-left first).
+    func sections(of group: String) -> [SubpanelDefinition] {
+        subpanels.filter { $0.groupID == group }.sorted {
+            let a = $0.frame, b = $1.frame
+            if let a, let b {
+                if abs(a.x - b.x) > 150 { return a.x < b.x }   // column first
+                return a.y < b.y
+            }
+            return ($0.order ?? .max, $0.title) < ($1.order ?? .max, $1.title)
         }
     }
 
@@ -217,6 +237,11 @@ final class PanelModel {
         case .all: return "Todos los paneles"
         case .group(let id): return layout.groups.first { $0.id == id }?.title ?? id
         case .phase(let id): return layout.phases.first { $0.id == id }?.title ?? id
+        case .subpanel(let id):
+            if let panel = subpanels.first(where: { $0.id == id }) {
+                return panel.title.isEmpty ? panel.id.replacingOccurrences(of: "_", with: " ").uppercased() : panel.title
+            }
+            return id.uppercased()
         }
     }
 

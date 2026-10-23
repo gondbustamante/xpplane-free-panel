@@ -105,6 +105,8 @@ public struct ControlDefinition: Codable, Identifiable, Sendable {
     public let style: String?
     /// Small vertical legend beside a korry ("AUTO").
     public let sideLabel: String?
+    /// Draws the label under the body instead of above (ADIRS "ADIR 1" under its selector).
+    public let labelBelow: Bool?
     /// Knob: value range. Display: unused.
     public let range: ValueRange?
     /// Display: printf-style format, e.g. "%.1fV".

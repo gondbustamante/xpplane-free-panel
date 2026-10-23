@@ -13,7 +13,7 @@
   "controls": [
     {
       "id": "adirs.on_bat",
-      "label": "ON BAT",
+      "label": "",
       "kind": "display",
       "positions": [
         "OFF",
@@ -154,7 +154,8 @@
       "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Up = girar a la derecha.",
       "size": 26,
       "x": 36.4,
-      "y": 85.5
+      "y": 85.5,
+      "labelBelow": true
     },
     {
       "id": "adirs.ir3",
@@ -177,7 +178,8 @@
       "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Up = girar a la derecha.",
       "size": 26,
       "x": 87.7,
-      "y": 85.5
+      "y": 85.5,
+      "labelBelow": true
     },
     {
       "id": "adirs.ir2",
@@ -200,7 +202,8 @@
       "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Nombres de comando confirmados en el volcado de ToLiss (mapping/reference/commands.txt). Up = girar a la derecha.",
       "size": 26,
       "x": 139.3,
-      "y": 85.5
+      "y": 85.5,
+      "labelBelow": true
     },
     {
       "id": "adirs.adr1_pb",

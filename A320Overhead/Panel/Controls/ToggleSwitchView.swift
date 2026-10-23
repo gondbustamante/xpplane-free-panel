@@ -63,15 +63,15 @@ struct ToggleSwitchView: View {
         .animation(.spring(response: 0.18, dampingFraction: 0.65), value: position)
         .onTapGesture { location in onMove(location.y < bezel / 2 ? 1 : -1) }
         .overlay(alignment: .top) {
-            VStack(spacing: 1) {
-                ControlLabel(text: label)
-                ControlLabel(text: positions.last ?? "", size: 8)
+            VStack(spacing: 0) {
+                if !label.isEmpty { ControlLabel(text: label) }
+                ControlLabel(text: positions.last ?? "", size: 7)
             }
-            .offset(y: -26)
+            .offset(y: label.isEmpty ? -12 : -22)
         }
-        .overlay(alignment: .bottom) { ControlLabel(text: positions.first ?? "", size: 8).offset(y: 12) }
+        .overlay(alignment: .bottom) { ControlLabel(text: positions.first ?? "", size: 7).offset(y: 11) }
         .overlay(alignment: .trailing) {
-            if count == 3 { ControlLabel(text: positions[1], size: 8).offset(x: 20) }
+            if count == 3 { ControlLabel(text: positions[1], size: 7).offset(x: 16) }
         }
         .opacity(dimmed ? 0.5 : 1)
         .disabled(!enabled)

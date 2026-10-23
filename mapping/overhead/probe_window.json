@@ -1,6 +1,6 @@
 {
   "id": "probe_window",
-  "title": "PROBE/WINDOW HEAT",
+  "title": "PROBE/WINDOW\nHEAT",
   "group": "overhead",
   "order": 36,
   "frame": {
@@ -36,5 +36,9 @@
       "x": 31,
       "y": 33
     }
+  ],
+  "titleAt": [
+    31,
+    7
   ]
 }

@@ -129,6 +129,15 @@ struct ZoomableCanvas<Content: View>: View {
 
     private let margin: CGFloat = 20
 
+    /// True when the scaled content fits the container: then the scroll view is disabled so a
+    /// finger on a switch never drags the panel around.
+    private var fits: Bool {
+        guard naturalSize.width > 0, containerSize.width > 0 else { return true }
+        let scale = model.canvasScale
+        return naturalSize.width * scale + margin * 2 <= containerSize.width + 1
+            && naturalSize.height * scale + margin * 2 <= containerSize.height + 1
+    }
+
     var body: some View {
         ScrollView([.horizontal, .vertical], showsIndicators: true) {
             ScaledLayout(scale: model.canvasScale) {
@@ -141,7 +150,9 @@ struct ZoomableCanvas<Content: View>: View {
                     .scaleEffect(model.canvasScale, anchor: .topLeading)
             }
             .padding(margin)
+            .frame(minWidth: containerSize.width, minHeight: containerSize.height, alignment: .center)
         }
+        .scrollDisabled(fits)
         .background(GeometryReader { proxy in
             Color.clear.preference(key: ContainerSizeKey.self, value: proxy.size)
         })
@@ -174,10 +185,12 @@ struct ZoomableCanvas<Content: View>: View {
 }
 
 private extension ZoomableCanvas {
+    /// Fits both axes so the selection is visible whole and the canvas stays still.
     func applyFitIfPending() {
-        guard pendingFit, naturalSize.width > 0, containerSize.width > 0 else { return }
-        let available = containerSize.width - margin * 2 - 4
-        model.setScale(available / naturalSize.width)
+        guard pendingFit, naturalSize.width > 0, naturalSize.height > 0, containerSize.width > 0 else { return }
+        let availableWidth = containerSize.width - margin * 2 - 4
+        let availableHeight = containerSize.height - margin * 2 - 4
+        model.setScale(min(availableWidth / naturalSize.width, availableHeight / naturalSize.height))
         pendingFit = false
     }
 }

@@ -241,24 +241,6 @@
     {
       "type": "text",
       "at": [
-        175.5,
-        25.9
-      ],
-      "text": "CTR TK",
-      "size": 5
-    },
-    {
-      "type": "text",
-      "at": [
-        238.3,
-        25.9
-      ],
-      "text": "CTR TK",
-      "size": 5
-    },
-    {
-      "type": "text",
-      "at": [
         328.8,
         25.9
       ],
@@ -363,7 +345,7 @@
     },
     {
       "id": "fuel.ctr_pump1",
-      "label": "PUMP 1",
+      "label": "CTR TK\nPUMP 1",
       "kind": "korry",
       "positions": [
         "OFF",
@@ -471,7 +453,7 @@
     },
     {
       "id": "fuel.ctr_pump2",
-      "label": "PUMP 2",
+      "label": "CTR TK\nPUMP 2",
       "kind": "korry",
       "positions": [
         "OFF",
