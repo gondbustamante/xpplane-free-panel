@@ -29,6 +29,26 @@ struct CustomPanel: Codable, Identifiable, Hashable {
     var columns: Int = 2
 }
 
+/// Where the integral lighting level of the panels comes from.
+enum BacklightMode: String, CaseIterable, Identifiable {
+    /// Follow the aircraft's integral lighting knobs (and electrical power).
+    case auto
+    /// Always lit at the manual level.
+    case on
+    /// Painted legends only.
+    case off
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .auto: return "Según el avión"
+        case .on: return "Siempre"
+        case .off: return "Apagada"
+        }
+    }
+}
+
 /// What the main canvas shows: every subpanel, one panel group, or the subpanels of a flight phase.
 enum PanelSelection: Hashable {
     case all
@@ -126,6 +146,26 @@ final class PanelModel {
             autoFit = true
         }
     }
+    /// Integral lighting of legends and keys.
+    var backlightMode: BacklightMode {
+        didSet { UserDefaults.standard.set(backlightMode.rawValue, forKey: Keys.backlightMode) }
+    }
+    /// Level used when the mode is "on", and in "auto" until the aircraft reports its own.
+    var backlightManualLevel: Double {
+        didSet { UserDefaults.standard.set(backlightManualLevel, forKey: Keys.backlightLevel) }
+    }
+    /// Integral lighting levels reported by ToLiss, by zone ("overhead", "main", "fcu",
+    /// "mcdu1", "mcdu2"). Kept apart from `rawValues` so panels only redraw when these change.
+    private(set) var simBacklight: [String: Double] = [:]
+
+    /// ToLiss datarefs that carry the integral lighting levels.
+    static let backlightSources = [
+        "AirbusFBW/IntegratedLightLevelOHP_Raw",
+        "AirbusFBW/IntegratedLightLevelMain_Raw",
+        "AirbusFBW/FCUIntegralBrightness",
+        "AirbusFBW/MCDUIntegBrightness",
+    ]
+
     /// Panels built by the user, persisted on the device.
     private(set) var customPanels: [CustomPanel] = [] {
         didSet { saveCustomPanels() }
@@ -189,6 +229,8 @@ final class PanelModel {
         static let mcduUnit = "mcdu.unit"
         static let mcduWide = "mcdu.wideInLandscape"
         static let customPanels = "custom.panels"
+        static let backlightMode = "ui.backlightMode"
+        static let backlightLevel = "ui.backlightLevel"
     }
 
     init() {
@@ -201,6 +243,8 @@ final class PanelModel {
         let storedUnit = defaults.integer(forKey: Keys.mcduUnit)
         mcduUnit = storedUnit == 2 ? 2 : 1
         mcduWideInLandscape = defaults.object(forKey: Keys.mcduWide) as? Bool ?? true
+        backlightMode = BacklightMode(rawValue: defaults.string(forKey: Keys.backlightMode) ?? "") ?? .auto
+        backlightManualLevel = defaults.object(forKey: Keys.backlightLevel) as? Double ?? 0.75
         if let data = defaults.data(forKey: Keys.customPanels),
            let stored = try? JSONDecoder().decode([CustomPanel].self, from: data) {
             customPanels = stored
@@ -360,6 +404,42 @@ final class PanelModel {
         }
     }
 
+    // MARK: Integral lighting
+
+    /// Level (0…1) of the integral lighting for a panel group or built-in panel id.
+    func backlight(forGroup group: String) -> Double {
+        switch backlightMode {
+        case .off: return 0
+        case .on: return backlightManualLevel
+        case .auto:
+            let zone: String
+            switch group {
+            case "overhead": zone = "overhead"
+            case "fcu": zone = "fcu"
+            case "mcdu": zone = "mcdu\(mcduUnit)"
+            default: zone = "main"          // pedestal, ECAM, glareshield
+            }
+            return status == .connected ? (simBacklight[zone] ?? backlightManualLevel) : backlightManualLevel
+        }
+    }
+
+    private func applyBacklight(_ update: DatarefUpdate) {
+        func store(_ zone: String, _ value: Double?) {
+            guard let value else { return }
+            let level = min(max(value, 0), 1)
+            if abs((simBacklight[zone] ?? -1) - level) > 0.02 { simBacklight[zone] = level }
+        }
+        switch update.name {
+        case "AirbusFBW/IntegratedLightLevelOHP_Raw": store("overhead", update.value.doubleValue)
+        case "AirbusFBW/IntegratedLightLevelMain_Raw": store("main", update.value.doubleValue)
+        case "AirbusFBW/FCUIntegralBrightness": store("fcu", update.value.doubleValue)
+        case "AirbusFBW/MCDUIntegBrightness":
+            store("mcdu1", update.value.element(at: 0)?.doubleValue)
+            store("mcdu2", update.value.element(at: 1)?.doubleValue)
+        default: break
+        }
+    }
+
     // MARK: Orientation
 
     func setLandscape(_ landscape: Bool) {
@@ -488,6 +568,7 @@ final class PanelModel {
         }
         if let fcu { names.formUnion(fcu.datarefNames) }
         if hasMCDU { names.formUnion(MCDUScreen.datarefNames(unit: mcduUnit)) }
+        names.formUnion(Self.backlightSources)
         return names
     }
 
@@ -588,6 +669,9 @@ final class PanelModel {
     }
 
     private func apply(_ update: DatarefUpdate) {
+        if Self.backlightSources.contains(update.name) {
+            applyBacklight(update)
+        }
         if update.name.hasPrefix("AirbusFBW/MCDU1") || update.name.hasPrefix("AirbusFBW/MCDU2") {
             mcduRaw[update.name] = update.value
             return

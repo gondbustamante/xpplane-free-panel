@@ -51,16 +51,59 @@ struct ScrewView: View {
     }
 }
 
+// MARK: - Integral lighting (backlit legends)
+
+private struct BacklightKey: EnvironmentKey {
+    static let defaultValue: Double = 0.75
+}
+
+extension EnvironmentValues {
+    /// 0…1 level of the integral lighting of the panel being drawn. Legends, key captions and
+    /// painted lines glow with it, as they do in the aircraft. Set per panel group by the canvas.
+    var backlight: Double {
+        get { self[BacklightKey.self] }
+        set { self[BacklightKey.self] = newValue }
+    }
+}
+
+extension PanelTheme {
+    /// Warm white of Airbus integral lighting.
+    static let backlightGlow = Color(red: 1.00, green: 0.93, blue: 0.80)
+
+    /// Legend colour: painted white when unlit, warming as the integral lighting comes up.
+    static func legend(_ level: Double) -> Color {
+        let l = min(max(level, 0), 1)
+        return Color(red: 0.90 + 0.10 * l, green: 0.90 + 0.06 * l, blue: 0.90 - 0.02 * l)
+    }
+}
+
+/// Glow of a backlit legend or painted line, following `\.backlight`.
+struct Backlit: ViewModifier {
+    @Environment(\.backlight) private var level
+
+    func body(content: Content) -> some View {
+        content.shadow(color: PanelTheme.backlightGlow.opacity(0.85 * min(max(level, 0), 1)),
+                       radius: 0.6 + 2.0 * level)
+    }
+}
+
+extension View {
+    /// Lights this legend with the panel's integral lighting.
+    func backlit() -> some View { modifier(Backlit()) }
+}
+
 struct PanelLabel: View {
     let text: String
     var small = false
+    @Environment(\.backlight) private var level
 
     var body: some View {
         Text(text.uppercased())
             .font(.system(size: small ? 10 : 11.5, weight: .semibold, design: .default))
             .tracking(0.4)
-            .foregroundStyle(PanelTheme.legend)
+            .foregroundStyle(PanelTheme.legend(level))
             .lineLimit(1)
             .minimumScaleFactor(0.7)
+            .backlit()
     }
 }

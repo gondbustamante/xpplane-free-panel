@@ -76,6 +76,12 @@ Adelantado desde la fase 2 porque es el panel que más se toca en vuelo y reutil
 - [ ] Confirmar valores de los selectores del ATC/TCAS, ENG MODE y la puerta, y los índices de luz de los RMP
 - [ ] ACP (audio), WX radar, iluminación del pedestal, palancas de gases
 
+## Fase 1f · MCDU oficial y retroiluminación (2026-10-23)
+
+- [x] MCDU en las coordenadas de la foto oficial, partible en horizontal
+- [x] Retroiluminación integral de leyendas, teclas y líneas en todos los paneles, ligada a los mandos de ToLiss o manual
+- [ ] Confirmar el rango 0…1 de los datarefs de iluminación integral en el simulador
+
 ## Fase 2 · Overhead completo (2 a 3 meses) — en curso
 
 Hecho el 2026-10-22: barra lateral con fases de vuelo y grupos de paneles (`mapping/layout.json`), selector rotatorio, pulsador guardado, y **21 subpaneles del overhead con 124 controles**. Con el volcado real de ToLiss en `mapping/reference/`, los 74 datarefs y 101 comandos del mapeo están comprobados por nombre (el validador lo exige). 59 controles verificados; 65 pendientes de confirmar semántica de valores o índice, de los cuales 24 bloqueados como solo lectura.

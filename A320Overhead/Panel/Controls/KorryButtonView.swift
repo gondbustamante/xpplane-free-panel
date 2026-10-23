@@ -48,7 +48,7 @@ struct KorryButtonView: View {
                         if let sideLabel {
                             VStack(spacing: -1) {
                                 ForEach(Array(sideLabel.enumerated()), id: \.offset) { _, letter in
-                                    Text(String(letter)).font(.system(size: 7, weight: .semibold)).foregroundStyle(PanelTheme.legend)
+                                    Text(String(letter)).font(.system(size: 7, weight: .semibold)).foregroundStyle(PanelTheme.legend).backlit()
                                 }
                             }
                             .offset(x: 8)

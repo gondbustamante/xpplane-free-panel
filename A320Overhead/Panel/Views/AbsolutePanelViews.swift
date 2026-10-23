@@ -60,6 +60,7 @@ struct AbsoluteGroupView: View {
 struct AbsoluteSubpanelView: View {
     let panel: SubpanelDefinition
     @Environment(PanelModel.self) private var model
+    @Environment(\.backlight) private var backlight
 
     var body: some View {
         let frame = panel.frame!
@@ -84,7 +85,8 @@ struct AbsoluteSubpanelView: View {
                     .font(.system(size: 11.5, weight: .bold))
                     .fontWidth(.condensed)
                     .tracking(0.6)
-                    .foregroundStyle(PanelTheme.legend)
+                    .foregroundStyle(PanelTheme.legend(backlight))
+                    .backlit()
                     .multilineTextAlignment(.center)
                     .fixedSize()
                     .padding(.horizontal, 3)
@@ -111,6 +113,7 @@ struct DecorationLayer: View {
                 draw(deco, in: &context)
             }
         }
+        .backlit()   // painted lines, synoptics and legends are lit too
         .allowsHitTesting(false)
     }
 
@@ -297,16 +300,18 @@ struct AbsoluteControlView: View {
 struct ControlLabel: View {
     let text: String
     var size: CGFloat = 8
+    @Environment(\.backlight) private var level
 
     var body: some View {
         Text(text.uppercased())
             .font(.system(size: size, weight: .semibold))
             .fontWidth(.condensed)
             .tracking(0.3)
-            .foregroundStyle(PanelTheme.legend)
+            .foregroundStyle(PanelTheme.legend(level))
             .multilineTextAlignment(.center)
             .lineLimit(2)
             .fixedSize()
+            .backlit()
     }
 }
 
@@ -425,6 +430,7 @@ struct RoundButtonView: View {
 
 /// Red guarded fire pushbutton (ENG 1 / APU / ENG 2). Lit red when the loop detects fire.
 struct FireButtonView: View {
+    @Environment(\.backlight) private var backlight
     let label: String
     let lit: Bool
     let pushed: Bool
@@ -475,7 +481,7 @@ struct FireButtonView: View {
         .frame(width: width, height: height)
         .overlay(alignment: .top) {
             Text(label.uppercased()).font(.system(size: 12, weight: .bold)).fontWidth(.condensed)
-                .foregroundStyle(PanelTheme.legend).fixedSize().offset(y: -14)
+                .foregroundStyle(PanelTheme.legend(backlight)).backlit().fixedSize().offset(y: -14)
         }
         .opacity(dimmed ? 0.5 : 1)
         .onChange(of: guardOpen) { _, open in
@@ -489,6 +495,7 @@ struct FireButtonView: View {
 /// Rectangular pushbutton with its legend on the key and a light bar on top (ECAM control
 /// panel). `red` draws the red face of EMER CANC.
 struct KeyButtonView: View {
+    @Environment(\.backlight) private var backlight
     let label: String
     let lit: Bool
     let lightColor: Color
@@ -518,7 +525,8 @@ struct KeyButtonView: View {
                     .fontWidth(.condensed)
                     .multilineTextAlignment(.center)
                     .lineSpacing(-1)
-                    .foregroundStyle(red ? Color(red: 1.0, green: 0.78, blue: 0.78) : .white)
+                    .foregroundStyle(red ? Color(red: 1.0, green: 0.78, blue: 0.78) : PanelTheme.legend(backlight))
+                    .backlit()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(.top, height * 0.22)
             }
@@ -565,7 +573,7 @@ struct LeverView: View {
                 HStack(spacing: 4) {
                     ControlLabel(text: positions[index], size: 7)
                         .frame(width: 34, alignment: .trailing)
-                    Rectangle().fill(PanelTheme.legend).frame(width: 8, height: 1.2)
+                    Rectangle().fill(PanelTheme.legend).frame(width: 8, height: 1.2).backlit()
                 }
                 .offset(x: -30, y: y(index) - 5)
             }

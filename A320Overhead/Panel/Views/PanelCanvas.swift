@@ -34,9 +34,11 @@ private struct StandardCanvas: View {
                 }
                 if items.contains(where: { if case .fcu = $0 { return true } else { return false } }) {
                     FCUView()
+                        .environment(\.backlight, model.backlight(forGroup: "fcu"))
                 }
                 if items.contains(where: { if case .mcdu = $0 { return true } else { return false } }) {
                     MCDUView()
+                        .environment(\.backlight, model.backlight(forGroup: "mcdu"))
                 }
                 ForEach(model.layout.groups) { group in
                     let visible = model.visibleSubpanels(in: group.id)
@@ -44,6 +46,7 @@ private struct StandardCanvas: View {
                         let absolute = visible.values.filter(\.isAbsolute)
                         if let canvas = model.layout.canvas(for: group.id), !absolute.isEmpty {
                             AbsoluteGroupView(canvas: canvas, panels: absolute.sorted { $0.id < $1.id })
+                                .environment(\.backlight, model.backlight(forGroup: group.id))
                         } else {
                             PanelFace {
                                 if let arrangement = model.layout.arrangement(for: group.id) {
@@ -102,13 +105,17 @@ private struct CustomPanelCanvas: View {
         switch item {
         case .fcu:
             FCUView()
+                .environment(\.backlight, model.backlight(forGroup: "fcu"))
         case .mcdu:
             MCDUView()
+                .environment(\.backlight, model.backlight(forGroup: "mcdu"))
         case .subpanel(let subpanel):
             if subpanel.isAbsolute, let canvas = model.layout.canvas(for: subpanel.groupID) {
                 AbsoluteGroupView(canvas: canvas, panels: [subpanel])
+                    .environment(\.backlight, model.backlight(forGroup: subpanel.groupID))
             } else {
                 PanelFace { SubpanelView(panel: subpanel) }
+                    .environment(\.backlight, model.backlight(forGroup: subpanel.groupID))
             }
         }
     }

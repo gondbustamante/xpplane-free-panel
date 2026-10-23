@@ -21,6 +21,25 @@ struct ConnectionSettingsView: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
+                Section {
+                    Picker("Retroiluminación", selection: $model.backlightMode) {
+                        ForEach(BacklightMode.allCases) { mode in
+                            Text(mode.title).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    if model.backlightMode != .off {
+                        HStack {
+                            Image(systemName: "sun.min")
+                            Slider(value: $model.backlightManualLevel, in: 0.1...1)
+                            Image(systemName: "sun.max")
+                        }
+                    }
+                } header: {
+                    Text("Retroiluminación")
+                } footer: {
+                    Text("«Según el avión» sigue los mandos de iluminación integral de la cabina (OVHD INTEG LT, panel principal, FCU y MCDU). El nivel manual se usa en «Siempre» y mientras no hay conexión.")
+                }
                 Section("Interfaz") {
                     Toggle("Marcar controles con mapeo sin verificar", isOn: $model.showVerificationBadges)
                     Text("Útil al verificar datarefs desde Diagnóstico. Apagado por defecto para que el panel se vea como el del avión.")
