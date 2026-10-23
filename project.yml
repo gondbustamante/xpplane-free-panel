@@ -14,7 +14,7 @@ settings:
     SWIFT_STRICT_CONCURRENCY: minimal
     CODE_SIGN_STYLE: Automatic
     # Set your Apple Developer Team ID here or pick it in Xcode > Signing & Capabilities.
-    DEVELOPMENT_TEAM: ""
+    DEVELOPMENT_TEAM: "6FGPAX2A5C"
 
 packages:
   XPlaneKit:
