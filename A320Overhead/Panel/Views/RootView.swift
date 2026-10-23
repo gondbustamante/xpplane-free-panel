@@ -123,7 +123,7 @@ struct ControlView: View {
                                dimmed: model.isDimmed(control)) { delta in
                 model.move(control, by: delta)
             }
-        case .knob, .display:
+        case .knob, .display, .lever, .dualKnob:
             AbsoluteControlView(control: control)
                 .frame(width: 80, height: 60)
         case .korry:

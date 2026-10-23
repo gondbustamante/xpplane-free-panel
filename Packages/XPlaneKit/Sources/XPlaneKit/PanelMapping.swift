@@ -81,7 +81,9 @@ public struct ControlDefinition: Codable, Identifiable, Sendable {
         case korry     // square pushbutton with up to two annunciator legends
         case rotary    // rotary selector with N detents
         case knob      // continuous knob over `range` (temperature, brightness, LDG ELEV)
-        case display   // numeric read-out (battery voltage)
+        case display   // read-out: number with `format`, or text when `format` is "text"
+        case lever     // long-travel lever with N detents (flaps, speed brake)
+        case dualKnob  // concentric knob: outer ring `up`/`down`, inner `upSmall`/`downSmall` (RMP)
     }
 
     public let id: String
@@ -172,6 +174,9 @@ public struct CommandBinding: Codable, Sendable {
     public let up: String?
     public let down: String?
     public let press: String?
+    /// Dual knob: inner (small step) knob.
+    public let upSmall: String?
+    public let downSmall: String?
     /// Seconds to hold the command (X-Plane max 10). Default 0 = press and release.
     public let duration: Double?
 }

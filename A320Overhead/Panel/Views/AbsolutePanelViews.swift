@@ -243,6 +243,17 @@ struct AbsoluteControlView: View {
             DisplayView(label: control.label, text: model.displayText(of: control),
                         width: PanelMetrics.pt(control.size ?? PanelMetrics.displayWidth),
                         height: PanelMetrics.pt(PanelMetrics.displayHeight))
+        case .lever:
+            LeverView(label: control.label, positions: control.positions, position: model.position(of: control),
+                      enabled: enabled, dimmed: dimmed,
+                      height: PanelMetrics.pt(control.size ?? 40)) { delta in
+                model.move(control, by: delta)
+            }
+        case .dualKnob:
+            DualKnobView(label: control.label, enabled: enabled, dimmed: dimmed,
+                         diameter: PanelMetrics.pt(control.size ?? 22)) { small, delta in
+                model.turn(control, small: small, delta: delta)
+            }
         case .korry:
             switch control.style ?? "" {
             case "round":
@@ -375,6 +386,8 @@ struct DisplayView: View {
                 .overlay(RoundedRectangle(cornerRadius: 2).stroke(PanelTheme.bezel, lineWidth: 1.5))
             Text(text)
                 .font(.system(size: height * 0.62, weight: .semibold, design: .monospaced))
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
                 .foregroundStyle(PanelTheme.fcuDigitsColor)
                 .shadow(color: PanelTheme.fcuDigitsColor.opacity(0.7), radius: 2)
         }
@@ -513,6 +526,143 @@ struct KeyButtonView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(KorryPressStyle())
+        .opacity(dimmed ? 0.5 : 1)
+        .disabled(!enabled)
+    }
+}
+
+/// Long-travel lever with labelled detents (flaps, speed brake). Positions run bottom → top.
+/// Tap above or below the handle to move one detent, or drag the handle.
+struct LeverView: View {
+    let label: String
+    let positions: [String]
+    let position: Int
+    let enabled: Bool
+    let dimmed: Bool
+    let height: CGFloat
+    let onMove: (Int) -> Void
+
+    @State private var dragStart: Int?
+
+    private var count: Int { max(positions.count, 2) }
+    private var step: CGFloat { height / CGFloat(count - 1) }
+
+    /// Vertical position of detent `index` measured from the top of the slot.
+    private func y(_ index: Int) -> CGFloat {
+        height - CGFloat(index) * step
+    }
+
+    var body: some View {
+        let current = min(max(position, 0), count - 1)
+        let handleHeight = max(height * 0.22, 18)
+        return ZStack(alignment: .top) {
+            // Slot and detent ticks with their legends on the left.
+            RoundedRectangle(cornerRadius: 5)
+                .fill(Color.black.opacity(0.85))
+                .frame(width: 12, height: height + handleHeight * 0.4)
+                .offset(y: -handleHeight * 0.2)
+            ForEach(0..<count, id: \.self) { index in
+                HStack(spacing: 4) {
+                    ControlLabel(text: positions[index], size: 7)
+                        .frame(width: 34, alignment: .trailing)
+                    Rectangle().fill(PanelTheme.legend).frame(width: 8, height: 1.2)
+                }
+                .offset(x: -30, y: y(index) - 5)
+            }
+            // Handle.
+            RoundedRectangle(cornerRadius: 6)
+                .fill(LinearGradient(colors: [Color(white: 0.28), Color(white: 0.08)],
+                                     startPoint: .top, endPoint: .bottom))
+                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black.opacity(0.8), lineWidth: 1))
+                .shadow(color: .black.opacity(0.6), radius: 3, y: 2)
+                .frame(width: 44, height: handleHeight)
+                .offset(y: y(current) - handleHeight / 2)
+                .animation(.spring(response: 0.22, dampingFraction: 0.75), value: position)
+        }
+        .frame(width: 60, height: height, alignment: .top)
+        .contentShape(Rectangle())
+        .onTapGesture { location in
+            onMove(location.y < y(current) ? 1 : -1)
+        }
+        .gesture(
+            DragGesture(minimumDistance: 6)
+                .onChanged { value in
+                    if dragStart == nil { dragStart = current }
+                    let target = (dragStart ?? current) + Int((-value.translation.height / step).rounded())
+                    let clamped = min(max(target, 0), count - 1)
+                    if clamped != current { onMove(clamped - current) }
+                }
+                .onEnded { _ in dragStart = nil }
+        )
+        .overlay(alignment: .top) {
+            if !label.isEmpty { ControlLabel(text: label).offset(y: -handleHeight / 2 - 14) }
+        }
+        .opacity(dimmed ? 0.5 : 1)
+        .disabled(!enabled)
+    }
+}
+
+/// Concentric frequency knob (RMP): the outer ring changes the large step, the inner cap the
+/// small step. Tap the right or left half to turn one click, or drag horizontally.
+struct DualKnobView: View {
+    let label: String
+    let enabled: Bool
+    let dimmed: Bool
+    let diameter: CGFloat
+    let onTurn: (_ small: Bool, _ delta: Int) -> Void
+
+    @State private var lastStep: Int = 0
+    @State private var dragIsInner = false
+
+    private let clickDistance: CGFloat = 14
+
+    var body: some View {
+        ZStack {
+            // Outer ring with knurling.
+            Circle()
+                .fill(RadialGradient(colors: [Color(white: 0.30), Color(white: 0.10)],
+                                     center: .center, startRadius: diameter * 0.2, endRadius: diameter * 0.55))
+                .overlay(Circle().stroke(Color.black.opacity(0.8), lineWidth: 1))
+            ForEach(0..<24, id: \.self) { index in
+                Rectangle().fill(Color.white.opacity(0.10)).frame(width: 1, height: diameter * 0.12)
+                    .offset(y: -diameter * 0.44).rotationEffect(.degrees(Double(index) * 15))
+            }
+            // Inner cap.
+            Circle()
+                .fill(RadialGradient(colors: [Color(white: 0.92), Color(white: 0.66)],
+                                     center: UnitPoint(x: 0.4, y: 0.35), startRadius: 1, endRadius: diameter * 0.32))
+                .frame(width: diameter * 0.56, height: diameter * 0.56)
+                .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
+        }
+        .frame(width: diameter, height: diameter)
+        .shadow(color: .black.opacity(0.55), radius: 3, y: 2)
+        .contentShape(Circle())
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { value in
+                    if value.translation == .zero {
+                        let center = CGPoint(x: diameter / 2, y: diameter / 2)
+                        let dx = value.startLocation.x - center.x, dy = value.startLocation.y - center.y
+                        dragIsInner = (dx * dx + dy * dy).squareRoot() < diameter * 0.28
+                        lastStep = 0
+                    }
+                    let step = Int(value.translation.width / clickDistance)
+                    if step != lastStep {
+                        onTurn(dragIsInner, step - lastStep)
+                        lastStep = step
+                    }
+                }
+                .onEnded { value in
+                    // A tap (no drag): one click towards the tapped side.
+                    if abs(value.translation.width) < 4 && abs(value.translation.height) < 4 {
+                        onTurn(dragIsInner, value.startLocation.x < diameter / 2 ? -1 : 1)
+                    }
+                    lastStep = 0
+                }
+        )
+        .overlay(alignment: .bottom) {
+            if !label.isEmpty { ControlLabel(text: label, size: 7).offset(y: 12) }
+        }
         .opacity(dimmed ? 0.5 : 1)
         .disabled(!enabled)
     }

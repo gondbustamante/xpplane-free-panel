@@ -1,0 +1,51 @@
+{
+  "id": "park_brk",
+  "title": "PARKING BRK",
+  "group": "pedestal",
+  "frame": {
+    "x": 190,
+    "y": 140,
+    "w": 66,
+    "h": 54
+  },
+  "titleAt": [
+    17.6,
+    8.2
+  ],
+  "order": 42,
+  "decorations": [
+    {
+      "type": "text",
+      "at": [
+        17.6,
+        13.2
+      ],
+      "text": "PULL & TURN",
+      "size": 4.5
+    }
+  ],
+  "notes": "Freno de aparcamiento. Geometría medida sobre las fotos del pedestal del A32NX (FlyByWire docs).",
+  "controls": [
+    {
+      "id": "park.brake",
+      "label": "",
+      "kind": "rotary",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "size": 22,
+      "state": {
+        "dataref": "AirbusFBW/ParkBrake"
+      },
+      "commands": {
+        "up": "toliss_airbus/park_brake_set",
+        "down": "toliss_airbus/park_brake_release"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss. Estado en AirbusFBW/ParkBrake.",
+      "x": 51.6,
+      "y": 31.1
+    }
+  ]
+}

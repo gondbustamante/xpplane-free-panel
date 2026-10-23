@@ -1,0 +1,75 @@
+{
+  "id": "rud_trim",
+  "title": "RUD TRIM",
+  "group": "pedestal",
+  "frame": {
+    "x": 124,
+    "y": 140,
+    "w": 62,
+    "h": 54
+  },
+  "titleAt": [
+    44.9,
+    6.0
+  ],
+  "order": 41,
+  "notes": "Trim de timón. Geometría medida sobre las fotos del pedestal del A32NX (FlyByWire docs).",
+  "controls": [
+    {
+      "id": "rudtrim.display",
+      "label": "",
+      "kind": "display",
+      "positions": [
+        "",
+        ""
+      ],
+      "size": 22,
+      "format": "%+.1f",
+      "state": {
+        "dataref": "AirbusFBW/YawTrimPosition"
+      },
+      "notes": "YawTrimPosition (ro, volcado); unidades por confirmar (el avión muestra L/R y grados).",
+      "x": 17.4,
+      "y": 14.5,
+      "verified": false
+    },
+    {
+      "id": "rudtrim.reset",
+      "label": "RESET",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "round",
+      "size": 14,
+      "commands": {
+        "press": "sim/flight_controls/rudder_trim_center"
+      },
+      "notes": "Comando estándar de X-Plane (no aparece en el volcado filtrado por ToLiss); ToLiss lo atiende como los de joystick.",
+      "x": 17.4,
+      "y": 36.9,
+      "verified": false
+    },
+    {
+      "id": "rudtrim.knob",
+      "label": "NOSE L · NOSE R",
+      "kind": "dualKnob",
+      "positions": [
+        "",
+        ""
+      ],
+      "size": 20,
+      "commands": {
+        "up": "sim/flight_controls/rudder_trim_right",
+        "down": "sim/flight_controls/rudder_trim_left",
+        "upSmall": "sim/flight_controls/rudder_trim_right",
+        "downSmall": "sim/flight_controls/rudder_trim_left"
+      },
+      "notes": "Toque a la izquierda o derecha, o arrastre. Comando estándar de X-Plane (no aparece en el volcado filtrado por ToLiss); ToLiss lo atiende como los de joystick.",
+      "x": 48.6,
+      "y": 35.9,
+      "verified": false
+    }
+  ]
+}

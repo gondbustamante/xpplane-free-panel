@@ -1,0 +1,62 @@
+{
+  "id": "cockpit_door",
+  "title": "COCKPIT DOOR",
+  "group": "pedestal",
+  "frame": {
+    "x": 262,
+    "y": 142,
+    "w": 112,
+    "h": 44
+  },
+  "titleAt": [
+    35.8,
+    7.6
+  ],
+  "order": 51,
+  "notes": "Puerta de cabina. Geometría medida sobre las fotos del pedestal del A32NX (FlyByWire docs).",
+  "controls": [
+    {
+      "id": "door.open",
+      "label": "",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "size": 13,
+      "readOnly": true,
+      "state": {
+        "dataref": "AirbusFBW/CockpitDoorAngle"
+      },
+      "lamps": {
+        "top": {
+          "text": "OPEN",
+          "color": "amber",
+          "dataref": "AirbusFBW/CockpitDoorAngle"
+        }
+      },
+      "notes": "Indicador: se ilumina con la puerta abierta (CockpitDoorAngle > 0,5).",
+      "x": 15.9,
+      "y": 25.6,
+      "verified": false
+    },
+    {
+      "id": "door.switch",
+      "label": "",
+      "kind": "toggle3",
+      "positions": [
+        "LOCK",
+        "NORM",
+        "UNLOCK"
+      ],
+      "size": 16,
+      "state": {
+        "dataref": "AirbusFBW/CockpitDoorSwitch"
+      },
+      "notes": "Escribible (volcado); orden de valores por confirmar en Diagnóstico.",
+      "x": 33.8,
+      "y": 25.6,
+      "verified": false
+    }
+  ]
+}

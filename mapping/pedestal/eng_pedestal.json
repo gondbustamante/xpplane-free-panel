@@ -1,0 +1,121 @@
+{
+  "id": "eng_pedestal",
+  "title": "ENG",
+  "group": "pedestal",
+  "frame": {
+    "x": 124,
+    "y": 50,
+    "w": 132,
+    "h": 86
+  },
+  "titleAt": [
+    68.0,
+    5.5
+  ],
+  "order": 40,
+  "decorations": [
+    {
+      "type": "text",
+      "at": [
+        28.1,
+        77.9
+      ],
+      "text": "1",
+      "size": 6
+    },
+    {
+      "type": "text",
+      "at": [
+        103.2,
+        77.9
+      ],
+      "text": "2",
+      "size": 6
+    },
+    {
+      "type": "box",
+      "at": [
+        34.7,
+        45.0
+      ],
+      "text": "ENG 1",
+      "size": 6
+    },
+    {
+      "type": "box",
+      "at": [
+        98.5,
+        45.0
+      ],
+      "text": "ENG 2",
+      "size": 6
+    }
+  ],
+  "notes": "ENG MASTER y ENG MODE. Las lámparas FIRE/FAULT no tienen dataref localizado. Geometría medida sobre las fotos del pedestal del A32NX (FlyByWire docs).",
+  "controls": [
+    {
+      "id": "eng.master1",
+      "label": "MASTER 1",
+      "kind": "toggle2",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "size": 20,
+      "state": {
+        "dataref": "AirbusFBW/ENG1MasterSwitch"
+      },
+      "commands": {
+        "up": "toliss_airbus/engcommands/Master1On",
+        "down": "toliss_airbus/engcommands/Master1Off"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss. Estado en ENG1MasterSwitch.",
+      "x": 36.3,
+      "y": 32.9
+    },
+    {
+      "id": "eng.mode",
+      "label": "MODE",
+      "kind": "rotary",
+      "positions": [
+        "CRANK",
+        "NORM",
+        "IGN/START"
+      ],
+      "size": 26,
+      "state": {
+        "dataref": "AirbusFBW/ENGModeSwitch"
+      },
+      "commands": {
+        "up": "toliss_airbus/engcommands/EngineModeSwitchRight",
+        "down": "toliss_airbus/engcommands/EngineModeSwitchLeft"
+      },
+      "notes": "Comandos confirmados en el volcado de ToLiss. Orden 0/1/2 de ENGModeSwitch por confirmar.",
+      "x": 66.4,
+      "y": 65.8,
+      "verified": false
+    },
+    {
+      "id": "eng.master2",
+      "label": "MASTER 2",
+      "kind": "toggle2",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "size": 20,
+      "state": {
+        "dataref": "AirbusFBW/ENG2MasterSwitch"
+      },
+      "commands": {
+        "up": "toliss_airbus/engcommands/Master2On",
+        "down": "toliss_airbus/engcommands/Master2Off"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss. Estado en ENG2MasterSwitch.",
+      "x": 96.1,
+      "y": 32.9
+    }
+  ]
+}

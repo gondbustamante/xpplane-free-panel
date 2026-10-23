@@ -64,6 +64,10 @@ Tipos de control añadidos para la geometría real:
 - `knob`: selector continuo (temperaturas, LDG ELEV, OVHD INTEG LT). Necesita `range: {min, max}`; `positions` son las leyendas de los extremos (`["COLD", "HOT"]`). Se gira arrastrando.
 - `display`: ventana numérica. `format` al estilo printf (`"%.1fV"` para los voltímetros de batería). Sin `format`, muestra la última posición cuando el valor está activo (ventana ON BAT del ADIRS).
 
+- `lever`: palanca de recorrido largo con N posiciones de abajo arriba (flaps, speedbrake). Se toca por encima o por debajo del mango, o se arrastra.
+- `dualKnob`: mando concéntrico. El aro exterior usa `commands.up`/`down` y el centro `commands.upSmall`/`downSmall` (frecuencia del RMP). Se toca a un lado o se arrastra.
+- `display` con `"format": "text"` muestra un dataref `data` como texto (ventanas del RMP, código del transpondedor).
+
 Los subpaneles sin `frame` siguen usando `col`/`row` en rejilla y la disposición por columnas de `arrangements`.
 
 ## Esquema

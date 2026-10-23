@@ -409,10 +409,12 @@ final class PanelModel {
 
     /// Subpanels of a group for the sidebar's section list, in reading order (top-left first).
     func sections(of group: String) -> [SubpanelDefinition] {
-        // Column of the overhead (captain / centre / first officer) from the frame's x, then y.
+        // Column (left / centre / right third of the group's canvas) from the frame's centre,
+        // then top to bottom: captain side first, as you read the panel.
+        let width = layout.canvas(for: group)?.width ?? 828
         func column(_ panel: SubpanelDefinition) -> Int {
-            guard let x = panel.frame?.x else { return 9 }
-            return x < 195 ? 0 : (x < 620 ? 1 : 2)
+            guard let frame = panel.frame else { return 9 }
+            return min(Int((frame.x + frame.w / 2) / (width / 3)), 2)
         }
         return subpanels.filter { $0.groupID == group }.sorted {
             let ca = column($0), cb = column($1)
@@ -686,6 +688,23 @@ final class PanelModel {
         return lamp.isLit(lampValues[key])
     }
 
+    /// Dual knob: one click of the outer (`small` false) or inner ring, `delta` > 0 clockwise.
+    func turn(_ control: ControlDefinition, small: Bool, delta: Int) {
+        guard let client, delta != 0, let commands = control.commands else { return }
+        let name = small ? (delta > 0 ? commands.upSmall : commands.downSmall)
+                         : (delta > 0 ? commands.up : commands.down)
+        guard let name else { return }
+        Task {
+            do {
+                for _ in 0..<abs(delta) {
+                    try await client.fire(command: name)
+                }
+            } catch {
+                self.lastError = self.describe(error)
+            }
+        }
+    }
+
     /// Knob: 0…1 over the control's range from the raw dataref value.
     func fraction(of control: ControlDefinition) -> Double {
         guard let state = control.state, let range = control.range,
@@ -709,6 +728,10 @@ final class PanelModel {
     /// Display: formatted raw value. Without a format it is a legend window that shows the last
     /// position name when the value is on (ADIRS "ON BAT"). Dashes when unknown.
     func displayText(of control: ControlDefinition) -> String {
+        if control.format == "text" {
+            guard let state = control.state, let raw = rawValues[state.dataref] else { return "" }
+            return raw.textValue ?? ""
+        }
         guard let state = control.state,
               let raw = rawValues[state.dataref]?.element(at: state.index)?.doubleValue else {
             return (control.format ?? "").isEmpty ? "" : "--.-"

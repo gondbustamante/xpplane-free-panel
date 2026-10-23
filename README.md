@@ -2,7 +2,7 @@
 
 Panel overhead del Airbus A320 para iPad que controla el ToLiss A320 en X-Plane 12 a través de la red local. Interfaz 2.5D en SwiftUI con interruptores y pulsadores que se mueven como los reales, estado bidireccional (lo que cambias en el simulador se refleja en el iPad y viceversa) y mapeo de controles en archivos JSON para sobrevivir a las actualizaciones de ToLiss.
 
-**Estado:** fase 2 en curso. Conectividad verificada de extremo a extremo, overhead completo con geometría real medida sobre fotos del A320 (27 subpaneles, 153 controles, sinópticos, todos los nombres comprobados contra el volcado real de ToLiss), MCDU con la pantalla real de ToLiss y teclado completo, panel de control del ECAM y MASTER WARN/CAUT, paneles personalizados, vertical y horizontal, FCU completo (SPD/MACH, HDG/TRK, ALT, V/S-FPA, AP1/AP2, A/THR, LOC, APPR, EXPED) con ruedas, push/pull y entrada directa de valores, barra lateral por fases de vuelo y grupos de paneles, reconexión automática y pantalla de diagnóstico para verificar mapeos desde el iPad. Ver [docs/ROADMAP.md](docs/ROADMAP.md).
+**Estado:** fase 2 en curso. Conectividad verificada de extremo a extremo, overhead completo con geometría real medida sobre fotos del A320 (27 subpaneles, 153 controles, sinópticos, todos los nombres comprobados contra el volcado real de ToLiss), MCDU con la pantalla real de ToLiss y teclado completo, panel de control del ECAM y MASTER WARN/CAUT, pedestal (RMP, flaps, speedbrake, ENG, transpondedor), paneles personalizados, vertical y horizontal, FCU completo (SPD/MACH, HDG/TRK, ALT, V/S-FPA, AP1/AP2, A/THR, LOC, APPR, EXPED) con ruedas, push/pull y entrada directa de valores, barra lateral por fases de vuelo y grupos de paneles, reconexión automática y pantalla de diagnóstico para verificar mapeos desde el iPad. Ver [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Cómo funciona
 
@@ -69,6 +69,7 @@ mapping/layout.json    Grupos de paneles y fases de vuelo (alimenta la barra lat
 mapping/overhead/      Un JSON por subpanel del overhead; otros grupos (pedestal…) van en carpetas hermanas
 mapping/fcu/           Mapeo del FCU (ventanas, ruedas y pulsadores), con esquema propio
 mapping/ecam/          ECAM Control Panel y MASTER WARN / CAUT
+mapping/pedestal/      RMP 1/2, speedbrake, flaps, ENG, RUD TRIM, PARKING BRK, ATC/TCAS, COCKPIT DOOR
 mapping/reference/     Volcado de datarefs y comandos de ToLiss (xp.py dump)
 tools/                 xp_relay.py (relay LAN), xp.py (CLI de descubrimiento), validate_mapping.py
 docs/                  Arquitectura, roadmap y guía de mapeo

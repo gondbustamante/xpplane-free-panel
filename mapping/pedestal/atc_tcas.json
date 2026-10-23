@@ -1,0 +1,325 @@
+{
+  "id": "atc_tcas",
+  "title": "ATC · TCAS",
+  "group": "pedestal",
+  "frame": {
+    "x": 262,
+    "y": 92,
+    "w": 112,
+    "h": 46
+  },
+  "titleHidden": true,
+  "order": 50,
+  "decorations": [
+    {
+      "type": "text",
+      "at": [
+        5.0,
+        23.1
+      ],
+      "text": "ATC",
+      "size": 6,
+      "vertical": true
+    },
+    {
+      "type": "text",
+      "at": [
+        107.7,
+        20.5
+      ],
+      "text": "TCAS",
+      "size": 6,
+      "vertical": true
+    }
+  ],
+  "notes": "Transpondedor y TCAS. Teclado con comandos confirmados. Geometría medida sobre las fotos del pedestal del A32NX (FlyByWire docs).",
+  "controls": [
+    {
+      "id": "atc.code",
+      "label": "",
+      "kind": "display",
+      "positions": [
+        "",
+        ""
+      ],
+      "size": 30,
+      "format": "text",
+      "state": {
+        "dataref": "AirbusFBW/XPDRString"
+      },
+      "verified": true,
+      "notes": "Código tal como lo envía ToLiss (texto).",
+      "x": 77.5,
+      "y": 12.3
+    },
+    {
+      "id": "atc.mode",
+      "label": "",
+      "kind": "rotary",
+      "positions": [
+        "STBY",
+        "AUTO",
+        "ON"
+      ],
+      "size": 13,
+      "state": {
+        "dataref": "AirbusFBW/XPDRPower"
+      },
+      "notes": "Escribible (volcado); orden de valores por confirmar en Diagnóstico.",
+      "x": 15.7,
+      "y": 9.4,
+      "verified": false
+    },
+    {
+      "id": "atc.system",
+      "label": "",
+      "kind": "rotary",
+      "positions": [
+        "1",
+        "2"
+      ],
+      "size": 13,
+      "state": {
+        "dataref": "AirbusFBW/XPDRSystem"
+      },
+      "notes": "Escribible (volcado); orden de valores por confirmar en Diagnóstico.",
+      "x": 15.7,
+      "y": 22.2,
+      "verified": false
+    },
+    {
+      "id": "atc.alt_rptg",
+      "label": "ALT RPTG",
+      "kind": "rotary",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "size": 13,
+      "state": {
+        "dataref": "AirbusFBW/XPDRAltitude"
+      },
+      "notes": "Escribible (volcado); orden de valores por confirmar en Diagnóstico.",
+      "x": 15.7,
+      "y": 35.9,
+      "verified": false
+    },
+    {
+      "id": "atc.ident",
+      "label": "IDENT",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "round",
+      "size": 11,
+      "commands": {
+        "press": "sim/transponder/transponder_ident"
+      },
+      "notes": "Comando estándar de X-Plane (no aparece en el volcado filtrado por ToLiss); ToLiss lo atiende como los de joystick.",
+      "x": 75.4,
+      "y": 27.4,
+      "verified": false
+    },
+    {
+      "id": "tcas.range",
+      "label": "",
+      "kind": "rotary",
+      "positions": [
+        "THRT",
+        "ALL",
+        "ABV",
+        "BLW"
+      ],
+      "size": 13,
+      "state": {
+        "dataref": "AirbusFBW/XPDRTCASAltSelect"
+      },
+      "notes": "Escribible (volcado); orden de valores por confirmar en Diagnóstico.",
+      "x": 69.6,
+      "y": 38.5,
+      "verified": false
+    },
+    {
+      "id": "tcas.mode",
+      "label": "",
+      "kind": "rotary",
+      "positions": [
+        "STBY",
+        "TA",
+        "TA/RA"
+      ],
+      "size": 13,
+      "state": {
+        "dataref": "AirbusFBW/XPDRTCASMode"
+      },
+      "notes": "Escribible (volcado); orden de valores por confirmar en Diagnóstico.",
+      "x": 96.1,
+      "y": 38.5,
+      "verified": false
+    },
+    {
+      "id": "atc.key1",
+      "label": "1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 9,
+      "commands": {
+        "press": "AirbusFBW/ATCCodeKey1"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss.",
+      "x": 31.5,
+      "y": 14.5
+    },
+    {
+      "id": "atc.key2",
+      "label": "2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 9,
+      "commands": {
+        "press": "AirbusFBW/ATCCodeKey2"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss.",
+      "x": 43.4,
+      "y": 14.5
+    },
+    {
+      "id": "atc.key3",
+      "label": "3",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 9,
+      "commands": {
+        "press": "AirbusFBW/ATCCodeKey3"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss.",
+      "x": 55.2,
+      "y": 14.5
+    },
+    {
+      "id": "atc.key4",
+      "label": "4",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 9,
+      "commands": {
+        "press": "AirbusFBW/ATCCodeKey4"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss.",
+      "x": 31.5,
+      "y": 26.5
+    },
+    {
+      "id": "atc.key5",
+      "label": "5",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 9,
+      "commands": {
+        "press": "AirbusFBW/ATCCodeKey5"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss.",
+      "x": 43.4,
+      "y": 26.5
+    },
+    {
+      "id": "atc.key6",
+      "label": "6",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 9,
+      "commands": {
+        "press": "AirbusFBW/ATCCodeKey6"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss.",
+      "x": 55.2,
+      "y": 26.5
+    },
+    {
+      "id": "atc.key7",
+      "label": "7",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 9,
+      "commands": {
+        "press": "AirbusFBW/ATCCodeKey7"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss.",
+      "x": 31.5,
+      "y": 39.0
+    },
+    {
+      "id": "atc.key0",
+      "label": "0",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 9,
+      "commands": {
+        "press": "AirbusFBW/ATCCodeKey0"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss.",
+      "x": 43.4,
+      "y": 39.0
+    },
+    {
+      "id": "atc.keyclr",
+      "label": "CLR",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 9,
+      "commands": {
+        "press": "AirbusFBW/ATCCodeKeyCLR"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss.",
+      "x": 55.2,
+      "y": 39.0
+    }
+  ]
+}

@@ -67,6 +67,15 @@ Adelantado desde la fase 2 porque es el panel que más se toca en vuelo y reutil
 - [ ] Confirmar valores de `AirbusFBW/SDPage` para iluminar la tecla de la página activa
 - [ ] Confirmar índices de `AirbusFBW/DUBrightness` para los mandos de brillo (bloqueados)
 
+## Fase 1e · Pedestal (2026-10-23)
+
+- [x] RMP 1 y 2: ventanas activa/standby, transferencia, VHF/HF/AM, NAV de respaldo, mando doble de frecuencia, ON/OFF
+- [x] Speedbrake y flaps como palancas con posiciones
+- [x] ENG MASTER 1/2 y ENG MODE
+- [x] RUD TRIM, PARKING BRK, ATC/TCAS (código, teclado, IDENT, modos), COCKPIT DOOR
+- [ ] Confirmar valores de los selectores del ATC/TCAS, ENG MODE y la puerta, y los índices de luz de los RMP
+- [ ] ACP (audio), WX radar, iluminación del pedestal, palancas de gases
+
 ## Fase 2 · Overhead completo (2 a 3 meses) — en curso
 
 Hecho el 2026-10-22: barra lateral con fases de vuelo y grupos de paneles (`mapping/layout.json`), selector rotatorio, pulsador guardado, y **21 subpaneles del overhead con 124 controles**. Con el volcado real de ToLiss en `mapping/reference/`, los 74 datarefs y 101 comandos del mapeo están comprobados por nombre (el validador lo exige). 59 controles verificados; 65 pendientes de confirmar semántica de valores o índice, de los cuales 24 bloqueados como solo lectura.

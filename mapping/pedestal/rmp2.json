@@ -1,0 +1,353 @@
+{
+  "id": "rmp2",
+  "title": "RMP 2",
+  "group": "pedestal",
+  "frame": {
+    "x": 262,
+    "y": 6,
+    "w": 112,
+    "h": 82
+  },
+  "titleHidden": true,
+  "order": 20,
+  "notes": "Radio Management Panel. Geometría medida sobre las fotos del pedestal del A32NX (FlyByWire docs). Comandos confirmados en el volcado de ToLiss.",
+  "controls": [
+    {
+      "id": "rmp2.active",
+      "label": "ACTIVE",
+      "kind": "display",
+      "positions": [
+        "",
+        ""
+      ],
+      "size": 34,
+      "format": "text",
+      "state": {
+        "dataref": "AirbusFBW/RMP2/ActiveWindowString"
+      },
+      "verified": true,
+      "notes": "Ventana activa tal como la envía ToLiss (texto).",
+      "x": 28.5,
+      "y": 14.9
+    },
+    {
+      "id": "rmp2.xfer",
+      "label": "⇄",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 10,
+      "commands": {
+        "press": "AirbusFBW/RMPSwapCo"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss.",
+      "x": 55.7,
+      "y": 15.6
+    },
+    {
+      "id": "rmp2.stby",
+      "label": "STBY/CRS",
+      "kind": "display",
+      "positions": [
+        "",
+        ""
+      ],
+      "size": 34,
+      "format": "text",
+      "state": {
+        "dataref": "AirbusFBW/RMP2/StandbyWindowString"
+      },
+      "verified": true,
+      "notes": "Ventana standby tal como la envía ToLiss (texto).",
+      "x": 82.3,
+      "y": 14.9
+    },
+    {
+      "id": "rmp2.vhf1",
+      "label": "VHF 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 10.5,
+      "commands": {
+        "press": "AirbusFBW/VHF1Co"
+      },
+      "verified": false,
+      "notes": "Comandos confirmados en el volcado de ToLiss. Luz con AirbusFBW/RMP2Lights; índice supuesto, por confirmar en Diagnóstico.",
+      "x": 15.7,
+      "y": 37.8,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "green",
+          "dataref": "AirbusFBW/RMP2Lights",
+          "index": 0
+        }
+      }
+    },
+    {
+      "id": "rmp2.vhf2",
+      "label": "VHF 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 10.5,
+      "commands": {
+        "press": "AirbusFBW/VHF2Co"
+      },
+      "verified": false,
+      "notes": "Comandos confirmados en el volcado de ToLiss. Luz con AirbusFBW/RMP2Lights; índice supuesto, por confirmar en Diagnóstico.",
+      "x": 30.3,
+      "y": 37.8,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "green",
+          "dataref": "AirbusFBW/RMP2Lights",
+          "index": 1
+        }
+      }
+    },
+    {
+      "id": "rmp2.vhf3",
+      "label": "VHF 3",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 10.5,
+      "commands": {
+        "press": "AirbusFBW/VHF3Co"
+      },
+      "verified": false,
+      "notes": "Comandos confirmados en el volcado de ToLiss. Luz con AirbusFBW/RMP2Lights; índice supuesto, por confirmar en Diagnóstico.",
+      "x": 41.9,
+      "y": 37.8,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "green",
+          "dataref": "AirbusFBW/RMP2Lights",
+          "index": 2
+        }
+      }
+    },
+    {
+      "id": "rmp2.hf1",
+      "label": "HF 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 10.5,
+      "commands": {
+        "press": "AirbusFBW/HF1Co"
+      },
+      "verified": false,
+      "notes": "Comandos confirmados en el volcado de ToLiss. Luz con AirbusFBW/RMP2Lights; índice supuesto, por confirmar en Diagnóstico.",
+      "x": 15.7,
+      "y": 52.9,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "green",
+          "dataref": "AirbusFBW/RMP2Lights",
+          "index": 3
+        }
+      }
+    },
+    {
+      "id": "rmp2.hf2",
+      "label": "HF 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 10.5,
+      "commands": {
+        "press": "AirbusFBW/HF2Co"
+      },
+      "verified": false,
+      "notes": "Comandos confirmados en el volcado de ToLiss. Luz con AirbusFBW/RMP2Lights; índice supuesto, por confirmar en Diagnóstico.",
+      "x": 41.9,
+      "y": 52.9,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "green",
+          "dataref": "AirbusFBW/RMP2Lights",
+          "index": 4
+        }
+      }
+    },
+    {
+      "id": "rmp2.am",
+      "label": "AM",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 10.5,
+      "commands": {
+        "press": "AirbusFBW/AMCo"
+      },
+      "verified": false,
+      "notes": "Comandos confirmados en el volcado de ToLiss. Luz con AirbusFBW/RMP2Lights; índice supuesto, por confirmar en Diagnóstico.",
+      "x": 55.8,
+      "y": 52.9,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "green",
+          "dataref": "AirbusFBW/RMP2Lights",
+          "index": 5
+        }
+      }
+    },
+    {
+      "id": "rmp2.nav",
+      "label": "NAV",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 10.5,
+      "commands": {
+        "press": "AirbusFBW/RMP2/BackupNavPress"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss.",
+      "x": 15.7,
+      "y": 73.7
+    },
+    {
+      "id": "rmp2.vor",
+      "label": "VOR",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 10.5,
+      "commands": {
+        "press": "AirbusFBW/RMP2/BackupNavVORPress"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss.",
+      "x": 29.5,
+      "y": 73.7
+    },
+    {
+      "id": "rmp2.ils",
+      "label": "ILS",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 10.5,
+      "commands": {
+        "press": "AirbusFBW/RMP2/BackupNavILSPress"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss.",
+      "x": 42.2,
+      "y": 73.7
+    },
+    {
+      "id": "rmp2.adf",
+      "label": "ADF",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 10.5,
+      "commands": {
+        "press": "AirbusFBW/RMP2/BackupNavADFPress"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss.",
+      "x": 68.8,
+      "y": 73.7
+    },
+    {
+      "id": "rmp2.bfo",
+      "label": "BFO",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 10.5,
+      "commands": {
+        "press": "AirbusFBW/RMP2/BackupNavBFOPress"
+      },
+      "verified": true,
+      "notes": "Comandos confirmados en el volcado de ToLiss.",
+      "x": 81.8,
+      "y": 73.7
+    },
+    {
+      "id": "rmp2.freq",
+      "label": "",
+      "kind": "dualKnob",
+      "positions": [
+        "",
+        ""
+      ],
+      "size": 20,
+      "verified": true,
+      "commands": {
+        "up": "AirbusFBW/RMP2FreqUpLrg",
+        "down": "AirbusFBW/RMP2FreqDownLrg",
+        "upSmall": "AirbusFBW/RMP2FreqUpSml",
+        "downSmall": "AirbusFBW/RMP2FreqDownSml"
+      },
+      "notes": "Aro exterior: MHz. Centro: kHz. Comandos confirmados en el volcado de ToLiss.",
+      "x": 75.7,
+      "y": 46.1
+    },
+    {
+      "id": "rmp2.power",
+      "label": "",
+      "kind": "toggle2",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "size": 12,
+      "state": {
+        "dataref": "AirbusFBW/RMP2Switch"
+      },
+      "notes": "AirbusFBW/RMP2Switch escribible (volcado); valores 0/1 por confirmar.",
+      "x": 95.3,
+      "y": 69.5,
+      "verified": false
+    }
+  ]
+}

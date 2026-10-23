@@ -142,3 +142,12 @@ final class PanelMappingExtrasTests: XCTestCase {
         XCTAssertEqual(layout.phases.first?.subpanels, ["elec", "apu"])
     }
 }
+
+final class XPValueTextTests: XCTestCase {
+    func testDecodesBase64PlainAndBytes() {
+        XCTAssertEqual(XPValue.string(Data("122.800\0xx".utf8).base64EncodedString()).textValue, "122.800")
+        XCTAssertEqual(XPValue.string("2000 ").textValue, "2000 ")   // not base64 (space) → plain
+        XCTAssertEqual(XPValue.array([.number(55), .number(55), .number(0)]).textValue, "77")
+        XCTAssertNil(XPValue.number(3).textValue)
+    }
+}

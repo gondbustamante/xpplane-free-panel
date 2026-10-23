@@ -53,6 +53,26 @@ public enum XPValue: Codable, Equatable, Sendable {
         return Int(double.rounded())
     }
 
+    /// Text of a `data` dataref: the Web API sends base64; plain strings and byte arrays are
+    /// accepted too. Stops at the first NUL.
+    public var textValue: String? {
+        let bytes: [UInt8]
+        switch self {
+        case .string(let text):
+            if !text.isEmpty, let data = Data(base64Encoded: text) {
+                bytes = [UInt8](data)
+            } else {
+                return text
+            }
+        case .array(let elements):
+            bytes = elements.compactMap { $0.intValue }.map { UInt8(clamping: $0) }
+        default:
+            return nil
+        }
+        let visible = bytes.prefix { $0 != 0 }
+        return String(decoding: visible, as: UTF8.self)
+    }
+
     public var arrayValue: [XPValue]? {
         if case .array(let array) = self { return array }
         return nil

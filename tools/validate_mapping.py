@@ -11,7 +11,8 @@ import json
 import os
 import sys
 
-KINDS = {"toggle2": 2, "toggle3": 3, "korry": None, "rotary": None, "knob": None, "display": None}
+KINDS = {"toggle2": 2, "toggle3": 3, "korry": None, "rotary": None, "knob": None, "display": None,
+         "lever": None, "dualKnob": None}
 DECORATIONS = {"line", "arrow", "bracket", "box", "text", "divider"}
 GUARD_STYLES = {"cage", "red"}
 KORRY_STYLES = {"round", "fire", "key", "keyRed"}
@@ -75,6 +76,12 @@ def validate_subpanel(panel, errors):
             errors.append(f"{where}: style '{control['style']}' no válido")
         if control.get("kind") == "knob" and not control.get("range"):
             errors.append(f"{where}: un knob necesita 'range'")
+        if control.get("kind") == "lever" and len(control.get("positions", [])) < 2:
+            errors.append(f"{where}: una lever necesita al menos 2 posiciones")
+        if control.get("kind") == "dualKnob":
+            cmds = control.get("commands") or {}
+            if not all(k in cmds for k in ("up", "down", "upSmall", "downSmall")):
+                errors.append(f"{where}: un dualKnob necesita up, down, upSmall y downSmall")
         kind = control.get("kind")
         positions = control.get("positions", [])
         if kind not in KINDS:
@@ -113,7 +120,7 @@ def names_in_subpanel(panel):
             lamp = (control.get("lamps") or {}).get(half)
             if lamp and lamp.get("dataref"):
                 datarefs.add(lamp["dataref"])
-        for key in ("up", "down", "press"):
+        for key in ("up", "down", "press", "upSmall", "downSmall"):
             value = (control.get("commands") or {}).get(key)
             if value:
                 commands.add(value)

@@ -1,0 +1,50 @@
+{
+  "id": "flaps",
+  "title": "FLAPS",
+  "group": "pedestal",
+  "frame": {
+    "x": 190,
+    "y": 6,
+    "w": 66,
+    "h": 40
+  },
+  "titleAt": [
+    35.5,
+    20.4
+  ],
+  "order": 31,
+  "notes": "Palanca de flaps. Geometría medida sobre las fotos del pedestal del A32NX (FlyByWire docs).",
+  "controls": [
+    {
+      "id": "flaps.lever",
+      "label": "",
+      "kind": "lever",
+      "positions": [
+        "FULL",
+        "3",
+        "2",
+        "1",
+        "0"
+      ],
+      "size": 25,
+      "state": {
+        "dataref": "AirbusFBW/FlapLeverRatio",
+        "values": [
+          1,
+          0.75,
+          0.5,
+          0.25,
+          0
+        ]
+      },
+      "commands": {
+        "up": "sim/flight_controls/flaps_up",
+        "down": "sim/flight_controls/flaps_down"
+      },
+      "notes": "Posición leída de AirbusFBW/FlapLeverRatio (rw, volcado). Movimiento con flaps_up/down: Comando estándar de X-Plane (no aparece en el volcado filtrado por ToLiss); ToLiss lo atiende como los de joystick.",
+      "x": 14.5,
+      "y": 20.1,
+      "verified": false
+    }
+  ]
+}
