@@ -58,6 +58,15 @@ Adelantado desde la fase 2 porque es el panel que más se toca en vuelo y reutil
 
 **Aceptación:** completar INIT A, F-PLN y PERF TAKE OFF desde el iPad leyendo la pantalla en el iPad.
 
+## Fase 1d · Personalización, vertical y ECAM (2026-10-23)
+
+- [x] Paneles personalizados: crear, editar, ordenar, duplicar y borrar; a partir de una fase
+- [x] Orientación vertical y multitarea (Split View / Stage Manager)
+- [x] MCDU más legible: pantalla mayor, letra sans-serif, brillo LCD; teclado al lado en horizontal
+- [x] ECAM Control Panel y MASTER WARN / CAUT
+- [ ] Confirmar valores de `AirbusFBW/SDPage` para iluminar la tecla de la página activa
+- [ ] Confirmar índices de `AirbusFBW/DUBrightness` para los mandos de brillo (bloqueados)
+
 ## Fase 2 · Overhead completo (2 a 3 meses) — en curso
 
 Hecho el 2026-10-22: barra lateral con fases de vuelo y grupos de paneles (`mapping/layout.json`), selector rotatorio, pulsador guardado, y **21 subpaneles del overhead con 124 controles**. Con el volcado real de ToLiss en `mapping/reference/`, los 74 datarefs y 101 comandos del mapeo están comprobados por nombre (el validador lo exige). 59 controles verificados; 65 pendientes de confirmar semántica de valores o índice, de los cuales 24 bloqueados como solo lectura.

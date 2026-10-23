@@ -23,12 +23,20 @@ struct MCDUView: View {
     }
 
     private var unitPicker: some View {
-        Picker("MCDU", selection: Binding(get: { model.mcduUnit }, set: { model.setMCDUUnit($0) })) {
-            Text("MCDU 1 · CAPT").tag(1)
-            Text("MCDU 2 · F/O").tag(2)
+        @Bindable var model = model
+        return HStack(spacing: 16) {
+            Picker("MCDU", selection: Binding(get: { model.mcduUnit }, set: { model.setMCDUUnit($0) })) {
+                Text("MCDU 1 · CAPT").tag(1)
+                Text("MCDU 2 · F/O").tag(2)
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 300)
+            if model.isLandscape {
+                Toggle("Teclado al lado", isOn: $model.mcduWideInLandscape)
+                    .toggleStyle(.button)
+                    .controlSize(.small)
+            }
         }
-        .pickerStyle(.segmented)
-        .frame(width: 300)
     }
 
     /// Hardware keyboard → MCDU keys.
@@ -57,12 +65,13 @@ struct MCDUView: View {
 // MARK: - Body
 
 private enum MCDUMetrics {
-    static let cellWidth: CGFloat = 16
-    static let rowHeight: CGFloat = 23
-    static let screenPadding: CGFloat = 10
+    // The real screen is 24 × 14 characters, a little taller than wide per cell.
+    static let cellWidth: CGFloat = 19
+    static let rowHeight: CGFloat = 28
+    static let screenPadding: CGFloat = 12
     static var screenWidth: CGFloat { cellWidth * CGFloat(MCDUScreen.columns) + screenPadding * 2 }
     static var screenHeight: CGFloat { rowHeight * CGFloat(MCDUScreen.rows) + screenPadding * 2 }
-    static let lskSize = CGSize(width: 36, height: 21)
+    static let lskSize = CGSize(width: 40, height: 24)
     static let bezel = Color(red: 0.36, green: 0.41, blue: 0.48)
     static let bezelHighlight = Color(red: 0.43, green: 0.48, blue: 0.55)
 }
@@ -70,12 +79,31 @@ private enum MCDUMetrics {
 private struct MCDUBody: View {
     @Environment(PanelModel.self) private var model
 
+    /// Landscape with "Teclado al lado": screen block and keyboard side by side, so the screen can
+    /// be much larger on a landscape iPad. Otherwise the real stacked unit.
+    private var wide: Bool { model.isLandscape && model.mcduWideInLandscape }
+
     var body: some View {
-        VStack(spacing: 14) {
-            topAnnunciators
-            screenRow
-            pageKeys
-            lowerKeyboard
+        Group {
+            if wide {
+                HStack(alignment: .center, spacing: 26) {
+                    VStack(spacing: 14) {
+                        topAnnunciators
+                        screenRow
+                    }
+                    VStack(spacing: 14) {
+                        pageKeys
+                        lowerKeyboard
+                    }
+                }
+            } else {
+                VStack(spacing: 14) {
+                    topAnnunciators
+                    screenRow
+                    pageKeys
+                    lowerKeyboard
+                }
+            }
         }
         .padding(.horizontal, 22)
         .padding(.top, 14)
@@ -339,9 +367,12 @@ struct MCDUScreenView: View {
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 6)
-                .fill(Color(red: 0.03, green: 0.03, blue: 0.04))
-                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 3))
+            // Recessed display: dark glass with a thin inner bevel, like the real unit.
+            RoundedRectangle(cornerRadius: 7)
+                .fill(Color(red: 0.015, green: 0.02, blue: 0.03))
+            RoundedRectangle(cornerRadius: 7)
+                .stroke(LinearGradient(colors: [Color.black, Color(white: 0.28)],
+                                       startPoint: .top, endPoint: .bottom), lineWidth: 4)
             VStack(spacing: 0) {
                 ForEach(0..<MCDUScreen.rows, id: \.self) { row in
                     HStack(spacing: 0) {
@@ -352,31 +383,38 @@ struct MCDUScreenView: View {
                 }
             }
             .padding(MCDUMetrics.screenPadding)
+            // One soft glow for the whole text layer (cheap) gives the emissive look of the LCD.
+            .compositingGroup()
+            .shadow(color: .white.opacity(0.18), radius: 1.2)
             if !connected && screen.isBlank {
                 Text("SIN CONEXIÓN")
-                    .font(.system(size: 14, weight: .medium, design: .monospaced))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(Color(white: 0.35))
             }
         }
         .frame(width: MCDUMetrics.screenWidth, height: MCDUMetrics.screenHeight)
     }
 
+    /// Each character sits in a fixed cell, so a proportional sans-serif (closer to the MCDU's
+    /// stroke font than a slab monospace) still lines up in columns. Small characters share
+    /// the baseline of large ones, as on the aircraft.
     private func cell(_ cell: MCDUCell) -> some View {
         Text(String(cell.character))
-            .font(.system(size: cell.small ? 15 : 20, weight: .medium, design: .monospaced))
+            .font(.system(size: cell.small ? 18 : 24, weight: cell.small ? .medium : .semibold))
             .foregroundStyle(color(cell.color))
             .frame(width: MCDUMetrics.cellWidth, height: MCDUMetrics.rowHeight,
                    alignment: cell.small ? .bottom : .center)
+            .offset(y: cell.small ? -1 : 0)   // offset does not change the cell's size
     }
 
     private func color(_ color: MCDUColor) -> Color {
         switch color {
-        case .white: return Color(white: 0.96)
-        case .cyan: return Color(red: 0.20, green: 0.90, blue: 1.00)
-        case .green: return Color(red: 0.25, green: 1.00, blue: 0.35)
-        case .magenta: return Color(red: 1.00, green: 0.35, blue: 1.00)
-        case .amber: return Color(red: 1.00, green: 0.60, blue: 0.10)
-        case .yellow: return Color(red: 1.00, green: 0.95, blue: 0.20)
+        case .white: return Color(white: 0.97)
+        case .cyan: return Color(red: 0.25, green: 0.92, blue: 1.00)
+        case .green: return Color(red: 0.30, green: 1.00, blue: 0.40)
+        case .magenta: return Color(red: 1.00, green: 0.40, blue: 1.00)
+        case .amber: return Color(red: 1.00, green: 0.62, blue: 0.12)
+        case .yellow: return Color(red: 1.00, green: 0.96, blue: 0.25)
         }
     }
 }

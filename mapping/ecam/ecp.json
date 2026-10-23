@@ -1,0 +1,495 @@
+{
+  "id": "ecp",
+  "title": "ECAM",
+  "group": "ecam",
+  "order": 10,
+  "frame": {
+    "x": 70,
+    "y": 6,
+    "w": 166,
+    "h": 60
+  },
+  "titleAt": [
+    14,
+    4
+  ],
+  "notes": "ECAM Control Panel del pedestal. Disposición medida sobre la foto del ECAM Control Panel del A32NX (FlyByWire docs). Comandos confirmados en el volcado de ToLiss.",
+  "controls": [
+    {
+      "id": "ecp.upper_brt",
+      "label": "UPPER DISPLAY",
+      "kind": "knob",
+      "positions": [
+        "OFF",
+        "BRT"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/DUBrightness",
+        "index": 2
+      },
+      "range": {
+        "min": 0,
+        "max": 1
+      },
+      "x": 14.0,
+      "y": 21.3,
+      "size": 15,
+      "readOnly": true,
+      "verified": false,
+      "notes": "DUBrightness es escribible (volcado); el índice 2 para la pantalla superior es supuesto. Bloqueado."
+    },
+    {
+      "id": "ecp.lower_brt",
+      "label": "LOWER DISPLAY",
+      "kind": "knob",
+      "positions": [
+        "OFF",
+        "BRT"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/DUBrightness",
+        "index": 3
+      },
+      "range": {
+        "min": 0,
+        "max": 1
+      },
+      "x": 14.0,
+      "y": 48.4,
+      "size": 15,
+      "readOnly": true,
+      "verified": false,
+      "notes": "DUBrightness es escribible (volcado); el índice 3 para la pantalla inferior es supuesto. Bloqueado."
+    },
+    {
+      "id": "ecp.to_config",
+      "label": "T.O\nCONFIG",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "commands": {
+        "press": "AirbusFBW/TOConfigPress"
+      },
+      "x": 61.9,
+      "y": 10.9,
+      "size": 13,
+      "verified": true
+    },
+    {
+      "id": "ecp.emer_canc",
+      "label": "EMER\nCANC",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "keyRed",
+      "commands": {
+        "press": "AirbusFBW/EmerCancel"
+      },
+      "x": 110.5,
+      "y": 11.6,
+      "size": 14,
+      "verified": true
+    },
+    {
+      "id": "ecp.eng",
+      "label": "ENG",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "commands": {
+        "press": "AirbusFBW/ECP/SelectEnginePage"
+      },
+      "x": 46.7,
+      "y": 27.1,
+      "size": 13,
+      "verified": false,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "white",
+          "dataref": "AirbusFBW/SDPage",
+          "onValue": 0
+        }
+      },
+      "notes": "La luz usa AirbusFBW/SDPage con valores supuestos (0 ENG … 11 STS). Confirmar en Diagnóstico."
+    },
+    {
+      "id": "ecp.bleed",
+      "label": "BLEED",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "commands": {
+        "press": "AirbusFBW/ECP/SelectBleedPage"
+      },
+      "x": 62.6,
+      "y": 27.1,
+      "size": 13,
+      "verified": false,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "white",
+          "dataref": "AirbusFBW/SDPage",
+          "onValue": 1
+        }
+      },
+      "notes": "La luz usa AirbusFBW/SDPage con valores supuestos (0 ENG … 11 STS). Confirmar en Diagnóstico."
+    },
+    {
+      "id": "ecp.press",
+      "label": "PRESS",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "commands": {
+        "press": "AirbusFBW/ECP/SelectPressPage"
+      },
+      "x": 78.6,
+      "y": 27.1,
+      "size": 13,
+      "verified": false,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "white",
+          "dataref": "AirbusFBW/SDPage",
+          "onValue": 2
+        }
+      },
+      "notes": "La luz usa AirbusFBW/SDPage con valores supuestos (0 ENG … 11 STS). Confirmar en Diagnóstico."
+    },
+    {
+      "id": "ecp.elec",
+      "label": "ELEC",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "commands": {
+        "press": "AirbusFBW/ECP/SelectElecACPage"
+      },
+      "x": 94.5,
+      "y": 27.1,
+      "size": 13,
+      "verified": false,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "white",
+          "dataref": "AirbusFBW/SDPage",
+          "onValue": 3
+        }
+      },
+      "notes": "La luz usa AirbusFBW/SDPage con valores supuestos (0 ENG … 11 STS). Confirmar en Diagnóstico."
+    },
+    {
+      "id": "ecp.hyd",
+      "label": "HYD",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "commands": {
+        "press": "AirbusFBW/ECP/SelectHydraulicPage"
+      },
+      "x": 111.0,
+      "y": 27.1,
+      "size": 13,
+      "verified": false,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "white",
+          "dataref": "AirbusFBW/SDPage",
+          "onValue": 4
+        }
+      },
+      "notes": "La luz usa AirbusFBW/SDPage con valores supuestos (0 ENG … 11 STS). Confirmar en Diagnóstico."
+    },
+    {
+      "id": "ecp.fuel",
+      "label": "FUEL",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "commands": {
+        "press": "AirbusFBW/ECP/SelectFuelPage"
+      },
+      "x": 127.2,
+      "y": 27.1,
+      "size": 13,
+      "verified": false,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "white",
+          "dataref": "AirbusFBW/SDPage",
+          "onValue": 5
+        }
+      },
+      "notes": "La luz usa AirbusFBW/SDPage con valores supuestos (0 ENG … 11 STS). Confirmar en Diagnóstico."
+    },
+    {
+      "id": "ecp.apu",
+      "label": "APU",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "commands": {
+        "press": "AirbusFBW/ECP/SelectAPUPage"
+      },
+      "x": 46.7,
+      "y": 37.5,
+      "size": 13,
+      "verified": false,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "white",
+          "dataref": "AirbusFBW/SDPage",
+          "onValue": 6
+        }
+      },
+      "notes": "La luz usa AirbusFBW/SDPage con valores supuestos (0 ENG … 11 STS). Confirmar en Diagnóstico."
+    },
+    {
+      "id": "ecp.cond",
+      "label": "COND",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "commands": {
+        "press": "AirbusFBW/ECP/SelectConditioningPage"
+      },
+      "x": 62.6,
+      "y": 37.5,
+      "size": 13,
+      "verified": false,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "white",
+          "dataref": "AirbusFBW/SDPage",
+          "onValue": 7
+        }
+      },
+      "notes": "La luz usa AirbusFBW/SDPage con valores supuestos (0 ENG … 11 STS). Confirmar en Diagnóstico."
+    },
+    {
+      "id": "ecp.door",
+      "label": "DOOR",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "commands": {
+        "press": "AirbusFBW/ECP/SelectDoorOxyPage"
+      },
+      "x": 78.6,
+      "y": 37.5,
+      "size": 13,
+      "verified": false,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "white",
+          "dataref": "AirbusFBW/SDPage",
+          "onValue": 8
+        }
+      },
+      "notes": "La luz usa AirbusFBW/SDPage con valores supuestos (0 ENG … 11 STS). Confirmar en Diagnóstico."
+    },
+    {
+      "id": "ecp.wheel",
+      "label": "WHEEL",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "commands": {
+        "press": "AirbusFBW/ECP/SelectWheelPage"
+      },
+      "x": 94.5,
+      "y": 37.5,
+      "size": 13,
+      "verified": false,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "white",
+          "dataref": "AirbusFBW/SDPage",
+          "onValue": 9
+        }
+      },
+      "notes": "La luz usa AirbusFBW/SDPage con valores supuestos (0 ENG … 11 STS). Confirmar en Diagnóstico."
+    },
+    {
+      "id": "ecp.fctl",
+      "label": "F/CTL",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "commands": {
+        "press": "AirbusFBW/ECP/SelectFlightControlPage"
+      },
+      "x": 111.0,
+      "y": 37.5,
+      "size": 13,
+      "verified": false,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "white",
+          "dataref": "AirbusFBW/SDPage",
+          "onValue": 10
+        }
+      },
+      "notes": "La luz usa AirbusFBW/SDPage con valores supuestos (0 ENG … 11 STS). Confirmar en Diagnóstico."
+    },
+    {
+      "id": "ecp.all",
+      "label": "ALL",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "commands": {
+        "press": "AirbusFBW/ECAMAll"
+      },
+      "x": 127.2,
+      "y": 37.5,
+      "size": 13,
+      "verified": true
+    },
+    {
+      "id": "ecp.clr_capt",
+      "label": "CLR",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "commands": {
+        "press": "AirbusFBW/ECP/CaptainClear"
+      },
+      "x": 46.7,
+      "y": 50.8,
+      "size": 13,
+      "verified": true,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "white",
+          "dataref": "AirbusFBW/CLRillum"
+        }
+      },
+      "notes": "Luz de CLR con AirbusFBW/CLRillum (volcado)."
+    },
+    {
+      "id": "ecp.sts",
+      "label": "STS",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "commands": {
+        "press": "AirbusFBW/ECP/SelectStatusPage"
+      },
+      "x": 78.6,
+      "y": 50.8,
+      "size": 13,
+      "verified": false,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "white",
+          "dataref": "AirbusFBW/SDPage",
+          "onValue": 11
+        }
+      },
+      "notes": "La luz usa AirbusFBW/SDPage con valores supuestos (0 ENG … 11 STS). Confirmar en Diagnóstico."
+    },
+    {
+      "id": "ecp.rcl",
+      "label": "RCL",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "commands": {
+        "press": "AirbusFBW/ECAMRecall"
+      },
+      "x": 94.5,
+      "y": 50.8,
+      "size": 13,
+      "verified": true
+    },
+    {
+      "id": "ecp.clr_fo",
+      "label": "CLR",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "commands": {
+        "press": "AirbusFBW/ECP/CopilotClear"
+      },
+      "x": 127.2,
+      "y": 50.8,
+      "size": 13,
+      "verified": true,
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "white",
+          "dataref": "AirbusFBW/CLRillum"
+        }
+      },
+      "notes": "Luz de CLR con AirbusFBW/CLRillum (volcado)."
+    }
+  ]
+}

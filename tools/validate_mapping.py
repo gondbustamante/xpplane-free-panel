@@ -14,7 +14,7 @@ import sys
 KINDS = {"toggle2": 2, "toggle3": 3, "korry": None, "rotary": None, "knob": None, "display": None}
 DECORATIONS = {"line", "arrow", "bracket", "box", "text", "divider"}
 GUARD_STYLES = {"cage", "red"}
-KORRY_STYLES = {"round", "fire"}
+KORRY_STYLES = {"round", "fire", "key", "keyRed"}
 COLORS = {"amber", "green", "white", "blue", "red"}
 FCU_FORMATS = {"speed", "mach", "heading", "altitude", "verticalSpeed", "flightPathAngle"}
 FCU_BUTTON_KINDS = {"push", "toggle"}

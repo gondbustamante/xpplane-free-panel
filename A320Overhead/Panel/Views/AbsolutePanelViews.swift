@@ -250,6 +250,14 @@ struct AbsoluteControlView: View {
                                 diameter: PanelMetrics.pt(control.size ?? PanelMetrics.roundButton)) {
                     model.press(control)
                 }
+            case "key", "keyRed":
+                let side = PanelMetrics.pt(control.size ?? 13)
+                KeyButtonView(label: control.label, lit: model.isLit(control.lamps?.top),
+                              lightColor: PanelTheme.lamp(control.lamps?.top?.color ?? "white"),
+                              red: control.style == "keyRed", enabled: enabled, dimmed: dimmed,
+                              width: side, height: side * 0.62) {
+                    model.press(control)
+                }
             case "fire":
                 FireButtonView(label: control.label, lit: model.isLit(control.lamps?.top),
                                pushed: model.position(of: control) > 0, enabled: enabled, dimmed: dimmed,
@@ -462,5 +470,50 @@ struct FireButtonView: View {
                 Task { try? await Task.sleep(for: .seconds(8)); guardOpen = false }
             }
         }
+    }
+}
+
+/// Rectangular pushbutton with its legend on the key and a light bar on top (ECAM control
+/// panel). `red` draws the red face of EMER CANC.
+struct KeyButtonView: View {
+    let label: String
+    let lit: Bool
+    let lightColor: Color
+    let red: Bool
+    let enabled: Bool
+    let dimmed: Bool
+    let width: CGFloat
+    let height: CGFloat
+    let onPress: () -> Void
+
+    var body: some View {
+        Button(action: onPress) {
+            ZStack(alignment: .top) {
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(LinearGradient(colors: red
+                                         ? [Color(red: 0.62, green: 0.18, blue: 0.20), Color(red: 0.42, green: 0.10, blue: 0.12)]
+                                         : [Color(white: 0.20), Color(white: 0.07)],
+                                         startPoint: .top, endPoint: .bottom))
+                    .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.black.opacity(0.85), lineWidth: 1))
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(lit ? lightColor : Color(white: 0.22))
+                    .frame(width: width * 0.40, height: max(height * 0.11, 2.5))
+                    .shadow(color: lit ? lightColor.opacity(0.9) : .clear, radius: 3)
+                    .padding(.top, height * 0.12)
+                Text(label)
+                    .font(.system(size: height * (label.contains("\n") ? 0.24 : 0.32), weight: .bold))
+                    .fontWidth(.condensed)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(-1)
+                    .foregroundStyle(red ? Color(red: 1.0, green: 0.78, blue: 0.78) : .white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(.top, height * 0.22)
+            }
+            .frame(width: width, height: height)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(KorryPressStyle())
+        .opacity(dimmed ? 0.5 : 1)
+        .disabled(!enabled)
     }
 }

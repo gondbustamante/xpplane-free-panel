@@ -1,0 +1,77 @@
+{
+  "id": "master",
+  "title": "MASTER",
+  "group": "ecam",
+  "order": 5,
+  "frame": {
+    "x": 4,
+    "y": 6,
+    "w": 62,
+    "h": 60
+  },
+  "titleAt": [
+    31,
+    4
+  ],
+  "notes": "MASTER WARNING y MASTER CAUTION del glareshield, lado del capitán.",
+  "controls": [
+    {
+      "id": "master.warn",
+      "label": "",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "lamps": {
+        "top": {
+          "text": "MASTER",
+          "color": "red",
+          "dataref": "AirbusFBW/MasterWarn"
+        },
+        "bottom": {
+          "text": "WARN",
+          "color": "red",
+          "dataref": "AirbusFBW/MasterWarn"
+        }
+      },
+      "commands": {
+        "press": "AirbusFBW/CaptWarnPush"
+      },
+      "x": 31,
+      "y": 22,
+      "size": 22,
+      "verified": true,
+      "notes": "AirbusFBW/MasterWarn (int, rw) y AirbusFBW/CaptWarnPush en el volcado."
+    },
+    {
+      "id": "master.caut",
+      "label": "",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "lamps": {
+        "top": {
+          "text": "MASTER",
+          "color": "amber",
+          "dataref": "AirbusFBW/MasterCaut"
+        },
+        "bottom": {
+          "text": "CAUT",
+          "color": "amber",
+          "dataref": "AirbusFBW/MasterCaut"
+        }
+      },
+      "commands": {
+        "press": "AirbusFBW/CaptCautPush"
+      },
+      "x": 31,
+      "y": 47,
+      "size": 22,
+      "verified": true,
+      "notes": "AirbusFBW/MasterCaut (int, rw) y AirbusFBW/CaptCautPush en el volcado."
+    }
+  ]
+}

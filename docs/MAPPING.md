@@ -28,7 +28,7 @@ Un grupo puede declarar además su **disposición física** en `arrangements`: c
 }
 ```
 
-La barra lateral de la app lista primero las fases y después los grupos. El MCDU no tiene archivo de mapeo: lo dibuja la app y se activa declarando el grupo `mcdu` en `groups`; en las fases se incluye con el id `mcdu`. Para añadir un panel nuevo (pedestal, glareshield…): crea la carpeta `mapping/<grupo>/`, declara el grupo en `groups`, pon `"group": "<grupo>"` en cada subpanel y, si procede, añádelo a las fases. Los iconos son nombres de SF Symbols.
+La barra lateral de la app lista primero los paneles personalizados del usuario (se crean y ordenan en el propio iPad, no en estos archivos), después las fases y después los grupos. El MCDU no tiene archivo de mapeo: lo dibuja la app y se activa declarando el grupo `mcdu` en `groups`; en las fases se incluye con el id `mcdu`. Para añadir un panel nuevo (pedestal, glareshield…): crea la carpeta `mapping/<grupo>/`, declara el grupo en `groups`, pon `"group": "<grupo>"` en cada subpanel y, si procede, añádelo a las fases. Los iconos son nombres de SF Symbols.
 
 ## Geometría real (`frame`, `x`, `y`, `decorations`)
 
@@ -51,7 +51,8 @@ Cuando un grupo declara un lienzo en `layout.json` (`"canvases": {"overhead": {"
       "x": 269.7, "y": 30.4,                                   // centro del cuerpo del control
       "sideLabel": "AUTO",                                     // leyenda vertical a la derecha (korry)
       "guarded": true, "guardStyle": "cage",                   // guarda: "cage" (jaula negra) o "red" (tapa roja)
-      "style": "round",                                        // korry: "round" (pulsador redondo) o "fire" (pulsador de fuego)
+      "style": "round",                                        // korry: "round" (redondo), "fire" (fuego), "key" (tecla rectangular
+                                                               //   con leyenda y barra de luz, ECAM) o "keyRed" (EMER CANC)
       "size": 22,                                              // tamaño del cuerpo en unidades (opcional)
       "state": { "dataref": "…" } }
   ]

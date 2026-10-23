@@ -28,6 +28,7 @@ struct ZoomableCanvas<Content: View>: View {
                                  autoFit: model.autoFit,
                                  fitRequestID: model.fitRequestID,
                                  selection: model.selection,
+                                 revision: model.layoutRevision,
                                  content: AnyView(content()))
     }
 }
@@ -53,6 +54,7 @@ struct PanelCanvasRepresentable: UIViewControllerRepresentable {
     let autoFit: Bool
     let fitRequestID: Int
     let selection: PanelSelection
+    let revision: Int
     let content: AnyView
 
     func makeUIViewController(context: Context) -> PanelCanvasController {
@@ -61,7 +63,7 @@ struct PanelCanvasRepresentable: UIViewControllerRepresentable {
 
     func updateUIViewController(_ controller: PanelCanvasController, context: Context) {
         controller.update(model: model, content: content, scale: scale, autoFit: autoFit,
-                          fitRequestID: fitRequestID, selection: selection)
+                          fitRequestID: fitRequestID, selection: selection, revision: revision)
     }
 }
 
@@ -77,6 +79,7 @@ final class PanelCanvasController: UIViewController, UIScrollViewDelegate {
     private var renderedScale: Double = 0
     private var lastSelection: PanelSelection?
     private var lastFitRequestID = -1
+    private var lastRevision = -1
     private var lastBounds: CGSize = .zero
     /// Natural-coordinate point to bring to the centre after the next render (two-finger tap).
     private var pendingFocus: CGPoint?
@@ -154,13 +157,16 @@ final class PanelCanvasController: UIViewController, UIScrollViewDelegate {
     // MARK: SwiftUI → UIKit
 
     func update(model: PanelModel, content: AnyView, scale: Double, autoFit: Bool,
-                fitRequestID: Int, selection: PanelSelection) {
+                fitRequestID: Int, selection: PanelSelection, revision: Int) {
         self.model = model
         self.content = content
-        let selectionChanged = selection != lastSelection
+        // A different selection, or the same one with new content (custom panel edited,
+        // orientation, MCDU layout), is treated as new content: measure and place it again.
+        let selectionChanged = selection != lastSelection || revision != lastRevision
         let fitRequested = fitRequestID != lastFitRequestID
         lastSelection = selection
         lastFitRequestID = fitRequestID
+        lastRevision = revision
         guard isViewLoaded else { return }
         // Never disturb a gesture in progress; the end of the gesture renders again.
         if scrollView.isZooming || scrollView.isZoomBouncing { return }

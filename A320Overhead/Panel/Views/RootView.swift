@@ -32,6 +32,12 @@ struct RootView: View {
         }
         .preferredColorScheme(.dark)
         .persistentSystemOverlays(.hidden)
+        // Portrait or landscape window (also in Split View): drives layouts that change shape.
+        .onGeometryChange(for: Bool.self) { proxy in
+            proxy.size.width > proxy.size.height
+        } action: { landscape in
+            model.setLandscape(landscape)
+        }
     }
 }
 

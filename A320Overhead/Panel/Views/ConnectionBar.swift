@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ConnectionBar: View {
     @Environment(PanelModel.self) private var model
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @Binding var showSettings: Bool
     @Binding var showDiagnostics: Bool
 
@@ -14,29 +15,39 @@ struct ConnectionBar: View {
         }
     }
 
+    /// Narrow window (portrait on smaller iPads, Split View): drop the secondary items.
+    private var compact: Bool { sizeClass == .compact }
+
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: compact ? 8 : 12) {
             Circle().fill(statusColor).frame(width: 10, height: 10)
             Text(model.status.label)
                 .font(.footnote)
                 .foregroundStyle(.white)
                 .lineLimit(1)
-            if !model.unresolved.isEmpty {
+                .truncationMode(.tail)
+                .layoutPriority(1)
+            if !model.unresolved.isEmpty && !compact {
                 Text("· \(model.unresolved.count) dataref(s) no disponibles")
                     .font(.footnote)
                     .foregroundStyle(.orange)
             }
-            Spacer()
-            Text("\(model.host):\(String(model.port))")
-                .font(.footnote.monospaced())
-                .foregroundStyle(.white.opacity(0.7))
-            HStack(spacing: 2) {
-                Button { model.zoom(by: 1 / 1.15) } label: { Image(systemName: "minus.magnifyingglass") }
-                Text("\(Int((model.canvasScale * 100).rounded()))%")
-                    .font(.caption2.monospacedDigit())
+            Spacer(minLength: 8)
+            if !compact {
+                Text("\(model.host):\(String(model.port))")
+                    .font(.footnote.monospaced())
                     .foregroundStyle(.white.opacity(0.7))
-                    .frame(width: 38)
-                Button { model.zoom(by: 1.15) } label: { Image(systemName: "plus.magnifyingglass") }
+                    .lineLimit(1)
+            }
+            HStack(spacing: 2) {
+                if !compact {
+                    Button { model.zoom(by: 1 / 1.15) } label: { Image(systemName: "minus.magnifyingglass") }
+                    Text("\(Int((model.canvasScale * 100).rounded()))%")
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(.white.opacity(0.7))
+                        .frame(width: 38)
+                    Button { model.zoom(by: 1.15) } label: { Image(systemName: "plus.magnifyingglass") }
+                }
                 Button { model.requestFit() } label: { Image(systemName: "arrow.down.left.and.arrow.up.right.rectangle") }
                     .help("Ajustar al ancho")
             }

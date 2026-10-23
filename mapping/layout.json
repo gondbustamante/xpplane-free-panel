@@ -14,6 +14,11 @@
       "id": "mcdu",
       "title": "MCDU",
       "icon": "keyboard"
+    },
+    {
+      "id": "ecam",
+      "title": "ECAM",
+      "icon": "rectangle.split.1x2"
     }
   ],
   "phases": [
@@ -45,7 +50,9 @@
         "hyd",
         "eng",
         "cabin_press",
-        "signs"
+        "signs",
+        "master",
+        "ecp"
       ]
     },
     {
@@ -60,7 +67,9 @@
         "probe_window",
         "air_cond",
         "apu",
-        "elec"
+        "elec",
+        "master",
+        "ecp"
       ]
     },
     {
@@ -74,7 +83,9 @@
         "anti_ice",
         "probe_window",
         "air_cond",
-        "cabin_press"
+        "cabin_press",
+        "master",
+        "ecp"
       ]
     },
     {
@@ -91,7 +102,9 @@
         "air_cond",
         "gpws",
         "wiper_l",
-        "wiper_r"
+        "wiper_r",
+        "master",
+        "ecp"
       ]
     },
     {
@@ -123,7 +136,9 @@
         "cabin_press",
         "hyd",
         "rcdr",
-        "oxygen"
+        "oxygen",
+        "master",
+        "ecp"
       ]
     }
   ],
@@ -215,6 +230,10 @@
     "overhead": {
       "width": 828,
       "height": 633
+    },
+    "ecam": {
+      "width": 240,
+      "height": 72
     }
   }
 }

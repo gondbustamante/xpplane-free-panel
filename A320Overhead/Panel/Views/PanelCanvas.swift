@@ -11,6 +11,21 @@ struct PanelCanvas: View {
     var body: some View {
         let items = model.visibleItems
         ZoomableCanvas {
+            if model.selection.isCustom {
+                CustomPanelCanvas(panel: model.selectedCustomPanel, items: items)
+            } else {
+                StandardCanvas(items: items)
+            }
+        }
+    }
+}
+
+/// Phases, groups and sections: FCU and MCDU first, then each group in its real geography.
+private struct StandardCanvas: View {
+    let items: [PanelItem]
+    @Environment(PanelModel.self) private var model
+
+    var body: some View {
             VStack(alignment: .leading, spacing: 30) {
                 if items.isEmpty {
                     Text("No hay paneles para esta selección. Revisa mapping/layout.json.")
@@ -44,6 +59,56 @@ struct PanelCanvas: View {
                         }
                     }
                 }
+            }
+    }
+}
+
+/// A user-built panel: its items in the chosen order, `columns` per row. Overhead sections keep
+/// their real artwork and proportions; each one is cropped to itself.
+private struct CustomPanelCanvas: View {
+    let panel: CustomPanel?
+    let items: [PanelItem]
+    @Environment(PanelModel.self) private var model
+
+    private var rows: [[PanelItem]] {
+        let columns = max(panel?.columns ?? 2, 1)
+        return stride(from: 0, to: items.count, by: columns).map { Array(items[$0..<min($0 + columns, items.count)]) }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            if items.isEmpty {
+                VStack(spacing: 10) {
+                    Image(systemName: "square.grid.2x2").font(.system(size: 40))
+                    Text("Este panel está vacío.")
+                    Text("Edítalo desde la barra lateral para añadir secciones, el FCU o el MCDU.")
+                        .font(.footnote)
+                }
+                .foregroundStyle(.white.opacity(0.7))
+                .padding(60)
+            }
+            ForEach(rows.indices, id: \.self) { row in
+                HStack(alignment: .top, spacing: 24) {
+                    ForEach(rows[row]) { item in
+                        itemView(item)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func itemView(_ item: PanelItem) -> some View {
+        switch item {
+        case .fcu:
+            FCUView()
+        case .mcdu:
+            MCDUView()
+        case .subpanel(let subpanel):
+            if subpanel.isAbsolute, let canvas = model.layout.canvas(for: subpanel.groupID) {
+                AbsoluteGroupView(canvas: canvas, panels: [subpanel])
+            } else {
+                PanelFace { SubpanelView(panel: subpanel) }
             }
         }
     }

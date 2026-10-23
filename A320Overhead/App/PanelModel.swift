@@ -17,6 +17,18 @@ enum PanelItem: Identifiable {
     }
 }
 
+/// A panel the user builds by grouping subpanels, the FCU, the MCDU and ECAM controls.
+/// Stored on the device (UserDefaults), not in the mapping.
+struct CustomPanel: Codable, Identifiable, Hashable {
+    var id: String = UUID().uuidString
+    var title: String
+    var icon: String = "square.grid.2x2"
+    /// Subpanel ids, "fcu" or "mcdu", in display order.
+    var items: [String] = []
+    /// Items per row.
+    var columns: Int = 2
+}
+
 /// What the main canvas shows: every subpanel, one panel group, or the subpanels of a flight phase.
 enum PanelSelection: Hashable {
     case all
@@ -24,6 +36,8 @@ enum PanelSelection: Hashable {
     case phase(String)
     /// One subpanel on its own, fitted to the screen.
     case subpanel(String)
+    /// A panel built by the user.
+    case custom(String)
 
     var storageValue: String {
         switch self {
@@ -31,7 +45,13 @@ enum PanelSelection: Hashable {
         case .group(let id): return "group:\(id)"
         case .phase(let id): return "phase:\(id)"
         case .subpanel(let id): return "subpanel:\(id)"
+        case .custom(let id): return "custom:\(id)"
         }
+    }
+
+    var isCustom: Bool {
+        if case .custom = self { return true }
+        return false
     }
 
     init(storageValue: String) {
@@ -41,6 +61,8 @@ enum PanelSelection: Hashable {
             self = .phase(String(storageValue.dropFirst(6)))
         } else if storageValue.hasPrefix("subpanel:") {
             self = .subpanel(String(storageValue.dropFirst(9)))
+        } else if storageValue.hasPrefix("custom:") {
+            self = .custom(String(storageValue.dropFirst(7)))
         } else {
             self = .all
         }
@@ -104,6 +126,22 @@ final class PanelModel {
             autoFit = true
         }
     }
+    /// Panels built by the user, persisted on the device.
+    private(set) var customPanels: [CustomPanel] = [] {
+        didSet { saveCustomPanels() }
+    }
+    /// The window is wider than tall. Drives the MCDU's wide layout.
+    private(set) var isLandscape = true
+    /// MCDU in landscape: keyboard beside the screen (bigger screen) instead of under it.
+    var mcduWideInLandscape: Bool {
+        didSet {
+            UserDefaults.standard.set(mcduWideInLandscape, forKey: Keys.mcduWide)
+            layoutRevision += 1
+        }
+    }
+    /// Bumped whenever the canvas content may change size without the selection changing
+    /// (orientation, MCDU layout, editing a custom panel), so the canvas measures again.
+    private(set) var layoutRevision = 0
     /// MCDU shown in the MCDU view: 1 captain, 2 first officer.
     private(set) var mcduUnit: Int {
         didSet { UserDefaults.standard.set(mcduUnit, forKey: Keys.mcduUnit) }
@@ -149,6 +187,8 @@ final class PanelModel {
         static let selection = "ui.selection"
         static let scale = "ui.canvasScale"
         static let mcduUnit = "mcdu.unit"
+        static let mcduWide = "mcdu.wideInLandscape"
+        static let customPanels = "custom.panels"
     }
 
     init() {
@@ -160,6 +200,11 @@ final class PanelModel {
         extraDatarefs = defaults.stringArray(forKey: Keys.extras) ?? []
         let storedUnit = defaults.integer(forKey: Keys.mcduUnit)
         mcduUnit = storedUnit == 2 ? 2 : 1
+        mcduWideInLandscape = defaults.object(forKey: Keys.mcduWide) as? Bool ?? true
+        if let data = defaults.data(forKey: Keys.customPanels),
+           let stored = try? JSONDecoder().decode([CustomPanel].self, from: data) {
+            customPanels = stored
+        }
         selection = PanelSelection(storageValue: defaults.string(forKey: Keys.selection) ?? "group:overhead")
         let storedScale = defaults.double(forKey: Keys.scale)
         canvasScale = storedScale == 0 ? 0.8 : min(max(storedScale, Self.scaleRange.lowerBound), Self.scaleRange.upperBound)
@@ -217,7 +262,110 @@ final class PanelModel {
         case .subpanel(let id):
             if let items = special(id) { return items }
             return subpanels.first { $0.id == id }.map { [.subpanel($0)] } ?? []
+        case .custom(let id):
+            guard let panel = customPanels.first(where: { $0.id == id }) else { return [] }
+            return panel.items.flatMap { wanted -> [PanelItem] in
+                if let items = special(wanted) { return items }
+                return subpanels.first { $0.id == wanted }.map { [.subpanel($0)] } ?? []
+            }
         }
+    }
+
+    // MARK: Custom panels
+
+    var selectedCustomPanel: CustomPanel? {
+        guard case .custom(let id) = selection else { return nil }
+        return customPanels.first { $0.id == id }
+    }
+
+    struct CatalogItem: Identifiable, Hashable {
+        let id: String
+        let title: String
+    }
+
+    struct CatalogGroup: Identifiable {
+        let id: String
+        let title: String
+        let items: [CatalogItem]
+    }
+
+    /// Everything that can go into a custom panel: built-in panels first, then each group's
+    /// sections in reading order.
+    var customPanelCatalog: [CatalogGroup] {
+        var catalog: [CatalogGroup] = []
+        var builtIn: [CatalogItem] = []
+        if fcu != nil { builtIn.append(CatalogItem(id: "fcu", title: "FCU")) }
+        if hasMCDU { builtIn.append(CatalogItem(id: "mcdu", title: "MCDU")) }
+        if !builtIn.isEmpty { catalog.append(CatalogGroup(id: "builtin", title: "Paneles completos", items: builtIn)) }
+        for group in layout.groups {
+            let sections = self.sections(of: group.id).map { CatalogItem(id: $0.id, title: displayTitle(of: $0)) }
+            if !sections.isEmpty { catalog.append(CatalogGroup(id: group.id, title: group.title, items: sections)) }
+        }
+        return catalog
+    }
+
+    func isSaved(_ panel: CustomPanel) -> Bool {
+        customPanels.contains { $0.id == panel.id }
+    }
+
+    func displayTitle(of panel: SubpanelDefinition) -> String {
+        panel.title.isEmpty ? panel.id.replacingOccurrences(of: "_", with: " ").uppercased()
+                            : panel.title.replacingOccurrences(of: "\n", with: " ")
+    }
+
+    func title(ofItem id: String) -> String {
+        switch id {
+        case "fcu": return "FCU"
+        case "mcdu": return "MCDU"
+        default: return subpanels.first { $0.id == id }.map(displayTitle(of:)) ?? id
+        }
+    }
+
+    /// Adds or replaces a custom panel and shows it.
+    func save(_ panel: CustomPanel) {
+        var cleaned = panel
+        cleaned.title = panel.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if cleaned.title.isEmpty { cleaned.title = "Mi panel" }
+        cleaned.columns = min(max(panel.columns, 1), 4)
+        if let index = customPanels.firstIndex(where: { $0.id == panel.id }) {
+            customPanels[index] = cleaned
+        } else {
+            customPanels.append(cleaned)
+        }
+        layoutRevision += 1
+        selection = .custom(cleaned.id)
+    }
+
+    func deleteCustomPanel(_ id: String) {
+        customPanels.removeAll { $0.id == id }
+        if case .custom(let selected) = selection, selected == id {
+            selection = .group("overhead")
+        }
+    }
+
+    func moveCustomPanels(from source: IndexSet, to destination: Int) {
+        customPanels.move(fromOffsets: source, toOffset: destination)
+    }
+
+    /// A new custom panel seeded with a phase's subpanels, so a phase can be tailored.
+    func customPanel(fromPhase id: String) -> CustomPanel? {
+        guard let phase = layout.phases.first(where: { $0.id == id }) else { return nil }
+        return CustomPanel(title: "\(phase.title) (mío)", icon: phase.icon ?? "square.grid.2x2",
+                           items: phase.subpanels, columns: 2)
+    }
+
+    private func saveCustomPanels() {
+        if let data = try? JSONEncoder().encode(customPanels) {
+            UserDefaults.standard.set(data, forKey: Keys.customPanels)
+        }
+    }
+
+    // MARK: Orientation
+
+    func setLandscape(_ landscape: Bool) {
+        guard landscape != isLandscape else { return }
+        isLandscape = landscape
+        layoutRevision += 1
     }
 
     // MARK: MCDU
@@ -319,10 +467,9 @@ final class PanelModel {
         case .group(let id): return layout.groups.first { $0.id == id }?.title ?? id
         case .phase(let id): return layout.phases.first { $0.id == id }?.title ?? id
         case .subpanel(let id):
-            if let panel = subpanels.first(where: { $0.id == id }) {
-                return panel.title.isEmpty ? panel.id.replacingOccurrences(of: "_", with: " ").uppercased() : panel.title
-            }
-            return id.uppercased()
+            return title(ofItem: id)
+        case .custom(let id):
+            return customPanels.first { $0.id == id }?.title ?? "Panel"
         }
     }
 
