@@ -1,0 +1,5 @@
+// Firma de código. No edites este archivo: pon tu Team ID en Local.xcconfig
+// (copia Local.xcconfig.example). Local.xcconfig no se versiona, así que
+// sobrevive a git pull y a xcodegen generate.
+CODE_SIGN_STYLE = Automatic
+#include? "Local.xcconfig"

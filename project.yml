@@ -8,13 +8,17 @@ options:
   createIntermediateGroups: true
   xcodeVersion: "16.0"
 
+# Signing lives in Signing.xcconfig + a git-ignored Local.xcconfig with your Team ID,
+# so regenerating the project never loses it. Do not set DEVELOPMENT_TEAM below:
+# build settings here override the xcconfig.
+configFiles:
+  Debug: Signing.xcconfig
+  Release: Signing.xcconfig
+
 settings:
   base:
     SWIFT_VERSION: "5.9"
     SWIFT_STRICT_CONCURRENCY: minimal
-    CODE_SIGN_STYLE: Automatic
-    # Set your Apple Developer Team ID here or pick it in Xcode > Signing & Capabilities.
-    DEVELOPMENT_TEAM: ""
 
 packages:
   XPlaneKit:

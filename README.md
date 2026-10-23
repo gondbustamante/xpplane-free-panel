@@ -35,11 +35,12 @@ Imprime la IP y el puerto que debes usar en el iPad (por defecto `IP_DEL_PC:8087
 ```bash
 git clone <este repo>
 cd xpplane-free-panel
+cp Local.xcconfig.example Local.xcconfig   # solo la primera vez: pon tu Team ID dentro
 xcodegen generate
 open A320Overhead.xcodeproj
 ```
 
-En Xcode: selecciona tu equipo en *Signing & Capabilities* (o rellena `DEVELOPMENT_TEAM` en `project.yml`), elige tu iPad como destino y ejecuta. Los tests de la capa de red se ejecutan con `cd Packages/XPlaneKit && swift test`.
+`Local.xcconfig` guarda tu Team ID fuera de git, así que `git pull` y `xcodegen generate` no pierden la firma. No elijas el equipo en *Signing & Capabilities*: ese cambio vive en el `.xcodeproj`, que se regenera. En Xcode elige tu iPad como destino y ejecuta. Los tests de la capa de red se ejecutan con `cd Packages/XPlaneKit && swift test`.
 
 **3. En el iPad**
 
