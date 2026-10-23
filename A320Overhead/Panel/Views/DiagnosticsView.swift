@@ -12,7 +12,8 @@ struct DiagnosticsView: View {
     @State private var commandName = ""
 
     private var names: [String] {
-        model.subscribedDatarefNames
+        // The MCDU screen is 150 text datarefs; the MCDU view itself is the way to inspect them.
+        model.subscribedDatarefNames.filter { !$0.hasPrefix("AirbusFBW/MCDU1") && !$0.hasPrefix("AirbusFBW/MCDU2") }
     }
 
     var body: some View {

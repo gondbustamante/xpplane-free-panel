@@ -9,6 +9,11 @@
       "id": "fcu",
       "title": "FCU",
       "icon": "slider.horizontal.3"
+    },
+    {
+      "id": "mcdu",
+      "title": "MCDU",
+      "icon": "keyboard"
     }
   ],
   "phases": [
@@ -31,6 +36,7 @@
       "title": "Antes de arranque",
       "icon": "power",
       "subpanels": [
+        "mcdu",
         "apu",
         "air_cond",
         "fuel",
@@ -76,6 +82,7 @@
       "title": "Aproximación",
       "icon": "airplane.arrival",
       "subpanels": [
+        "mcdu",
         "fcu",
         "ext_lt",
         "signs",

@@ -19,6 +19,8 @@ COLORS = {"amber", "green", "white", "blue", "red"}
 FCU_FORMATS = {"speed", "mach", "heading", "altitude", "verticalSpeed", "flightPathAngle"}
 FCU_BUTTON_KINDS = {"push", "toggle"}
 DUMP_PREFIXES = ("AirbusFBW/", "toliss_airbus/")
+# Panels drawn by the app itself, without a mapping file.
+BUILTIN_PANELS = {"mcdu"}
 
 
 # ---------------------------------------------------------------- overhead-style subpanels
@@ -260,7 +262,7 @@ def validate_layout(root, panel_ids, panel_ids_by_group):
     group_ids = {g["id"] for g in layout.get("groups", [])}
     for phase in layout.get("phases", []):
         for sub in phase.get("subpanels", []):
-            if sub not in panel_ids:
+            if sub not in panel_ids and sub not in BUILTIN_PANELS:
                 errors.append(f"layout.json: la fase '{phase.get('id')}' referencia el panel inexistente '{sub}'")
     for group in (layout.get("canvases") or {}):
         if group not in group_ids:

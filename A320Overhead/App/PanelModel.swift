@@ -2,15 +2,17 @@ import Foundation
 import Observation
 import XPlaneKit
 
-/// One thing drawn on the canvas: a generic subpanel, or a panel with its own view (the FCU).
+/// One thing drawn on the canvas: a generic subpanel, or a panel with its own view (FCU, MCDU).
 enum PanelItem: Identifiable {
     case subpanel(SubpanelDefinition)
     case fcu
+    case mcdu
 
     var id: String {
         switch self {
         case .subpanel(let panel): return panel.id
         case .fcu: return "fcu"
+        case .mcdu: return "mcdu"
         }
     }
 }
@@ -102,6 +104,13 @@ final class PanelModel {
             autoFit = true
         }
     }
+    /// MCDU shown in the MCDU view: 1 captain, 2 first officer.
+    private(set) var mcduUnit: Int {
+        didSet { UserDefaults.standard.set(mcduUnit, forKey: Keys.mcduUnit) }
+    }
+    /// Raw MCDU screen datarefs, kept apart from `rawValues` so ~150 text updates per page change
+    /// do not re-render every switch on the overhead.
+    private(set) var mcduRaw: [String: XPValue] = [:]
     /// Datarefs added from the diagnostics screen, on top of the ones the mapping needs.
     private(set) var extraDatarefs: [String] {
         didSet { UserDefaults.standard.set(extraDatarefs, forKey: Keys.extras) }
@@ -139,6 +148,7 @@ final class PanelModel {
         static let extras = "diag.extraDatarefs"
         static let selection = "ui.selection"
         static let scale = "ui.canvasScale"
+        static let mcduUnit = "mcdu.unit"
     }
 
     init() {
@@ -148,6 +158,8 @@ final class PanelModel {
         port = storedPort == 0 ? 8087 : storedPort   // 8087 = xp_relay.py default
         showVerificationBadges = defaults.object(forKey: Keys.badges) as? Bool ?? false
         extraDatarefs = defaults.stringArray(forKey: Keys.extras) ?? []
+        let storedUnit = defaults.integer(forKey: Keys.mcduUnit)
+        mcduUnit = storedUnit == 2 ? 2 : 1
         selection = PanelSelection(storageValue: defaults.string(forKey: Keys.selection) ?? "group:overhead")
         let storedScale = defaults.double(forKey: Keys.scale)
         canvasScale = storedScale == 0 ? 0.8 : min(max(storedScale, Self.scaleRange.lowerBound), Self.scaleRange.upperBound)
@@ -179,24 +191,71 @@ final class PanelModel {
     }
 
     /// What the canvas shows for the current sidebar selection, in display order.
-    /// The FCU is addressed by the id "fcu" in groups and phases.
+    /// The FCU and the MCDU are addressed by the ids "fcu" and "mcdu" in groups and phases.
     var visibleItems: [PanelItem] {
         let fcuItem: [PanelItem] = fcu == nil ? [] : [.fcu]
+        let mcduItem: [PanelItem] = hasMCDU ? [.mcdu] : []
+        func special(_ id: String) -> [PanelItem]? {
+            switch id {
+            case "fcu": return fcuItem
+            case "mcdu": return mcduItem
+            default: return nil
+            }
+        }
         switch selection {
         case .all:
-            return subpanels.map { .subpanel($0) } + fcuItem
+            return subpanels.map { .subpanel($0) } + fcuItem + mcduItem
         case .group(let id):
-            if id == "fcu" { return fcuItem }
+            if let items = special(id) { return items }
             return subpanels.filter { $0.groupID == id }.map { .subpanel($0) }
         case .phase(let id):
             guard let phase = layout.phases.first(where: { $0.id == id }) else { return [] }
-            return phase.subpanels.compactMap { wanted -> PanelItem? in
-                if wanted == "fcu" { return fcuItem.first }
-                return subpanels.first { $0.id == wanted }.map { .subpanel($0) }
+            return phase.subpanels.flatMap { wanted -> [PanelItem] in
+                if let items = special(wanted) { return items }
+                return subpanels.first { $0.id == wanted }.map { [.subpanel($0)] } ?? []
             }
         case .subpanel(let id):
-            if id == "fcu" { return fcuItem }
+            if let items = special(id) { return items }
             return subpanels.first { $0.id == id }.map { [.subpanel($0)] } ?? []
+        }
+    }
+
+    // MARK: MCDU
+
+    /// The MCDU is built in (no mapping file): it is on when layout.json declares a "mcdu" group.
+    var hasMCDU: Bool {
+        layout.groups.contains { $0.id == "mcdu" }
+    }
+
+    /// Decoded screen of the selected MCDU.
+    var mcduScreen: MCDUScreen {
+        MCDUScreen.decode(unit: mcduUnit, values: mcduRaw)
+    }
+
+    /// Switches between the captain's (1) and first officer's (2) MCDU.
+    func setMCDUUnit(_ unit: Int) {
+        guard unit == 1 || unit == 2, unit != mcduUnit else { return }
+        mcduUnit = unit
+        guard let client, status == .connected else { return }
+        Task {
+            do {
+                _ = try await client.subscribe(datarefs: MCDUScreen.datarefNames(unit: unit))
+            } catch {
+                self.lastError = self.describe(error)
+            }
+        }
+    }
+
+    /// Presses an MCDU key: `key` is the ToLiss command suffix, e.g. "LSK1L", "KeyA", "DirTo".
+    func pressMCDU(_ key: String, duration: Double = 0) {
+        guard let client, status == .connected else { return }
+        let command = "AirbusFBW/MCDU\(mcduUnit)\(key)"
+        Task {
+            do {
+                try await client.fire(command: command, duration: duration)
+            } catch {
+                self.lastError = self.describe(error)
+            }
         }
     }
 
@@ -279,6 +338,7 @@ final class PanelModel {
             if let bottom = control.lamps?.bottom?.dataref { names.insert(bottom) }
         }
         if let fcu { names.formUnion(fcu.datarefNames) }
+        if hasMCDU { names.formUnion(MCDUScreen.datarefNames(unit: mcduUnit)) }
         return names
     }
 
@@ -379,6 +439,10 @@ final class PanelModel {
     }
 
     private func apply(_ update: DatarefUpdate) {
+        if update.name.hasPrefix("AirbusFBW/MCDU1") || update.name.hasPrefix("AirbusFBW/MCDU2") {
+            mcduRaw[update.name] = update.value
+            return
+        }
         stampChanges(for: update)
         rawValues[update.name] = update.value
 

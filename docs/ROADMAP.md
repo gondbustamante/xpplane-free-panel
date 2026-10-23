@@ -46,6 +46,18 @@ Adelantado desde la fase 2 porque es el panel que más se toca en vuelo y reutil
 
 **Aceptación:** ejecutar una salida y una aproximación ILS completas con el autopiloto tocando solo el iPad: selected speed/heading/altitude, V/S, managed con push, LOC y APPR.
 
+## Fase 1c · MCDU (2026-10-23) — en curso
+
+- [x] Decodificador de pantalla de ToLiss (150 datarefs por unidad, colores, letra grande y pequeña, símbolos especiales, scratchpad, flechas), con tests
+- [x] Vista del MCDU según la foto del A32NX: pantalla, 12 LSK, teclas de página, BRT/DIM, AIRPORT, flechas, numérico, alfabético
+- [x] MCDU 1 / MCDU 2 y teclado físico del iPad hacia el scratchpad
+- [x] En la barra lateral como grupo y en las fases Antes de arranque y Aproximación
+- [ ] Confirmar en el simulador que la Web API entrega los datarefs `data` en base64 (el decodificador acepta también texto plano y arrays de bytes)
+- [ ] Anunciadores FM1/IND/RDY/FM2 y FAIL/FM/MCDU MENU (localizar datarefs)
+- [ ] CLR mantenido para borrar todo el scratchpad
+
+**Aceptación:** completar INIT A, F-PLN y PERF TAKE OFF desde el iPad leyendo la pantalla en el iPad.
+
 ## Fase 2 · Overhead completo (2 a 3 meses) — en curso
 
 Hecho el 2026-10-22: barra lateral con fases de vuelo y grupos de paneles (`mapping/layout.json`), selector rotatorio, pulsador guardado, y **21 subpaneles del overhead con 124 controles**. Con el volcado real de ToLiss en `mapping/reference/`, los 74 datarefs y 101 comandos del mapeo están comprobados por nombre (el validador lo exige). 59 controles verificados; 65 pendientes de confirmar semántica de valores o índice, de los cuales 24 bloqueados como solo lectura.

@@ -28,7 +28,7 @@ Un grupo puede declarar además su **disposición física** en `arrangements`: c
 }
 ```
 
-La barra lateral de la app lista primero las fases y después los grupos. Para añadir un panel nuevo (pedestal, glareshield…): crea la carpeta `mapping/<grupo>/`, declara el grupo en `groups`, pon `"group": "<grupo>"` en cada subpanel y, si procede, añádelo a las fases. Los iconos son nombres de SF Symbols.
+La barra lateral de la app lista primero las fases y después los grupos. El MCDU no tiene archivo de mapeo: lo dibuja la app y se activa declarando el grupo `mcdu` en `groups`; en las fases se incluye con el id `mcdu`. Para añadir un panel nuevo (pedestal, glareshield…): crea la carpeta `mapping/<grupo>/`, declara el grupo en `groups`, pon `"group": "<grupo>"` en cada subpanel y, si procede, añádelo a las fases. Los iconos son nombres de SF Symbols.
 
 ## Geometría real (`frame`, `x`, `y`, `decorations`)
 

@@ -20,6 +20,9 @@ struct PanelCanvas: View {
                 if items.contains(where: { if case .fcu = $0 { return true } else { return false } }) {
                     FCUView()
                 }
+                if items.contains(where: { if case .mcdu = $0 { return true } else { return false } }) {
+                    MCDUView()
+                }
                 ForEach(model.layout.groups) { group in
                     let visible = model.visibleSubpanels(in: group.id)
                     if !visible.isEmpty {
