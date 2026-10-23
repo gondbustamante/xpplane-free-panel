@@ -125,7 +125,7 @@ struct ZoomableCanvas<Content: View>: View {
     @State private var pinchBase: Double?
     @State private var naturalSize: CGSize = .zero
     @State private var containerSize: CGSize = .zero
-    @State private var pendingFit = false
+    @State private var pendingFit = true
 
     private let margin: CGFloat = 20
 
@@ -171,13 +171,13 @@ struct ZoomableCanvas<Content: View>: View {
         }
         .onChange(of: model.selection) { _, _ in
             pendingFit = true   // new selection: refit once its size is known
+            DispatchQueue.main.async { applyFitIfPending() }
         }
         .simultaneousGesture(
             MagnificationGesture()
                 .onChanged { value in
                     if pinchBase == nil { pinchBase = model.canvasScale }
-                    model.canvasScale = min(max((pinchBase ?? 1) * value, PanelModel.scaleRange.lowerBound),
-                                            PanelModel.scaleRange.upperBound)
+                    model.pinch(to: (pinchBase ?? 1) * value)
                 }
                 .onEnded { _ in pinchBase = nil }
         )
@@ -187,10 +187,12 @@ struct ZoomableCanvas<Content: View>: View {
 private extension ZoomableCanvas {
     /// Fits both axes so the selection is visible whole and the canvas stays still.
     func applyFitIfPending() {
-        guard pendingFit, naturalSize.width > 0, naturalSize.height > 0, containerSize.width > 0 else { return }
+        guard pendingFit || model.autoFit, naturalSize.width > 0, naturalSize.height > 0, containerSize.width > 0 else { return }
         let availableWidth = containerSize.width - margin * 2 - 4
         let availableHeight = containerSize.height - margin * 2 - 4
-        model.setScale(min(availableWidth / naturalSize.width, availableHeight / naturalSize.height))
+        let target = min(availableWidth / naturalSize.width, availableHeight / naturalSize.height)
+        // Ignore sub-pixel differences so a refit never nudges the panel under a finger.
+        if abs(target - model.canvasScale) > 0.002 { model.setScale(target) }
         pendingFit = false
     }
 }

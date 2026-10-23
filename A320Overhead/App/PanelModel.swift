@@ -90,9 +90,17 @@ final class PanelModel {
     }
     /// Bumped by the "fit" button; the canvas answers by choosing the scale that fits its width.
     private(set) var fitRequestID = 0
-    static let scaleRange: ClosedRange<Double> = 0.4...1.6
+    /// While true the canvas keeps the selection fitted to the screen (and therefore still):
+    /// it refits on rotation, sidebar toggles and selection changes. Manual zoom turns it off,
+    /// the fit button turns it back on.
+    private(set) var autoFit = true
+    /// Wide enough for a single section to fill the screen.
+    static let scaleRange: ClosedRange<Double> = 0.3...5.0
     var selection: PanelSelection {
-        didSet { UserDefaults.standard.set(selection.storageValue, forKey: Keys.selection) }
+        didSet {
+            UserDefaults.standard.set(selection.storageValue, forKey: Keys.selection)
+            autoFit = true
+        }
     }
     /// Datarefs added from the diagnostics screen, on top of the ones the mapping needs.
     private(set) var extraDatarefs: [String] {
@@ -126,7 +134,8 @@ final class PanelModel {
     private enum Keys {
         static let host = "xp.host"
         static let port = "xp.port"
-        static let badges = "ui.verificationBadges"
+        // v2: badges are off by default since the overhead aims at realism; mapping work turns them on.
+        static let badges = "ui.verificationBadges.v2"
         static let extras = "diag.extraDatarefs"
         static let selection = "ui.selection"
         static let scale = "ui.canvasScale"
@@ -137,12 +146,12 @@ final class PanelModel {
         host = defaults.string(forKey: Keys.host) ?? "192.168.1.100"
         let storedPort = defaults.integer(forKey: Keys.port)
         port = storedPort == 0 ? 8087 : storedPort   // 8087 = xp_relay.py default
-        showVerificationBadges = defaults.object(forKey: Keys.badges) as? Bool ?? true
+        showVerificationBadges = defaults.object(forKey: Keys.badges) as? Bool ?? false
         extraDatarefs = defaults.stringArray(forKey: Keys.extras) ?? []
         selection = PanelSelection(storageValue: defaults.string(forKey: Keys.selection) ?? "group:overhead")
         let storedScale = defaults.double(forKey: Keys.scale)
         canvasScale = storedScale == 0 ? 0.8 : min(max(storedScale, Self.scaleRange.lowerBound), Self.scaleRange.upperBound)
-        if storedScale == 0 { fitRequestID = 1 }   // first launch: fit the selection to the screen
+        fitRequestID = 1   // launch fitted: the panel starts still
         loadMappings()
     }
 
@@ -193,21 +202,34 @@ final class PanelModel {
 
     /// Subpanels of a group for the sidebar's section list, in reading order (top-left first).
     func sections(of group: String) -> [SubpanelDefinition] {
-        subpanels.filter { $0.groupID == group }.sorted {
-            let a = $0.frame, b = $1.frame
-            if let a, let b {
-                if abs(a.x - b.x) > 150 { return a.x < b.x }   // column first
-                return a.y < b.y
-            }
-            return ($0.order ?? .max, $0.title) < ($1.order ?? .max, $1.title)
+        // Column of the overhead (captain / centre / first officer) from the frame's x, then y.
+        func column(_ panel: SubpanelDefinition) -> Int {
+            guard let x = panel.frame?.x else { return 9 }
+            return x < 195 ? 0 : (x < 620 ? 1 : 2)
+        }
+        return subpanels.filter { $0.groupID == group }.sorted {
+            let ca = column($0), cb = column($1)
+            if ca != cb { return ca < cb }
+            let ya = $0.frame?.y ?? Double($0.order ?? 0), yb = $1.frame?.y ?? Double($1.order ?? 0)
+            if ya != yb { return ya < yb }
+            return ($0.frame?.x ?? 0) < ($1.frame?.x ?? 0)
         }
     }
 
+
     func zoom(by factor: Double) {
+        autoFit = false
         canvasScale = min(max(canvasScale * factor, Self.scaleRange.lowerBound), Self.scaleRange.upperBound)
     }
 
+    /// Pinch in progress: manual zoom, so stop refitting.
+    func pinch(to value: Double) {
+        autoFit = false
+        setScale(value)
+    }
+
     func requestFit() {
+        autoFit = true
         fitRequestID += 1
     }
 

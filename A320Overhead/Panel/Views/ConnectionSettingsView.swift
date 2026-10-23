@@ -23,6 +23,9 @@ struct ConnectionSettingsView: View {
                 }
                 Section("Interfaz") {
                     Toggle("Marcar controles con mapeo sin verificar", isOn: $model.showVerificationBadges)
+                    Text("Útil al verificar datarefs desde Diagnóstico. Apagado por defecto para que el panel se vea como el del avión.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
                 if !model.unresolved.isEmpty {
                     Section("Datarefs no reconocidos por el simulador") {
