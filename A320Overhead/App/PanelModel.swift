@@ -7,12 +7,15 @@ enum PanelItem: Identifiable {
     case subpanel(SubpanelDefinition)
     case fcu
     case mcdu
+    /// Camera views: X-Plane quick looks and the X-Camera commands found in the simulator.
+    case camera
 
     var id: String {
         switch self {
         case .subpanel(let panel): return panel.id
         case .fcu: return "fcu"
         case .mcdu: return "mcdu"
+        case .camera: return "camera"
         }
     }
 }
@@ -23,7 +26,7 @@ struct CustomPanel: Codable, Identifiable, Hashable {
     var id: String = UUID().uuidString
     var title: String
     var icon: String = "square.grid.2x2"
-    /// Subpanel ids, "fcu" or "mcdu", in display order.
+    /// Subpanel ids, "fcu", "mcdu" or "camera", in display order.
     var items: [String] = []
     /// Items per row.
     var columns: Int = 2
@@ -284,6 +287,7 @@ final class PanelModel {
         static let activeProcedure = "procedures.active"
         static let showChecklist = "procedures.showChecklist"
         static let recentFrequencies = "radio.recentFrequencies"
+        static let xCamera = "camera.xCameraCommands"
     }
 
     init() {
@@ -303,6 +307,8 @@ final class PanelModel {
         activeProcedureID = defaults.string(forKey: Keys.activeProcedure)
         showChecklist = defaults.bool(forKey: Keys.showChecklist)
         recentFrequencies = (defaults.array(forKey: Keys.recentFrequencies) as? [Int]) ?? []
+        xCameraCommands = defaults.data(forKey: Keys.xCamera)
+            .flatMap { try? JSONDecoder().decode([CameraCommand].self, from: $0) } ?? []
         if let data = defaults.data(forKey: Keys.customPanels),
            let stored = try? JSONDecoder().decode([CustomPanel].self, from: data) {
             customPanels = stored
@@ -356,16 +362,18 @@ final class PanelModel {
     var visibleItems: [PanelItem] {
         let fcuItem: [PanelItem] = fcu == nil ? [] : [.fcu]
         let mcduItem: [PanelItem] = hasMCDU ? [.mcdu] : []
+        let cameraItem: [PanelItem] = hasCamera ? [.camera] : []
         func special(_ id: String) -> [PanelItem]? {
             switch id {
             case "fcu": return fcuItem
             case "mcdu": return mcduItem
+            case "camera": return cameraItem
             default: return nil
             }
         }
         switch selection {
         case .all:
-            return subpanels.map { .subpanel($0) } + fcuItem + mcduItem
+            return subpanels.map { .subpanel($0) } + fcuItem + mcduItem + cameraItem
         case .group(let id):
             if let items = special(id) { return items }
             return subpanels.filter { $0.groupID == id }.map { .subpanel($0) }
@@ -417,6 +425,7 @@ final class PanelModel {
         var builtIn: [CatalogItem] = []
         if fcu != nil { builtIn.append(CatalogItem(id: "fcu", title: "FCU")) }
         if hasMCDU { builtIn.append(CatalogItem(id: "mcdu", title: "MCDU")) }
+        if hasCamera { builtIn.append(CatalogItem(id: "camera", title: "Cámaras")) }
         if !builtIn.isEmpty { catalog.append(CatalogGroup(id: "builtin", title: "Paneles completos", items: builtIn)) }
         for group in layout.groups {
             let sections = self.sections(of: group.id).map { CatalogItem(id: $0.id, title: displayTitle(of: $0)) }
@@ -438,6 +447,7 @@ final class PanelModel {
         switch id {
         case "fcu": return "FCU"
         case "mcdu": return "MCDU"
+        case "camera": return "Cámaras"
         default: return subpanels.first { $0.id == id }.map(displayTitle(of:)) ?? id
         }
     }
@@ -672,6 +682,11 @@ final class PanelModel {
 
     // MARK: MCDU
 
+    /// The camera panel is built in: it is on when layout.json declares a "camera" group.
+    var hasCamera: Bool {
+        layout.groups.contains { $0.id == "camera" }
+    }
+
     /// The MCDU is built in (no mapping file): it is on when layout.json declares a "mcdu" group.
     var hasMCDU: Bool {
         layout.groups.contains { $0.id == "mcdu" }
@@ -789,6 +804,7 @@ final class PanelModel {
             if let state = control.state { names.insert(state.dataref) }
             if let top = control.lamps?.top?.dataref { names.insert(top) }
             if let bottom = control.lamps?.bottom?.dataref { names.insert(bottom) }
+            if let baro = control.baro { names.formUnion([baro.std, baro.unit]) }
         }
         if let fcu { names.formUnion(fcu.datarefNames) }
         if hasMCDU { names.formUnion(MCDUScreen.datarefNames(unit: mcduUnit)) }
@@ -1021,8 +1037,9 @@ final class PanelModel {
     /// Dual knob: one click of the outer (`small` false) or inner ring, `delta` > 0 clockwise.
     func turn(_ control: ControlDefinition, small: Bool, delta: Int) {
         guard let client, delta != 0, let commands = control.commands else { return }
-        let name = small ? (delta > 0 ? commands.upSmall : commands.downSmall)
-                         : (delta > 0 ? commands.up : commands.down)
+        // Knobs with a single ring (BARO) turn the same way from the centre.
+        let large = delta > 0 ? commands.up : commands.down
+        let name = small ? ((delta > 0 ? commands.upSmall : commands.downSmall) ?? large) : large
         guard let name else { return }
         Task {
             do {
@@ -1058,6 +1075,11 @@ final class PanelModel {
     /// Display: formatted raw value. Without a format it is a legend window that shows the last
     /// position name when the value is on (ADIRS "ON BAT"). Dashes when unknown.
     func displayText(of control: ControlDefinition) -> String {
+        if control.format == "baro", let baro = control.baro {
+            let inHg = control.state.flatMap { rawValues[$0.dataref]?.element(at: $0.index)?.doubleValue }
+            return BaroBinding.text(inHg: inHg, std: rawValues[baro.std]?.doubleValue,
+                                    hectopascal: rawValues[baro.unit]?.doubleValue) ?? "----"
+        }
         if control.format == "text" {
             guard let state = control.state, let raw = rawValues[state.dataref] else { return "" }
             return raw.textValue ?? ""
@@ -1237,6 +1259,194 @@ final class PanelModel {
             }
         }
         return last
+    }
+
+    // MARK: Baro
+
+    /// A BARO reference: the window (state in inHg) and the knob (push STD / pull QNH, turn),
+    /// found in the same subpanel.
+    struct BaroPanel: Identifiable {
+        let id: String
+        let title: String
+        let window: ControlDefinition
+        let knob: ControlDefinition?
+        let unit: ControlDefinition?
+    }
+
+    var baroPanels: [BaroPanel] {
+        subpanels.compactMap { baroPanel($0.id) }
+    }
+
+    func baroPanel(_ panelID: String?) -> BaroPanel? {
+        guard let panelID, let panel = subpanels.first(where: { $0.id == panelID }),
+              let window = panel.controls.first(where: { $0.format == "baro" && $0.baro != nil && $0.state != nil }) else { return nil }
+        let knob = panel.controls.first { $0.baro != nil && $0.kind == .dualKnob }
+        let unit = panel.controls.first { $0.state?.dataref == window.baro?.unit && $0.kind != .display }
+        return BaroPanel(id: panel.id, title: displayTitle(of: panel), window: window, knob: knob, unit: unit)
+    }
+
+    func baroPanel(containing control: ControlDefinition) -> BaroPanel? {
+        guard control.baro != nil, let panel = panelOfControl[control.id] else { return nil }
+        return baroPanel(panel)
+    }
+
+    /// BARO panel whose sheet is open.
+    var baroSheetPanelID: String?
+
+    func openBaroSheet(_ panel: BaroPanel) {
+        baroSheetPanelID = panel.id
+    }
+
+    func isStandard(_ panel: BaroPanel) -> Bool {
+        guard let std = panel.window.baro?.std else { return false }
+        return (rawValues[std]?.doubleValue ?? 0) > 0.5
+    }
+
+    func isHectopascal(_ panel: BaroPanel) -> Bool {
+        guard let unit = panel.window.baro?.unit else { return true }
+        return (rawValues[unit]?.doubleValue ?? 1) > 0.5
+    }
+
+    func inHg(_ panel: BaroPanel) -> Double? {
+        guard let state = panel.window.state else { return nil }
+        return rawValues[state.dataref]?.element(at: state.index)?.doubleValue
+    }
+
+    /// Push (STD) or pull (QNH) the knob.
+    func setStandard(_ panel: BaroPanel, _ standard: Bool) {
+        guard let command = standard ? panel.knob?.commands?.press : panel.knob?.commands?.pull else { return }
+        fire(baroCommand: command)
+    }
+
+    func setHectopascal(_ panel: BaroPanel, _ hectopascal: Bool) {
+        guard let client, let unit = panel.window.baro?.unit else { return }
+        rawValues[unit] = .number(hectopascal ? 1 : 0)   // optimistic
+        Task {
+            do { try await client.write(DatarefKey(unit), XPValue(hectopascal ? 1.0 : 0.0)) } catch { self.lastError = self.describe(error) }
+        }
+    }
+
+    /// Sets the reference directly (writing inHg) and leaves STD for QNH, as when the pilot
+    /// pulls the knob and dials. Accepts hPa (800…1100) or inHg (25…33).
+    @discardableResult
+    func setQNH(_ panel: BaroPanel, _ value: Double) -> Bool {
+        let inHg: Double
+        if (800...1100).contains(value) {
+            inHg = value / BaroBinding.hectopascalsPerInHg
+        } else if (25...33).contains(value) {
+            inHg = value
+        } else {
+            return false
+        }
+        guard let client, let state = panel.window.state else { return false }
+        if isStandard(panel) { setStandard(panel, false) }
+        rawValues[state.dataref] = .number(inHg)   // optimistic
+        Task {
+            do { try await client.write(state.key, XPValue(inHg)) } catch { self.lastError = self.describe(error) }
+        }
+        return true
+    }
+
+    /// Copies one side's setting and mode to every other BARO panel ("BARO REF ... SET BOTH").
+    func syncBaro(from source: BaroPanel) {
+        guard let value = inHg(source) else { return }
+        for other in baroPanels where other.id != source.id {
+            setHectopascal(other, isHectopascal(source))
+            if isStandard(source) {
+                if !isStandard(other) { setStandard(other, true) }
+            } else {
+                setQNH(other, value)
+            }
+        }
+    }
+
+    private func fire(baroCommand command: String) {
+        guard let client else { return }
+        Task {
+            do { try await client.fire(command: command) } catch { self.lastError = self.describe(error) }
+        }
+    }
+
+    // MARK: Cameras
+
+    struct CameraCommand: Identifiable, Hashable, Codable {
+        let name: String
+        let title: String
+        var id: String { name }
+    }
+
+    /// X-Camera commands found in the simulator on the last search, persisted.
+    private(set) var xCameraCommands: [CameraCommand] {
+        didSet {
+            if let data = try? JSONEncoder().encode(xCameraCommands) {
+                UserDefaults.standard.set(data, forKey: Keys.xCamera)
+            }
+        }
+    }
+    private(set) var cameraSearchState: CameraSearchState = .idle
+
+    enum CameraSearchState: Equatable {
+        case idle
+        case searching
+        case found(Int)
+        case failed(String)
+    }
+
+    /// Lists the commands X-Camera registered in the simulator (it registers one per view, with
+    /// names that depend on the user's setup) instead of guessing them.
+    func searchXCameraCommands() {
+        guard let client, status == .connected else {
+            cameraSearchState = .failed("Conecta con X-Plane para buscar las vistas de X-Camera.")
+            return
+        }
+        guard let xplane = client as? XPlaneClient else {
+            cameraSearchState = .failed("En modo demo no hay X-Camera.")
+            return
+        }
+        cameraSearchState = .searching
+        Task {
+            do {
+                let found = try await xplane.searchCommands(containing: "X-Camera")
+                let commands = found
+                    .map { CameraCommand(name: $0.name, title: Self.cameraTitle($0.name, description: $0.description)) }
+                    .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+                self.xCameraCommands = commands
+                self.cameraSearchState = .found(commands.count)
+            } catch {
+                self.cameraSearchState = .failed(self.describe(error))
+            }
+        }
+    }
+
+    /// "SRS/X-Camera/Select_View_ID_3" → "Select View ID 3"; the description when it has one.
+    static func cameraTitle(_ name: String, description: String?) -> String {
+        if let description, !description.trimmingCharacters(in: .whitespaces).isEmpty { return description }
+        let last = name.split(separator: "/").last.map(String.init) ?? name
+        return last.replacingOccurrences(of: "_", with: " ")
+    }
+
+    /// Fires a camera command once (view selection, quick look).
+    func fireCamera(_ command: String) {
+        guard let client else { return }
+        Task {
+            do { try await client.fire(command: command) } catch { self.lastError = self.describe(error) }
+        }
+    }
+
+    /// Holds a camera movement command while the finger is down (pan, zoom, rotate).
+    func holdCamera(_ command: String, active: Bool) {
+        guard let client else { return }
+        Task {
+            do {
+                if let xplane = client as? XPlaneClient {
+                    try await xplane.hold(command: command, active: active)
+                } else if active {
+                    try await client.fire(command: command)
+                }
+            } catch {
+                self.lastError = self.describe(error)
+            }
+        }
     }
 
     // MARK: FCU

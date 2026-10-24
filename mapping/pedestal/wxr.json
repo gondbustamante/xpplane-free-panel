@@ -1,0 +1,165 @@
+{
+  "id": "wxr",
+  "title": "WX RADAR",
+  "group": "pedestal",
+  "frame": {
+    "x": 6,
+    "y": 92,
+    "w": 112,
+    "h": 102
+  },
+  "order": 15,
+  "titleHidden": true,
+  "notes": "Panel del radar meteorológico. Nombres del volcado de ToLiss; valores de cada posición por confirmar en Diagnóstico.",
+  "decorations": [
+    {
+      "type": "text",
+      "at": [
+        56,
+        5
+      ],
+      "text": "WEATHER RADAR",
+      "size": 5
+    }
+  ],
+  "controls": [
+    {
+      "id": "wxr.sys",
+      "label": "SYS",
+      "kind": "rotary",
+      "positions": [
+        "1",
+        "OFF",
+        "2"
+      ],
+      "size": 14,
+      "state": {
+        "dataref": "AirbusFBW/WXPowerSwitch",
+        "values": [
+          0,
+          1,
+          2
+        ]
+      },
+      "commands": {
+        "up": "toliss_airbus/WXRadarSwitchRight",
+        "down": "toliss_airbus/WXRadarSwitchLeft"
+      },
+      "verified": false,
+      "notes": "Se mueve con los comandos de ToLiss; valores de WXPowerSwitch supuestos.",
+      "x": 18,
+      "y": 22
+    },
+    {
+      "id": "wxr.pws",
+      "label": "PWS",
+      "kind": "toggle2",
+      "positions": [
+        "OFF",
+        "AUTO"
+      ],
+      "size": 11,
+      "state": {
+        "dataref": "AirbusFBW/WXSwitchPWS",
+        "values": [
+          0,
+          1
+        ]
+      },
+      "verified": false,
+      "notes": "Predictive windshear. Escribible en el volcado.",
+      "x": 50,
+      "y": 22
+    },
+    {
+      "id": "wxr.multiscan",
+      "label": "MULTISCAN",
+      "kind": "toggle2",
+      "positions": [
+        "MAN",
+        "AUTO"
+      ],
+      "size": 11,
+      "state": {
+        "dataref": "AirbusFBW/WXSwitchMultiscan",
+        "values": [
+          0,
+          1
+        ]
+      },
+      "verified": false,
+      "notes": "Escribible en el volcado; valores supuestos.",
+      "x": 88,
+      "y": 22
+    },
+    {
+      "id": "wxr.mode",
+      "label": "MODE",
+      "kind": "rotary",
+      "positions": [
+        "WX",
+        "WX+T",
+        "TURB",
+        "MAP"
+      ],
+      "size": 15,
+      "state": {
+        "dataref": "AirbusFBW/WXSwitchMode",
+        "values": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "labelBelow": true,
+      "verified": false,
+      "notes": "Escribible en el volcado; orden de valores supuesto.",
+      "x": 20,
+      "y": 66
+    },
+    {
+      "id": "wxr.gain",
+      "label": "GAIN",
+      "kind": "knob",
+      "positions": [
+        "CAL",
+        "MAX"
+      ],
+      "size": 18,
+      "state": {
+        "dataref": "AirbusFBW/WXRadarGain"
+      },
+      "range": {
+        "min": 0,
+        "max": 1
+      },
+      "readOnly": true,
+      "verified": false,
+      "notes": "Rango desconocido: bloqueado hasta confirmarlo en Diagnóstico.",
+      "x": 56,
+      "y": 66
+    },
+    {
+      "id": "wxr.tilt",
+      "label": "TILT",
+      "kind": "knob",
+      "positions": [
+        "-15",
+        "+15"
+      ],
+      "size": 18,
+      "state": {
+        "dataref": "AirbusFBW/WXRadarTilt"
+      },
+      "range": {
+        "min": -15,
+        "max": 15
+      },
+      "verified": false,
+      "notes": "Grados de inclinación de la antena; rango supuesto ±15.",
+      "x": 92,
+      "y": 66
+    }
+  ]
+}

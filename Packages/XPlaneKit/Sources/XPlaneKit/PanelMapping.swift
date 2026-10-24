@@ -111,8 +111,10 @@ public struct ControlDefinition: Codable, Identifiable, Sendable {
     public let labelBelow: Bool?
     /// Knob: value range. Display: unused.
     public let range: ValueRange?
-    /// Display: printf-style format, e.g. "%.1fV".
+    /// Display: printf-style format, e.g. "%.1fV"; "text" for strings; "baro" for a BARO window.
     public let format: String?
+    /// BARO window (`format` "baro"): `state` holds inHg; these flags pick STD and the hPa unit.
+    public let baro: BaroBinding?
     /// Shows state but refuses input. Used while a candidate mapping is being verified.
     public let readOnly: Bool?
     /// Grid placement (subpanels without `frame`).
@@ -174,11 +176,33 @@ public struct CommandBinding: Codable, Sendable {
     public let up: String?
     public let down: String?
     public let press: String?
+    /// Knob pulled (BARO: QNH). `press` is the push (BARO: STD).
+    public let pull: String?
     /// Dual knob: inner (small step) knob.
     public let upSmall: String?
     public let downSmall: String?
     /// Seconds to hold the command (X-Plane max 10). Default 0 = press and release.
     public let duration: Double?
+}
+
+/// Flags of a BARO reference window.
+public struct BaroBinding: Codable, Sendable {
+    /// Non-zero when the knob is pushed to STD.
+    public let std: String
+    /// Non-zero when the unit is hPa, zero for inHg.
+    public let unit: String
+
+    /// Window text: "Std", "1013" (hPa) or "29.92" (inHg); nil while values are missing.
+    public static func text(inHg: Double?, std: Double?, hectopascal: Double?) -> String? {
+        if let std, std > 0.5 { return "Std" }
+        guard let inHg, inHg > 0 else { return nil }
+        if let hectopascal, hectopascal > 0.5 {
+            return String(Int((inHg * hectopascalsPerInHg).rounded()))
+        }
+        return String(format: "%.2f", inHg)
+    }
+
+    public static let hectopascalsPerInHg = 33.8639
 }
 
 public struct Lamps: Codable, Sendable {

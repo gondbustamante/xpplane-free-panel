@@ -71,10 +71,11 @@ mapping/layout.json    Grupos de paneles y fases de vuelo (alimenta la barra lat
 mapping/overhead/      Un JSON por subpanel del overhead; otros grupos (pedestal…) van en carpetas hermanas
 mapping/fcu/           Mapeo del FCU (ventanas, ruedas y pulsadores), con esquema propio
 mapping/ecam/          ECAM Control Panel y MASTER WARN / CAUT
-mapping/pedestal/      RMP 1/2, speedbrake, flaps, ENG, RUD TRIM, PARKING BRK, ATC/TCAS, COCKPIT DOOR
+mapping/pedestal/      RMP 1/2, WX RADAR, speedbrake, flaps, ENG, RUD TRIM, PARKING BRK, ATC/TCAS, COCKPIT DOOR
+mapping/efis/          EFIS capitán y F/O del glareshield (BARO, FD, LS, ND)
 mapping/procedures/    Procedimientos normales y checklist del A320; los ítems ligados a mandos se marcan solos
 mapping/reference/     Volcado de datarefs y comandos de ToLiss (xp.py dump)
-tools/                 xp_relay.py (relay LAN), xp.py (CLI de descubrimiento), validate_mapping.py
+tools/                 xp_relay.py (relay LAN), xp.py (CLI de descubrimiento), validate_mapping.py, make_icon.py (icono y logo)
 docs/                  Arquitectura, roadmap y guía de mapeo
 project.yml            Especificación XcodeGen (el .xcodeproj no se versiona)
 ```

@@ -22,7 +22,7 @@ FCU_FORMATS = {"speed", "mach", "heading", "altitude", "verticalSpeed", "flightP
 FCU_BUTTON_KINDS = {"push", "toggle"}
 DUMP_PREFIXES = ("AirbusFBW/", "toliss_airbus/")
 # Panels drawn by the app itself, without a mapping file.
-BUILTIN_PANELS = {"mcdu"}
+BUILTIN_PANELS = {"mcdu", "camera"}
 
 
 # ---------------------------------------------------------------- overhead-style subpanels
@@ -81,8 +81,12 @@ def validate_subpanel(panel, errors):
             errors.append(f"{where}: una lever necesita al menos 2 posiciones")
         if control.get("kind") == "dualKnob":
             cmds = control.get("commands") or {}
-            if not all(k in cmds for k in ("up", "down", "upSmall", "downSmall")):
-                errors.append(f"{where}: un dualKnob necesita up, down, upSmall y downSmall")
+            if not all(k in cmds for k in ("up", "down")):
+                errors.append(f"{where}: un dualKnob necesita al menos up y down (upSmall/downSmall para el centro)")
+        if control.get("format") == "baro" and not control.get("baro"):
+            errors.append(f"{where}: el formato 'baro' necesita 'baro' con 'std' y 'unit'")
+        if control.get("baro") and not all(k in control["baro"] for k in ("std", "unit")):
+            errors.append(f"{where}: 'baro' necesita 'std' y 'unit'")
         kind = control.get("kind")
         positions = control.get("positions", [])
         if kind not in KINDS:
@@ -121,7 +125,11 @@ def names_in_subpanel(panel):
             lamp = (control.get("lamps") or {}).get(half)
             if lamp and lamp.get("dataref"):
                 datarefs.add(lamp["dataref"])
-        for key in ("up", "down", "press", "upSmall", "downSmall"):
+        for key in ("std", "unit"):
+            value = (control.get("baro") or {}).get(key)
+            if value:
+                datarefs.add(value)
+        for key in ("up", "down", "press", "pull", "upSmall", "downSmall"):
             value = (control.get("commands") or {}).get(key)
             if value:
                 commands.add(value)

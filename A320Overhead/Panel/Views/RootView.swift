@@ -7,6 +7,10 @@ struct RootView: View {
     @State private var showDiagnostics = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
+    private var baroPresented: Binding<Bool> {
+        Binding(get: { model.baroSheetPanelID != nil }, set: { if !$0 { model.baroSheetPanelID = nil } })
+    }
+
     private var tunerPresented: Binding<Bool> {
         Binding(get: { model.tuningRadioID != nil }, set: { if !$0 { model.tuningRadioID = nil } })
     }
@@ -31,6 +35,14 @@ struct RootView: View {
             .toolbarBackground(PanelTheme.cockpitBackground, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        if let baro = model.baroPanels.first { model.openBaroSheet(baro) }
+                    } label: {
+                        Label("BARO", systemImage: "gauge.with.dots.needle.33percent")
+                    }
+                    .disabled(model.baroPanels.isEmpty)
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         if let radio = model.radioPanels.first { model.openTuner(radio) }
@@ -63,6 +75,9 @@ struct RootView: View {
         }
         .sheet(isPresented: tunerPresented) {
             RadioTunerView()
+        }
+        .sheet(isPresented: baroPresented) {
+            BaroSheet()
         }
         .preferredColorScheme(.dark)
         .persistentSystemOverlays(.hidden)

@@ -409,16 +409,12 @@ private struct SidebarHeader: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(LinearGradient(colors: [Color(red: 0.16, green: 0.36, blue: 0.70), Color(red: 0.07, green: 0.18, blue: 0.40)],
-                                     startPoint: .topLeading, endPoint: .bottomTrailing))
-                .frame(width: 42, height: 42)
-                .overlay {
-                    Image(systemName: "airplane")
-                        .font(.system(size: 19, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .rotationEffect(.degrees(-45))
-                }
+            Image("Logo")
+                .resizable()
+                .interpolation(.high)
+                .frame(width: 44, height: 44)
+                .shadow(color: .black.opacity(0.35), radius: 3, y: 1)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
                 Text("ToLiss A320")
                     .font(.headline)

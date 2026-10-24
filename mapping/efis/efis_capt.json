@@ -1,0 +1,402 @@
+{
+  "id": "efis_capt",
+  "title": "EFIS CAPT",
+  "group": "efis",
+  "frame": {
+    "x": 6,
+    "y": 6,
+    "w": 168,
+    "h": 92
+  },
+  "order": 10,
+  "notes": "EFIS control panel del glareshield: BARO, FD/LS, filtros del ND, modo y escala, ADF/VOR. Nombres del volcado de ToLiss; valores y semántica según XSchenFly (devices/winwing_fcu.py), por confirmar en Diagnóstico.",
+  "decorations": [
+    {
+      "type": "line",
+      "points": [
+        [
+          4,
+          24
+        ],
+        [
+          4,
+          54
+        ],
+        [
+          56,
+          54
+        ],
+        [
+          56,
+          24
+        ]
+      ]
+    },
+    {
+      "type": "text",
+      "at": [
+        28,
+        58
+      ],
+      "text": "BARO",
+      "size": 5
+    },
+    {
+      "type": "text",
+      "at": [
+        102,
+        70
+      ],
+      "text": "ADF · OFF · VOR",
+      "size": 4.5
+    }
+  ],
+  "controls": [
+    {
+      "id": "efis_capt.baro_window",
+      "label": "QNH",
+      "kind": "display",
+      "positions": [
+        "",
+        ""
+      ],
+      "size": 30,
+      "format": "baro",
+      "state": {
+        "dataref": "sim/cockpit2/gauges/actuators/barometer_setting_in_hg_pilot"
+      },
+      "baro": {
+        "std": "AirbusFBW/BaroStdCapt",
+        "unit": "AirbusFBW/BaroUnitCapt"
+      },
+      "verified": false,
+      "notes": "inHg del simulador; STD y unidad de ToLiss. Toca para fijar el QNH tecleando.",
+      "x": 30,
+      "y": 13
+    },
+    {
+      "id": "efis_capt.baro_unit",
+      "label": "",
+      "kind": "rotary",
+      "positions": [
+        "inHg",
+        "hPa"
+      ],
+      "size": 10,
+      "state": {
+        "dataref": "AirbusFBW/BaroUnitCapt",
+        "values": [
+          0,
+          1
+        ]
+      },
+      "verified": false,
+      "notes": "Nombres del volcado de ToLiss; valores y semántica según XSchenFly (devices/winwing_fcu.py), por confirmar en Diagnóstico.",
+      "x": 12,
+      "y": 36
+    },
+    {
+      "id": "efis_capt.baro",
+      "label": "PULL QNH · PUSH STD",
+      "kind": "dualKnob",
+      "positions": [
+        "",
+        ""
+      ],
+      "size": 18,
+      "commands": {
+        "up": "sim/instruments/barometer_up",
+        "down": "sim/instruments/barometer_down",
+        "press": "toliss_airbus/capt_baro_push",
+        "pull": "toliss_airbus/capt_baro_pull"
+      },
+      "baro": {
+        "std": "AirbusFBW/BaroStdCapt",
+        "unit": "AirbusFBW/BaroUnitCapt"
+      },
+      "verified": false,
+      "notes": "Giro con sim/instruments/barometer_*: un clic es 0,01 inHg. Push/pull con los comandos de ToLiss. Nombres del volcado de ToLiss; valores y semántica según XSchenFly (devices/winwing_fcu.py), por confirmar en Diagnóstico.",
+      "x": 34,
+      "y": 38
+    },
+    {
+      "id": "efis_capt.fd",
+      "label": "FD",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 10.5,
+      "commands": {
+        "press": "toliss_airbus/fd1_push"
+      },
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "green",
+          "dataref": "AirbusFBW/FD1Engage"
+        }
+      },
+      "verified": true,
+      "notes": "Comando y luz en el volcado de ToLiss.",
+      "x": 12,
+      "y": 66
+    },
+    {
+      "id": "efis_capt.ls",
+      "label": "LS",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "key",
+      "size": 10.5,
+      "commands": {
+        "press": "toliss_airbus/dispcommands/CaptLSButtonPush"
+      },
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "green",
+          "dataref": "AirbusFBW/ILSonCapt"
+        }
+      },
+      "verified": true,
+      "notes": "Comando y luz en el volcado de ToLiss.",
+      "x": 30,
+      "y": 66
+    },
+    {
+      "id": "efis_capt.cstr",
+      "label": "CSTR",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "round",
+      "size": 9,
+      "commands": {
+        "press": "toliss_airbus/dispcommands/CaptCstrPushButton"
+      },
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "green",
+          "dataref": "AirbusFBW/NDShowCSTRCapt"
+        }
+      },
+      "verified": true,
+      "notes": "Comando y luz en el volcado de ToLiss.",
+      "x": 62,
+      "y": 13
+    },
+    {
+      "id": "efis_capt.wpt",
+      "label": "WPT",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "round",
+      "size": 9,
+      "commands": {
+        "press": "toliss_airbus/dispcommands/CaptWptPushButton"
+      },
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "green",
+          "dataref": "AirbusFBW/NDShowWPTCapt"
+        }
+      },
+      "verified": true,
+      "notes": "Comando y luz en el volcado de ToLiss.",
+      "x": 80,
+      "y": 13
+    },
+    {
+      "id": "efis_capt.vord",
+      "label": "VOR.D",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "round",
+      "size": 9,
+      "commands": {
+        "press": "toliss_airbus/dispcommands/CaptVorDPushButton"
+      },
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "green",
+          "dataref": "AirbusFBW/NDShowVORDCapt"
+        }
+      },
+      "verified": true,
+      "notes": "Comando y luz en el volcado de ToLiss.",
+      "x": 98,
+      "y": 13
+    },
+    {
+      "id": "efis_capt.ndb",
+      "label": "NDB",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "round",
+      "size": 9,
+      "commands": {
+        "press": "toliss_airbus/dispcommands/CaptNdbPushButton"
+      },
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "green",
+          "dataref": "AirbusFBW/NDShowNDBCapt"
+        }
+      },
+      "verified": true,
+      "notes": "Comando y luz en el volcado de ToLiss.",
+      "x": 116,
+      "y": 13
+    },
+    {
+      "id": "efis_capt.arpt",
+      "label": "ARPT",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "style": "round",
+      "size": 9,
+      "commands": {
+        "press": "toliss_airbus/dispcommands/CaptArptPushButton"
+      },
+      "lamps": {
+        "top": {
+          "text": "",
+          "color": "green",
+          "dataref": "AirbusFBW/NDShowARPTCapt"
+        }
+      },
+      "verified": true,
+      "notes": "Comando y luz en el volcado de ToLiss.",
+      "x": 134,
+      "y": 13
+    },
+    {
+      "id": "efis_capt.nd_mode",
+      "label": "MODE",
+      "kind": "rotary",
+      "positions": [
+        "LS",
+        "VOR",
+        "NAV",
+        "ARC",
+        "PLAN"
+      ],
+      "size": 15,
+      "state": {
+        "dataref": "AirbusFBW/NDmodeCapt",
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "labelBelow": true,
+      "verified": false,
+      "notes": "Nombres del volcado de ToLiss; valores y semántica según XSchenFly (devices/winwing_fcu.py), por confirmar en Diagnóstico.",
+      "x": 80,
+      "y": 46
+    },
+    {
+      "id": "efis_capt.nd_range",
+      "label": "RANGE",
+      "kind": "rotary",
+      "positions": [
+        "10",
+        "20",
+        "40",
+        "80",
+        "160",
+        "320"
+      ],
+      "size": 15,
+      "state": {
+        "dataref": "AirbusFBW/NDrangeCapt",
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "labelBelow": true,
+      "verified": false,
+      "notes": "Nombres del volcado de ToLiss; valores y semántica según XSchenFly (devices/winwing_fcu.py), por confirmar en Diagnóstico.",
+      "x": 124,
+      "y": 46
+    },
+    {
+      "id": "efis_capt.adf_vor1",
+      "label": "1",
+      "kind": "toggle3",
+      "positions": [
+        "ADF",
+        "OFF",
+        "VOR"
+      ],
+      "size": 11,
+      "state": {
+        "dataref": "sim/cockpit2/EFIS/EFIS_1_selection_pilot",
+        "values": [
+          0,
+          1,
+          2
+        ]
+      },
+      "verified": false,
+      "notes": "Dataref estándar de X-Plane. Nombres del volcado de ToLiss; valores y semántica según XSchenFly (devices/winwing_fcu.py), por confirmar en Diagnóstico.",
+      "x": 66,
+      "y": 76
+    },
+    {
+      "id": "efis_capt.adf_vor2",
+      "label": "2",
+      "kind": "toggle3",
+      "positions": [
+        "ADF",
+        "OFF",
+        "VOR"
+      ],
+      "size": 11,
+      "state": {
+        "dataref": "sim/cockpit2/EFIS/EFIS_2_selection_pilot",
+        "values": [
+          0,
+          1,
+          2
+        ]
+      },
+      "verified": false,
+      "notes": "Dataref estándar de X-Plane. Nombres del volcado de ToLiss; valores y semántica según XSchenFly (devices/winwing_fcu.py), por confirmar en Diagnóstico.",
+      "x": 140,
+      "y": 76
+    }
+  ]
+}

@@ -226,6 +226,17 @@ struct AbsoluteControlView: View {
         }
     }
 
+    /// Tapping a radio or BARO knob opens its sheet; other dual knobs click towards the tap.
+    private func knobTap(_ control: ControlDefinition) -> (() -> Void)? {
+        if let radio = model.radio(containing: control) {
+            return { model.openTuner(radio) }
+        }
+        if let baro = model.baroPanel(containing: control) {
+            return { model.openBaroSheet(baro) }
+        }
+        return nil
+    }
+
     @ViewBuilder
     private func body(for control: ControlDefinition) -> some View {
         switch control.kind {
@@ -249,7 +260,16 @@ struct AbsoluteControlView: View {
                 model.set(control, fraction: fraction)
             }
         case .display:
-            if let radio = model.radio(containing: control) {
+            if let baro = model.baroPanel(containing: control) {
+                // BARO window: opens the QNH sheet, where the setting is typed.
+                Button { model.openBaroSheet(baro) } label: {
+                    DisplayView(label: control.label, text: model.displayText(of: control),
+                                width: PanelMetrics.pt(control.size ?? PanelMetrics.displayWidth),
+                                height: PanelMetrics.pt(PanelMetrics.displayHeight))
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Abre el ajuste del QNH")
+            } else if let radio = model.radio(containing: control) {
                 // RMP windows open the tuner: typing a frequency beats turning the knob.
                 Button { model.openTuner(radio) } label: {
                     DisplayView(label: control.label, text: model.displayText(of: control),
@@ -272,7 +292,7 @@ struct AbsoluteControlView: View {
         case .dualKnob:
             DualKnobView(label: control.label, enabled: enabled, dimmed: dimmed,
                          diameter: PanelMetrics.pt(control.size ?? 22),
-                         onTap: model.radio(containing: control).map { radio -> () -> Void in { model.openTuner(radio) } }) { small, delta in
+                         onTap: knobTap(control)) { small, delta in
                 model.turn(control, small: small, delta: delta)
             }
         case .korry:

@@ -280,7 +280,7 @@ struct RadioTunerView: View {
 }
 
 /// Amber seven-segment-like window, as on the RMP.
-private struct FrequencyWindow: View {
+struct FrequencyWindow: View {
     let title: String
     let text: String
     var highlighted = false
@@ -334,7 +334,7 @@ private struct StepRow: View {
     }
 }
 
-private struct Keypad: View {
+struct Keypad: View {
     let onDigit: (Character) -> Void
     let onDelete: () -> Void
     let onClear: () -> Void

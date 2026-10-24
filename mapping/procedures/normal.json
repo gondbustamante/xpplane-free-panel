@@ -79,7 +79,7 @@
         { "challenge": "ATC", "response": "STBY",
           "checks": [ { "control": "atc.mode", "expect": ["STBY"] } ] },
         { "challenge": "MCDU", "response": "PREPARED", "note": "INIT, F-PLN, RAD NAV, PERF. Pulsa INIT y sigue las páginas.", "panels": ["mcdu"] },
-        { "challenge": "FCU / BARO REF", "response": "SET", "panels": ["fcu"] }
+        { "challenge": "FCU / BARO REF", "response": "SET", "panels": ["fcu", "efis_capt"] }
       ]
     },
     {
@@ -94,7 +94,7 @@
           "checks": [ { "control": "signs.seat_belts", "expect": ["ON"] } ] },
         { "challenge": "ADIRS", "response": "NAV",
           "checks": [ { "control": "adirs.ir1", "expect": ["NAV"] }, { "control": "adirs.ir2", "expect": ["NAV"] }, { "control": "adirs.ir3", "expect": ["NAV"] } ] },
-        { "challenge": "BARO REF", "response": "___ SET (BOTH)", "both": true, "panels": ["fcu"] }
+        { "challenge": "BARO REF", "response": "___ SET (BOTH)", "both": true, "panels": ["efis_capt"] }
       ]
     },
     {
@@ -190,7 +190,8 @@
           "note": "Pulsa F/CTL en el ECAM y mueve sidestick y pedales a fondo." },
         { "challenge": "FLAP SETTING", "response": "CONF ___ (BOTH)", "both": true,
           "checks": [ { "control": "flaps.lever", "expect": ["1", "2", "3"] } ] },
-        { "challenge": "RADAR & PRED W/S", "response": "ON & AUTO" },
+        { "challenge": "RADAR & PRED W/S", "response": "ON & AUTO",
+          "checks": [ { "control": "wxr.sys", "expect": ["1", "2"] }, { "control": "wxr.pws", "expect": ["AUTO"] } ] },
         { "challenge": "ENG MODE SEL", "response": "___",
           "checks": [ { "control": "eng.mode", "expect": ["NORM", "IGN/START"] } ] },
         { "challenge": "ECAM MEMO", "response": "TO NO BLUE", "panels": ["ecp"],
@@ -260,7 +261,7 @@
           "checks": [ { "control": "ext_lt.land_l", "expect": ["RETRACT"] }, { "control": "ext_lt.land_r", "expect": ["RETRACT"] } ] },
         { "challenge": "SEAT BELTS", "response": "AS RQRD", "optional": true,
           "checks": [ { "control": "signs.seat_belts", "expect": ["OFF"] } ] },
-        { "challenge": "BARO REF", "response": "STD", "note": "Al cruzar la altitud de transición.", "panels": ["fcu"] }
+        { "challenge": "BARO REF", "response": "STD", "note": "Al cruzar la altitud de transición.", "panels": ["efis_capt"] }
       ]
     },
     {
@@ -272,7 +273,7 @@
       "items": [
         { "challenge": "MCDU APPR", "response": "PREPARED", "note": "F-PLN, RAD NAV, PERF APPR con QNH, viento y mínimos.", "panels": ["mcdu"] },
         { "challenge": "AUTO BRAKE", "response": "AS RQRD" },
-        { "challenge": "BARO REF", "response": "SET", "note": "Al cruzar el nivel de transición.", "panels": ["fcu"] },
+        { "challenge": "BARO REF", "response": "SET", "note": "Al cruzar el nivel de transición.", "panels": ["efis_capt"] },
         { "challenge": "LAND LT", "response": "ON", "note": "Por debajo de FL100.",
           "checks": [ { "control": "ext_lt.land_l", "expect": ["ON"] }, { "control": "ext_lt.land_r", "expect": ["ON"] } ] },
         { "challenge": "SEAT BELTS", "response": "ON",
@@ -285,7 +286,7 @@
       "title": "APPROACH",
       "phase": "approach",
       "items": [
-        { "challenge": "BARO REF", "response": "___ SET (BOTH)", "both": true, "panels": ["fcu"] },
+        { "challenge": "BARO REF", "response": "___ SET (BOTH)", "both": true, "panels": ["efis_capt"] },
         { "challenge": "SEAT BELTS", "response": "ON",
           "checks": [ { "control": "signs.seat_belts", "expect": ["ON"] } ] },
         { "challenge": "MINIMUM", "response": "___", "panels": ["mcdu"] },
@@ -336,7 +337,8 @@
       "title": "AFTER LANDING",
       "phase": "approach",
       "items": [
-        { "challenge": "RADAR & PRED W/S", "response": "OFF" }
+        { "challenge": "RADAR & PRED W/S", "response": "OFF",
+          "checks": [ { "control": "wxr.sys", "expect": ["OFF"] }, { "control": "wxr.pws", "expect": ["OFF"] } ] }
       ]
     },
     {

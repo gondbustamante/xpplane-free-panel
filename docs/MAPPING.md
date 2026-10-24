@@ -66,7 +66,10 @@ Tipos de control añadidos para la geometría real:
 
 - `lever`: palanca de recorrido largo con N posiciones de abajo arriba (flaps, speedbrake). Se toca por encima o por debajo del mango, o se arrastra.
 - `dualKnob`: mando concéntrico. El aro exterior usa `commands.up`/`down` y el centro `commands.upSmall`/`downSmall` (frecuencia del RMP). Se toca a un lado o se arrastra.
+- `dualKnob`: si solo tiene `up`/`down`, el centro gira igual que el aro (BARO). `commands.pull` es el tirón del mando (BARO: QNH) y `press` el empuje (STD).
 - `display` con `"format": "text"` muestra un dataref `data` como texto (ventanas del RMP, código del transpondedor).
+- `display` con `"format": "baro"` es una ventana BARO: `state` es el reglaje en inHg y `"baro": { "std": …, "unit": … }` los flags de STD y hPa. Muestra «Std», «1013» o «29.92». Tocarla abre el ajuste del QNH.
+- Paneles con vista propia en `layout.json`: `fcu`, `mcdu` y `camera` (cámaras de X-Plane y X-Camera).
 
 Los subpaneles sin `frame` siguen usando `col`/`row` en rejilla y la disposición por columnas de `arrangements`.
 

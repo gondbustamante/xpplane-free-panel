@@ -103,7 +103,17 @@ Adelantado desde la fase 2 porque es el panel que más se toca en vuelo y reutil
 - [x] Mando doble del RMP: arrastre a derecha o arriba sube, etiqueta MHz/kHz mientras se gira, toque abre el sintonizador
 - [ ] Confirmar en el simulador el paso del centro del RMP (25 kHz u 8,33 kHz) y el tiempo de respuesta de la ventana STBY
 
-## Fase 2 · Overhead completo (2 a 3 meses) — en curso
+## Fase 1i · Logo, EFIS/BARO, radar y cámaras (2026-10-24)
+
+- [x] Icono de la app y logo en la barra lateral, generados con `tools/make_icon.py`
+- [x] Paneles EFIS capitán y F/O: BARO con ventana Std/hPa/inHg, FD, LS, filtros del ND, modo, escala y ADF/VOR
+- [x] Ajuste del BARO tecleando el QNH, STD/QNH, hPa/inHg, ajuste fino y copia al otro lado
+- [x] Panel del radar meteorológico en el pedestal: SYS, PWS, MULTISCAN, MODE, GAIN y TILT
+- [x] Panel de cámaras: vistas de X-Plane, vistas rápidas 1–10, mando para mover y girar, y vistas de X-Camera descubiertas en el simulador
+- [ ] Confirmar en Diagnóstico los valores de WXPowerSwitch, WXSwitchMode, NDmode/NDrange y el rango de GAIN
+- [ ] Comprobar con X-Camera instalado qué comandos registra y si conviene agruparlos por categoría
+
+ (2 a 3 meses) — en curso
 
 Hecho el 2026-10-22: barra lateral con fases de vuelo y grupos de paneles (`mapping/layout.json`), selector rotatorio, pulsador guardado, y **21 subpaneles del overhead con 124 controles**. Con el volcado real de ToLiss en `mapping/reference/`, los 74 datarefs y 101 comandos del mapeo están comprobados por nombre (el validador lo exige). 59 controles verificados; 65 pendientes de confirmar semántica de valores o índice, de los cuales 24 bloqueados como solo lectura.
 

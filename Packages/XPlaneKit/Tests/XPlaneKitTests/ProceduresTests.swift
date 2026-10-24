@@ -52,3 +52,23 @@ final class ProceduresTests: XCTestCase {
         XCTAssertEqual(panels, ["adirs", "mcdu", "flaps"])
     }
 }
+
+final class BaroBindingTests: XCTestCase {
+    func testWindowText() {
+        XCTAssertEqual(BaroBinding.text(inHg: 29.92, std: 1, hectopascal: 1), "Std")
+        XCTAssertEqual(BaroBinding.text(inHg: 29.92, std: 0, hectopascal: 1), "1013")
+        XCTAssertEqual(BaroBinding.text(inHg: 29.92, std: 0, hectopascal: 0), "29.92")
+        XCTAssertNil(BaroBinding.text(inHg: nil, std: 0, hectopascal: 0))
+    }
+
+    func testDecodesBaroAndPull() throws {
+        let json = """
+        { "id": "efis.baro", "label": "", "kind": "dualKnob", "positions": ["", ""],
+          "commands": { "up": "a", "down": "b", "press": "push", "pull": "pull" },
+          "baro": { "std": "AirbusFBW/BaroStdCapt", "unit": "AirbusFBW/BaroUnitCapt" } }
+        """
+        let control = try JSONDecoder().decode(ControlDefinition.self, from: Data(json.utf8))
+        XCTAssertEqual(control.commands?.pull, "pull")
+        XCTAssertEqual(control.baro?.unit, "AirbusFBW/BaroUnitCapt")
+    }
+}

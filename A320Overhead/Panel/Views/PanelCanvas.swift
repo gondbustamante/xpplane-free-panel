@@ -40,6 +40,9 @@ private struct StandardCanvas: View {
                     MCDUView()
                         .environment(\.backlight, model.backlight(forGroup: "mcdu"))
                 }
+                if items.contains(where: { if case .camera = $0 { return true } else { return false } }) {
+                    CameraView()
+                }
                 ForEach(model.layout.groups) { group in
                     let visible = model.visibleSubpanels(in: group.id)
                     if !visible.isEmpty {
@@ -109,6 +112,8 @@ private struct CustomPanelCanvas: View {
         case .mcdu:
             MCDUView()
                 .environment(\.backlight, model.backlight(forGroup: "mcdu"))
+        case .camera:
+            CameraView()
         case .subpanel(let subpanel):
             if subpanel.isAbsolute, let canvas = model.layout.canvas(for: subpanel.groupID) {
                 AbsoluteGroupView(canvas: canvas, panels: [subpanel])

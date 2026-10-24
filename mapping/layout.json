@@ -11,6 +11,11 @@
       "icon": "slider.horizontal.3"
     },
     {
+      "id": "efis",
+      "title": "EFIS · BARO",
+      "icon": "gauge.with.dots.needle.33percent"
+    },
+    {
       "id": "mcdu",
       "title": "MCDU",
       "icon": "keyboard"
@@ -24,6 +29,11 @@
       "id": "pedestal",
       "title": "Pedestal",
       "icon": "rectangle.bottomhalf.inset.filled"
+    },
+    {
+      "id": "camera",
+      "title": "Cámaras",
+      "icon": "video"
     }
   ],
   "phases": [
@@ -46,6 +56,7 @@
       "title": "Antes de arranque",
       "icon": "power",
       "subpanels": [
+        "efis_capt",
         "mcdu",
         "apu",
         "air_cond",
@@ -60,7 +71,8 @@
         "ecp",
         "park_brk",
         "rmp1",
-        "atc_tcas"
+        "atc_tcas",
+        "wxr"
       ]
     },
     {
@@ -81,7 +93,8 @@
         "eng_pedestal",
         "park_brk",
         "flaps",
-        "atc_tcas"
+        "atc_tcas",
+        "wxr"
       ]
     },
     {
@@ -90,6 +103,7 @@
       "icon": "airplane",
       "subpanels": [
         "fcu",
+        "efis_capt",
         "ext_lt",
         "signs",
         "anti_ice",
@@ -101,7 +115,8 @@
         "flaps",
         "speedbrake",
         "atc_tcas",
-        "rmp1"
+        "rmp1",
+        "wxr"
       ]
     },
     {
@@ -111,6 +126,7 @@
       "subpanels": [
         "mcdu",
         "fcu",
+        "efis_capt",
         "ext_lt",
         "signs",
         "anti_ice",
@@ -123,7 +139,8 @@
         "ecp",
         "flaps",
         "speedbrake",
-        "rmp1"
+        "rmp1",
+        "wxr"
       ]
     },
     {
@@ -260,6 +277,10 @@
     "pedestal": {
       "width": 380,
       "height": 200
+    },
+    "efis": {
+      "width": 374,
+      "height": 104
     }
   }
 }
