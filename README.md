@@ -39,7 +39,7 @@ xcodegen generate
 open A320Overhead.xcodeproj
 ```
 
-En Xcode: selecciona tu equipo en *Signing & Capabilities* (o rellena `DEVELOPMENT_TEAM` en `project.yml`), elige tu iPad como destino y ejecuta. Los tests de la capa de red se ejecutan con `cd Packages/XPlaneKit && swift test`.
+La firma sale de `Signing.xcconfig`, con el equipo del proyecto por defecto, así que `git pull` y `xcodegen generate` no la pierden. Para firmar con otro equipo, copia `Local.xcconfig.example` como `Local.xcconfig` y pon tu Team ID: ese archivo no se versiona. No elijas el equipo en *Signing & Capabilities*: ese cambio vive en el `.xcodeproj`, que se regenera. En Xcode elige tu iPad como destino y ejecuta. Los tests de la capa de red se ejecutan con `cd Packages/XPlaneKit && swift test`.
 
 **Sin simulador:** pulsa **Demo** en la barra superior (o activa *Modo demo* en el engranaje). La app simula el avión en el propio iPad a partir del mapeo: interruptores y pulsadores con sus leyendas, FCU, radios y MCDU responden como si hubiera X-Plane. Útil para probar la interfaz, enseñarla o desarrollar sin el PC. El estado arranca de cero en cada conexión.
 

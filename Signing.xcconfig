@@ -1,0 +1,6 @@
+// Firma de código. El equipo por defecto es el del proyecto. Para firmar con otro, copia
+// Local.xcconfig.example como Local.xcconfig y pon tu Team ID: no se versiona, así que
+// sobrevive a git pull y a xcodegen generate, y se aplica encima de este valor.
+CODE_SIGN_STYLE = Automatic
+DEVELOPMENT_TEAM = 6FGPAX2A5C
+#include? "Local.xcconfig"
