@@ -8,7 +8,7 @@ struct ConnectionBar: View {
 
     private var statusColor: Color {
         switch model.status {
-        case .connected: return .green
+        case .connected: return model.demoMode ? .cyan : .green
         case .connecting, .reconnecting: return .yellow
         case .disconnected: return .gray
         case .error: return .red
@@ -21,7 +21,7 @@ struct ConnectionBar: View {
     var body: some View {
         HStack(spacing: compact ? 8 : 12) {
             Circle().fill(statusColor).frame(width: 10, height: 10)
-            Text(model.status.label)
+            Text(model.statusLabel)
                 .font(.footnote)
                 .foregroundStyle(.white)
                 .lineLimit(1)
@@ -34,7 +34,7 @@ struct ConnectionBar: View {
             }
             Spacer(minLength: 8)
             if !compact {
-                Text("\(model.host):\(String(model.port))")
+                Text(model.demoMode ? "Simulación local" : "\(model.host):\(String(model.port))")
                     .font(.footnote.monospaced())
                     .foregroundStyle(.white.opacity(0.7))
                     .lineLimit(1)
@@ -53,6 +53,12 @@ struct ConnectionBar: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
+            if !model.status.isActive && !model.demoMode {
+                Button("Demo") { model.startDemo() }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .help("Probar el panel sin X-Plane")
+            }
             Button(model.status.isActive ? "Desconectar" : "Conectar") {
                 model.toggleConnection()
             }
