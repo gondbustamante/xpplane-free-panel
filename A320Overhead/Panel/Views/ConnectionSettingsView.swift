@@ -10,6 +10,11 @@ struct ConnectionSettingsView: View {
         @Bindable var model = model
         NavigationStack {
             Form {
+                Section {
+                    Toggle("Modo demo", isOn: $model.demoMode)
+                } footer: {
+                    Text("Simula el avión en el iPad, sin X-Plane ni red: los interruptores, el FCU, las radios y el MCDU responden como si hubiera simulador. Empieza siempre desde cero al conectar.")
+                }
                 Section("X-Plane") {
                     TextField("IP del PC con X-Plane", text: $host)
                         .keyboardType(.numbersAndPunctuation)
@@ -68,7 +73,7 @@ struct ConnectionSettingsView: View {
                     Button("Cerrar") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Guardar y conectar") {
+                    Button(model.demoMode ? "Iniciar demo" : "Guardar y conectar") {
                         model.host = host.trimmingCharacters(in: .whitespacesAndNewlines)
                         if let value = Int(port), (1...65535).contains(value) { model.port = value }
                         model.connect()
