@@ -201,6 +201,28 @@ Los formatos reproducen la ventana real: `250`, `.78`, `005`, `05000`, `+25oo` (
 2. Comprueba la escritura directa: `python3 tools/xp.py set sim/cockpit/autopilot/altitude 12000`. Si ToLiss la ignora o la deshace, cambia la estrategia en `fcu.json` (deja solo los comandos) y anótalo.
 3. Desde el iPad, la pantalla de diagnóstico ya lista todos los datarefs del FCU; los que cambian se iluminan.
 
+## Procedimientos y checklists (`mapping/procedures/*.json`)
+
+Cada archivo es un libro con una lista `procedures`, en orden de vuelo:
+
+```json
+{ "id": "cockpit_prep_flow", "kind": "flow", "title": "Preparación de cabina", "phase": "cold_dark",
+  "summary": "Una línea bajo el título",
+  "items": [
+    { "challenge": "ADIRS 1, 2, 3", "response": "NAV", "note": "Texto de ayuda",
+      "checks": [ { "control": "adirs.ir1", "expect": ["NAV"] }, { "control": "adirs.ir2", "expect": ["NAV"] } ] },
+    { "challenge": "MCDU", "response": "PREPARED", "panels": ["mcdu"] }
+  ] }
+```
+
+- `kind`: `flow` (lo que se hace, en orden de barrido) o `checklist` (la lista de lectura y confirmación).
+- `phase`: id de una fase de `layout.json`; agrupa la lista en la barra lateral.
+- `checks`: el ítem se marca solo cuando todos los mandos están en una de las posiciones de `expect`, con los nombres de `positions` del mando. Sin `checks`, se marca a mano.
+- `panels`: subpaneles, `fcu` o `mcdu` que el ítem necesita además de los de sus mandos. La vista del procedimiento muestra todos.
+- `optional`, `both` y `sub` (líneas del memo ECAM) son informativos.
+
+El validador comprueba que cada mando, posición, panel y fase existe.
+
 ## Procedimiento de verificación
 
 Se hace con el ToLiss cargado y, idealmente, en tierra con motores apagados. Hay dos caminos equivalentes.

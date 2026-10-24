@@ -218,6 +218,12 @@ struct AbsoluteControlView: View {
                     .allowsHitTesting(false)
             }
         }
+        // Overlay, not a ZStack layer: the ring must not change the control's size.
+        .overlay {
+            if model.highlightedControl == control.id {
+                LocateRing(diameter: PanelMetrics.pt(control.size ?? 22) + 16)
+            }
+        }
     }
 
     @ViewBuilder
@@ -673,5 +679,23 @@ struct DualKnobView: View {
         }
         .opacity(dimmed ? 0.5 : 1)
         .disabled(!enabled)
+    }
+}
+
+/// Pulsing ring around the control a checklist item points at.
+struct LocateRing: View {
+    let diameter: CGFloat
+
+    var body: some View {
+        Circle()
+            .stroke(PanelTheme.checklistCyan, lineWidth: 3)
+            .frame(width: diameter, height: diameter)
+            .shadow(color: PanelTheme.checklistCyan.opacity(0.8), radius: 6)
+            .phaseAnimator([false, true]) { ring, expanded in
+                ring.scaleEffect(expanded ? 1.3 : 0.95).opacity(expanded ? 0.4 : 1)
+            } animation: { _ in
+                .easeInOut(duration: 0.55)
+            }
+            .allowsHitTesting(false)
     }
 }

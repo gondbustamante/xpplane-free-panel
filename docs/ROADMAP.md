@@ -82,6 +82,15 @@ Adelantado desde la fase 2 porque es el panel que más se toca en vuelo y reutil
 - [x] Retroiluminación integral de leyendas, teclas y líneas en todos los paneles, ligada a los mandos de ToLiss o manual
 - [ ] Confirmar el rango 0…1 de los datarefs de iluminación integral en el simulador
 
+## Fase 1g · Procedimientos y barra lateral (2026-10-24)
+
+- [x] Procedimientos normales (flows) y checklist normal del A320 en `mapping/procedures/normal.json`, 22 listas de Cold & Dark a Securing
+- [x] Ítems detectados: se marcan solos al leer la posición de los mandos; el resto se marca a mano
+- [x] Columna de checklist junto a los paneles, con el ítem actual enmarcado, "mostrar en el panel" y "poner" para mover el mando
+- [x] Barra lateral por secciones plegables, reordenables y ocultables, con búsqueda y estado del simulador
+- [ ] Probar en el simulador la detección de los ítems con mandos aún sin verificar (bombas HYD, FCC)
+- [ ] Procedimientos anormales (QRH) en un segundo archivo
+
 ## Fase 2 · Overhead completo (2 a 3 meses) — en curso
 
 Hecho el 2026-10-22: barra lateral con fases de vuelo y grupos de paneles (`mapping/layout.json`), selector rotatorio, pulsador guardado, y **21 subpaneles del overhead con 124 controles**. Con el volcado real de ToLiss en `mapping/reference/`, los 74 datarefs y 101 comandos del mapeo están comprobados por nombre (el validador lo exige). 59 controles verificados; 65 pendientes de confirmar semántica de valores o índice, de los cuales 24 bloqueados como solo lectura.

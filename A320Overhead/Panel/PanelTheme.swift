@@ -18,6 +18,13 @@ enum PanelTheme {
     static let legend = Color.white
     static let unlitLegend = Color(white: 0.42)
     static let verificationBadge = Color(red: 1.0, green: 0.62, blue: 0.0)
+    // Electronic checklist, ECAM colours: cyan to do, green done, amber pending sense, and the
+    // dark surface of the display unit.
+    static let checklistCyan = Color(red: 0.25, green: 0.85, blue: 0.95)
+    static let checklistGreen = Color(red: 0.30, green: 0.90, blue: 0.40)
+    static let checklistAmber = Color(red: 1.0, green: 0.70, blue: 0.15)
+    static let checklistSurface = Color(red: 0.05, green: 0.06, blue: 0.08)
+    static let sidebarSurface = Color(red: 0.09, green: 0.10, blue: 0.12)
     /// LCD digits of the FCU windows (warm amber, like the ToLiss unit).
     static let fcuDigits = Color(red: 1.0, green: 0.66, blue: 0.18)
 

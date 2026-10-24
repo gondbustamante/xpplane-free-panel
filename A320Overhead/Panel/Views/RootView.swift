@@ -7,6 +7,10 @@ struct RootView: View {
     @State private var showDiagnostics = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
+    private var showChecklist: Binding<Bool> {
+        Binding(get: { model.showChecklist }, set: { model.showChecklist = $0 })
+    }
+
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             SidebarView()
@@ -22,6 +26,21 @@ struct RootView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(PanelTheme.cockpitBackground, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        withAnimation { model.showChecklist.toggle() }
+                    } label: {
+                        Label("Checklist", systemImage: model.showChecklist ? "checklist.checked" : "checklist")
+                    }
+                    .disabled(model.procedures.isEmpty)
+                }
+            }
+            // Checklist beside the panels; a sheet when the window is narrow.
+            .inspector(isPresented: showChecklist) {
+                ChecklistColumn()
+                    .inspectorColumnWidth(min: 320, ideal: 380, max: 480)
+            }
         }
         .navigationSplitViewStyle(.balanced)
         .sheet(isPresented: $showSettings) {

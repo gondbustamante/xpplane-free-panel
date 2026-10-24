@@ -6,21 +6,13 @@ struct ConnectionBar: View {
     @Binding var showSettings: Bool
     @Binding var showDiagnostics: Bool
 
-    private var statusColor: Color {
-        switch model.status {
-        case .connected: return .green
-        case .connecting, .reconnecting: return .yellow
-        case .disconnected: return .gray
-        case .error: return .red
-        }
-    }
 
     /// Narrow window (portrait on smaller iPads, Split View): drop the secondary items.
     private var compact: Bool { sizeClass == .compact }
 
     var body: some View {
         HStack(spacing: compact ? 8 : 12) {
-            Circle().fill(statusColor).frame(width: 10, height: 10)
+            Circle().fill(model.status.color).frame(width: 10, height: 10)
             Text(model.status.label)
                 .font(.footnote)
                 .foregroundStyle(.white)
@@ -72,6 +64,17 @@ struct ConnectionBar: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
+        }
+    }
+}
+
+extension PanelModel.Status {
+    var color: Color {
+        switch self {
+        case .connected: return .green
+        case .connecting, .reconnecting: return .yellow
+        case .disconnected: return .gray
+        case .error: return .red
         }
     }
 }

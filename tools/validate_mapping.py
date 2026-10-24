@@ -4,6 +4,7 @@
 mapping/layout.json        panel groups and flight phases
 mapping/<group>/*.json     one subpanel per file (toggle2 | toggle3 | korry | rotary controls)
 mapping/fcu/*.json         the Flight Control Unit (selectors + buttons), its own schema
+mapping/procedures/*.json  flows and checklists; sensed items must name real controls and positions
 mapping/reference/*.txt    xp.py dump of ToLiss; every AirbusFBW/ and toliss_airbus/ name must appear there
 """
 import glob
@@ -292,6 +293,65 @@ def validate_layout(root, panel_ids, panel_ids_by_group):
     return errors, group_ids
 
 
+PROCEDURE_KINDS = {"flow", "checklist"}
+
+
+def validate_procedures(root, controls, panel_ids):
+    """Flows and checklists: unique ids, known phases, real controls, positions and panels."""
+    errors, seen = [], set()
+    phases = set()
+    layout_path = os.path.join(root, "layout.json")
+    if os.path.exists(layout_path):
+        with open(layout_path, encoding="utf-8") as handle:
+            phases = {phase.get("id") for phase in json.load(handle).get("phases", [])}
+    paths = sorted(glob.glob(os.path.join(root, "procedures", "*.json")))
+    count = sensed = 0
+    for path in paths:
+        name = os.path.relpath(path)
+        with open(path, encoding="utf-8") as handle:
+            book = json.load(handle)
+        for procedure in book.get("procedures", []):
+            pid = procedure.get("id")
+            where = f"{name} · {pid}"
+            if not pid or pid in seen:
+                errors.append(f"{where}: id vacío o repetido")
+            seen.add(pid)
+            if procedure.get("kind") not in PROCEDURE_KINDS:
+                errors.append(f"{where}: 'kind' debe ser flow o checklist")
+            if not procedure.get("title"):
+                errors.append(f"{where}: falta 'title'")
+            if procedure.get("phase") and procedure["phase"] not in phases:
+                errors.append(f"{where}: la fase '{procedure['phase']}' no está en layout.json")
+            items = procedure.get("items", [])
+            if not items:
+                errors.append(f"{where}: sin ítems")
+            for index, item in enumerate(items, 1):
+                at = f"{where} #{index}"
+                count += 1
+                if not item.get("challenge") or not item.get("response"):
+                    errors.append(f"{at}: faltan 'challenge' o 'response'")
+                for panel in item.get("panels", []):
+                    if panel not in panel_ids:
+                        errors.append(f"{at}: el panel '{panel}' no existe")
+                checks = item.get("checks", [])
+                sensed += bool(checks)
+                for check in checks:
+                    control = controls.get(check.get("control"))
+                    if control is None:
+                        errors.append(f"{at}: el mando '{check.get('control')}' no existe")
+                        continue
+                    expect = check.get("expect") or []
+                    if not expect:
+                        errors.append(f"{at}: '{check['control']}' sin 'expect'")
+                    for position in expect:
+                        if position not in control.get("positions", []):
+                            errors.append(f"{at}: '{check['control']}' no tiene la posición '{position}'"
+                                          f" (posiciones: {control.get('positions')})")
+    if paths:
+        print(f"\nProcedimientos: {len(seen)} en {len(paths)} archivo(s), {count} ítems, {sensed} con detección automática.")
+    return errors
+
+
 def load_reference(root):
     """Names from mapping/reference/*.txt (xp.py dump), or None when no dump exists yet."""
     def read(name):
@@ -315,7 +375,8 @@ def print_rows(rows):
 def main():
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "mapping")
     files = sorted(f for f in glob.glob(os.path.join(root, "**", "*.json"), recursive=True)
-                   if os.path.basename(f) != "layout.json" and os.sep + "reference" + os.sep not in f)
+                   if os.path.basename(f) != "layout.json" and os.sep + "reference" + os.sep not in f
+                   and os.sep + "procedures" + os.sep not in f)
     if not files:
         sys.exit("No hay archivos de mapeo.")
     ref_datarefs, ref_commands = load_reference(root)
@@ -324,8 +385,11 @@ def main():
     panel_ids, groups_used, all_ids = set(), set(), {}
     panel_ids_by_group = {}
     used_datarefs, used_commands = set(), set()
+    controls = {}
     for path in files:
         panel, rows, errors, (datarefs, commands), group = validate(path)
+        for control in panel.get("controls", []):
+            controls[control.get("id")] = control
         panel_ids.add(panel.get("id"))
         groups_used.add(group)
         panel_ids_by_group.setdefault(group, set()).add(panel.get("id"))
@@ -347,6 +411,10 @@ def main():
     for group in groups_used - group_ids - {None}:
         layout_errors.append(f"layout.json: el grupo '{group}' no está declarado en 'groups'")
     for error in layout_errors:
+        print(f"ERROR: {error}")
+        failed = True
+
+    for error in validate_procedures(root, controls, panel_ids | BUILTIN_PANELS | {"fcu"}):
         print(f"ERROR: {error}")
         failed = True
 

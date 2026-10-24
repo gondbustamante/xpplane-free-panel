@@ -129,6 +129,7 @@ Decisión de uso: suscripciones y comandos mantenidos por WebSocket; escrituras 
 | D10 | **Rueda del FCU por comandos `sim/autopilot/*`**, entrada directa por escritura | Escribir siempre el dataref | Los comandos respetan el paso y la lógica de ToLiss (ALT 100/1000, Mach vs nudos). La escritura directa se reserva a teclear un valor exacto, donde el usuario quiere saltar sin dar 200 clics. |
 | D12 | **Geometría real por datos** (`frame`, `x`, `y`, `decorations`) en vez de rejillas | Rejillas automáticas | Un overhead al 95 % exige alineación exacta y los sinópticos verdes; medirlo sobre fotos y guardarlo como datos permite ajustarlo sin recompilar y reutilizar el motor para el pedestal. |
 | D11 | **Paneles con vista propia** se integran como `PanelItem` | Obligar a todo panel a ser una rejilla de controles | El FCU, y en el futuro el MCDU o el ECAM, no son rejillas. El canvas mezcla subpaneles genéricos y vistas propias; la barra lateral y las fases los tratan igual por id. |
+| D13 | **Procedimientos como datos** con ítems ligados a mandos del mapeo | Checklist en texto fijo, o ligada a datarefs | Reutiliza las posiciones que ya decodifica `PanelModel`: un ítem detectado no añade suscripciones y el validador comprueba que el mando y la posición existen. Las marcas manuales viven en el dispositivo. |
 
 ## 8. Riesgos abiertos
 

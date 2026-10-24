@@ -1,0 +1,428 @@
+{
+  "id": "normal",
+  "title": "Procedimientos normales",
+  "source": "Secuencia de procedimientos normales del A320 y checklist normal según el FBW A32NX Checklist (1 APR 2024). Solo para simulación.",
+  "procedures": [
+    {
+      "id": "power_up",
+      "kind": "flow",
+      "title": "Encendido",
+      "phase": "cold_dark",
+      "summary": "Del avión frío y oscuro a energía eléctrica y APU.",
+      "items": [
+        { "challenge": "BAT 1 + 2", "response": "AUTO", "note": "Antes, comprueba BAT > 25,5 V en el panel ELEC.",
+          "checks": [ { "control": "elec.bat1", "expect": ["ON"] }, { "control": "elec.bat2", "expect": ["ON"] } ] },
+        { "challenge": "EXT PWR", "response": "ON", "note": "Solo si la GPU está conectada (AVAIL). Si no, sigue con el APU.",
+          "optional": true,
+          "checks": [ { "control": "elec.ext_pwr", "expect": ["ON"] } ] },
+        { "challenge": "NAV & LOGO LT", "response": "ON",
+          "checks": [ { "control": "ext_lt.nav_logo", "expect": ["1", "2"] } ] },
+        { "challenge": "APU FIRE TEST", "response": "PERFORM", "panels": ["fire"] },
+        { "challenge": "APU MASTER SW", "response": "ON",
+          "checks": [ { "control": "apu.master", "expect": ["ON"] } ] },
+        { "challenge": "APU START", "response": "ON", "note": "Espera APU AVAIL en la página APU del ECAM.", "panels": ["apu"] },
+        { "challenge": "APU BLEED", "response": "ON", "note": "Con el APU disponible.",
+          "checks": [ { "control": "air_cond.apu_bleed", "expect": ["ON"] } ] }
+      ]
+    },
+    {
+      "id": "cockpit_prep_flow",
+      "kind": "flow",
+      "title": "Preparación de cabina",
+      "phase": "cold_dark",
+      "summary": "Barrido del overhead de izquierda a derecha y de arriba abajo, y después el pedestal.",
+      "items": [
+        { "challenge": "CREW SUPPLY", "response": "ON",
+          "checks": [ { "control": "oxy.crew_supply", "expect": ["ON"] } ] },
+        { "challenge": "ADIRS 1, 2, 3", "response": "NAV", "note": "La alineación tarda unos minutos; no muevas el avión.",
+          "checks": [ { "control": "adirs.ir1", "expect": ["NAV"] }, { "control": "adirs.ir2", "expect": ["NAV"] }, { "control": "adirs.ir3", "expect": ["NAV"] } ] },
+        { "challenge": "GPWS", "response": "ALL ON",
+          "checks": [ { "control": "gpws.sys", "expect": ["ON"] }, { "control": "gpws.terr", "expect": ["ON"] }, { "control": "gpws.gs_mode", "expect": ["ON"] }, { "control": "gpws.flap_mode", "expect": ["ON"] } ] },
+        { "challenge": "RCDR GND CTL", "response": "ON",
+          "checks": [ { "control": "rcdr.gnd_ctl", "expect": ["ON"] } ] },
+        { "challenge": "FUEL PUMPS", "response": "ON",
+          "checks": [ { "control": "fuel.l_pump1", "expect": ["ON"] }, { "control": "fuel.l_pump2", "expect": ["ON"] }, { "control": "fuel.ctr_pump1", "expect": ["ON"] }, { "control": "fuel.ctr_pump2", "expect": ["ON"] }, { "control": "fuel.r_pump1", "expect": ["ON"] }, { "control": "fuel.r_pump2", "expect": ["ON"] } ] },
+        { "challenge": "FUEL MODE SEL", "response": "AUTO",
+          "checks": [ { "control": "fuel.mode_sel", "expect": ["AUTO"] } ] },
+        { "challenge": "EXT LT STROBE", "response": "AUTO",
+          "checks": [ { "control": "ext_lt.strobe", "expect": ["AUTO"] } ] },
+        { "challenge": "SEAT BELTS", "response": "ON",
+          "checks": [ { "control": "signs.seat_belts", "expect": ["ON"] } ] },
+        { "challenge": "NO SMOKING", "response": "AUTO",
+          "checks": [ { "control": "signs.no_smoking", "expect": ["AUTO"] } ] },
+        { "challenge": "EMER EXIT LT", "response": "ARM",
+          "checks": [ { "control": "signs.emer_exit_lt", "expect": ["ARM"] } ] },
+        { "challenge": "PROBE / WINDOW HEAT", "response": "AUTO",
+          "checks": [ { "control": "anti_ice.probe_window", "expect": ["AUTO"] } ] },
+        { "challenge": "CABIN PRESS MODE SEL", "response": "AUTO",
+          "checks": [ { "control": "press.mode_sel", "expect": ["AUTO"] } ] },
+        { "challenge": "PACK 1 + 2", "response": "ON",
+          "checks": [ { "control": "air_cond.pack1", "expect": ["ON"] }, { "control": "air_cond.pack2", "expect": ["ON"] } ] },
+        { "challenge": "ENG BLEED 1 + 2", "response": "ON",
+          "checks": [ { "control": "air_cond.eng1_bleed", "expect": ["ON"] }, { "control": "air_cond.eng2_bleed", "expect": ["ON"] } ] },
+        { "challenge": "X BLEED", "response": "AUTO",
+          "checks": [ { "control": "air_cond.x_bleed", "expect": ["AUTO"] } ] },
+        { "challenge": "ANN LT", "response": "TEST, THEN BRT",
+          "checks": [ { "control": "int_lt.ann_lt", "expect": ["BRT"] } ] },
+        { "challenge": "RMP 1 + 2", "response": "ON",
+          "checks": [ { "control": "rmp1.power", "expect": ["ON"] }, { "control": "rmp2.power", "expect": ["ON"] } ] },
+        { "challenge": "ENG MASTER 1 + 2", "response": "OFF",
+          "checks": [ { "control": "eng.master1", "expect": ["OFF"] }, { "control": "eng.master2", "expect": ["OFF"] } ] },
+        { "challenge": "ENG MODE SEL", "response": "NORM",
+          "checks": [ { "control": "eng.mode", "expect": ["NORM"] } ] },
+        { "challenge": "PARKING BRAKE", "response": "ON",
+          "checks": [ { "control": "park.brake", "expect": ["ON"] } ] },
+        { "challenge": "SPEED BRAKE", "response": "RET",
+          "checks": [ { "control": "speedbrake.lever", "expect": ["RET"] } ] },
+        { "challenge": "FLAPS", "response": "0",
+          "checks": [ { "control": "flaps.lever", "expect": ["0"] } ] },
+        { "challenge": "ATC", "response": "STBY",
+          "checks": [ { "control": "atc.mode", "expect": ["STBY"] } ] },
+        { "challenge": "MCDU", "response": "PREPARED", "note": "INIT, F-PLN, RAD NAV, PERF. Pulsa INIT y sigue las páginas.", "panels": ["mcdu"] },
+        { "challenge": "FCU / BARO REF", "response": "SET", "panels": ["fcu"] }
+      ]
+    },
+    {
+      "id": "cockpit_prep_cl",
+      "kind": "checklist",
+      "title": "COCKPIT PREPARATION",
+      "phase": "cold_dark",
+      "items": [
+        { "challenge": "GEAR PINS and COVERS", "response": "REMOVED" },
+        { "challenge": "FUEL QUANTITY", "response": "___ KG/LB" },
+        { "challenge": "SEAT BELTS", "response": "ON",
+          "checks": [ { "control": "signs.seat_belts", "expect": ["ON"] } ] },
+        { "challenge": "ADIRS", "response": "NAV",
+          "checks": [ { "control": "adirs.ir1", "expect": ["NAV"] }, { "control": "adirs.ir2", "expect": ["NAV"] }, { "control": "adirs.ir3", "expect": ["NAV"] } ] },
+        { "challenge": "BARO REF", "response": "___ SET (BOTH)", "both": true, "panels": ["fcu"] }
+      ]
+    },
+    {
+      "id": "before_start_flow",
+      "kind": "flow",
+      "title": "Antes del arranque",
+      "phase": "before_start",
+      "summary": "Con la autorización IFR y la hoja de carga.",
+      "items": [
+        { "challenge": "T.O DATA (MCDU PERF)", "response": "INSERTED", "panels": ["mcdu"] },
+        { "challenge": "DOORS / WINDOWS", "response": "CLOSED" },
+        { "challenge": "FUEL PUMPS", "response": "ON",
+          "checks": [ { "control": "fuel.l_pump1", "expect": ["ON"] }, { "control": "fuel.l_pump2", "expect": ["ON"] }, { "control": "fuel.r_pump1", "expect": ["ON"] }, { "control": "fuel.r_pump2", "expect": ["ON"] } ] },
+        { "challenge": "APU BLEED", "response": "ON",
+          "checks": [ { "control": "air_cond.apu_bleed", "expect": ["ON"] } ] },
+        { "challenge": "XPDR CODE", "response": "SET", "panels": ["atc_tcas"] },
+        { "challenge": "ATC", "response": "AUTO",
+          "checks": [ { "control": "atc.mode", "expect": ["AUTO", "ON"] } ] },
+        { "challenge": "BEACON", "response": "ON", "note": "Al recibir la autorización de puesta en marcha o push.",
+          "checks": [ { "control": "ext_lt.beacon", "expect": ["ON"] } ] }
+      ]
+    },
+    {
+      "id": "before_start_cl",
+      "kind": "checklist",
+      "title": "BEFORE START",
+      "phase": "before_start",
+      "items": [
+        { "challenge": "PARKING BRAKE", "response": "___", "panels": ["park_brk"] },
+        { "challenge": "T.O SPEEDS & THRUST", "response": "___ (BOTH)", "both": true, "panels": ["mcdu"] },
+        { "challenge": "WINDOWS", "response": "CLOSED (BOTH)", "both": true },
+        { "challenge": "BEACON", "response": "ON",
+          "checks": [ { "control": "ext_lt.beacon", "expect": ["ON"] } ] }
+      ]
+    },
+    {
+      "id": "engine_start_flow",
+      "kind": "flow",
+      "title": "Arranque de motores",
+      "phase": "start_taxi",
+      "summary": "Motor 2 primero: el sistema amarillo da presión a los frenos.",
+      "items": [
+        { "challenge": "ENG MODE SEL", "response": "IGN/START",
+          "checks": [ { "control": "eng.mode", "expect": ["IGN/START"] } ] },
+        { "challenge": "ENG MASTER 2", "response": "ON", "note": "Vigila N2, EGT y el encendido en el ECAM superior.",
+          "checks": [ { "control": "eng.master2", "expect": ["ON"] } ] },
+        { "challenge": "ENG MASTER 1", "response": "ON", "note": "Cuando el motor 2 esté estabilizado.",
+          "checks": [ { "control": "eng.master1", "expect": ["ON"] } ] },
+        { "challenge": "ENG MODE SEL", "response": "NORM",
+          "checks": [ { "control": "eng.mode", "expect": ["NORM"] } ] },
+        { "challenge": "APU BLEED", "response": "OFF",
+          "checks": [ { "control": "air_cond.apu_bleed", "expect": ["OFF"] } ] },
+        { "challenge": "APU MASTER SW", "response": "OFF", "optional": true,
+          "checks": [ { "control": "apu.master", "expect": ["OFF"] } ] }
+      ]
+    },
+    {
+      "id": "after_start_flow",
+      "kind": "flow",
+      "title": "Después del arranque",
+      "phase": "start_taxi",
+      "items": [
+        { "challenge": "GROUND SPOILERS", "response": "ARM",
+          "checks": [ { "control": "speedbrake.lever", "expect": ["ARM"] } ] },
+        { "challenge": "RUD TRIM", "response": "ZERO", "panels": ["rud_trim"] },
+        { "challenge": "FLAPS", "response": "SET FOR T.O",
+          "checks": [ { "control": "flaps.lever", "expect": ["1", "2", "3"] } ] },
+        { "challenge": "PITCH TRIM", "response": "SET" },
+        { "challenge": "ECAM STATUS", "response": "CHECK", "panels": ["ecp"] },
+        { "challenge": "NOSE LT", "response": "TAXI",
+          "checks": [ { "control": "ext_lt.nose", "expect": ["TAXI"] } ] }
+      ]
+    },
+    {
+      "id": "after_start_cl",
+      "kind": "checklist",
+      "title": "AFTER START",
+      "phase": "start_taxi",
+      "items": [
+        { "challenge": "ANTI ICE", "response": "___", "panels": ["anti_ice"] },
+        { "challenge": "ECAM STATUS", "response": "CHECKED", "panels": ["ecp"] },
+        { "challenge": "PITCH TRIM", "response": "___ %" },
+        { "challenge": "RUDDER TRIM", "response": "NEUTRAL", "panels": ["rud_trim"] }
+      ]
+    },
+    {
+      "id": "taxi_cl",
+      "kind": "checklist",
+      "title": "TAXI",
+      "phase": "start_taxi",
+      "items": [
+        { "challenge": "FLIGHT CONTROLS", "response": "CHECKED (BOTH)", "both": true, "panels": ["ecp"],
+          "note": "Pulsa F/CTL en el ECAM y mueve sidestick y pedales a fondo." },
+        { "challenge": "FLAP SETTING", "response": "CONF ___ (BOTH)", "both": true,
+          "checks": [ { "control": "flaps.lever", "expect": ["1", "2", "3"] } ] },
+        { "challenge": "RADAR & PRED W/S", "response": "ON & AUTO" },
+        { "challenge": "ENG MODE SEL", "response": "___",
+          "checks": [ { "control": "eng.mode", "expect": ["NORM", "IGN/START"] } ] },
+        { "challenge": "ECAM MEMO", "response": "TO NO BLUE", "panels": ["ecp"],
+          "sub": ["AUTO BRK MAX", "SIGNS ON", "CABIN READY", "SPLRS ARM", "FLAPS TO", "TO CONFIG NORM"] },
+        { "challenge": "CABIN", "response": "READY" }
+      ]
+    },
+    {
+      "id": "line_up_flow",
+      "kind": "flow",
+      "title": "Alineación",
+      "phase": "takeoff_cruise",
+      "summary": "Al entrar en pista.",
+      "items": [
+        { "challenge": "STROBE", "response": "ON",
+          "checks": [ { "control": "ext_lt.strobe", "expect": ["ON"] } ] },
+        { "challenge": "LAND LT", "response": "ON",
+          "checks": [ { "control": "ext_lt.land_l", "expect": ["ON"] }, { "control": "ext_lt.land_r", "expect": ["ON"] } ] },
+        { "challenge": "NOSE LT", "response": "T.O",
+          "checks": [ { "control": "ext_lt.nose", "expect": ["T.O"] } ] },
+        { "challenge": "RWY TURN OFF", "response": "ON",
+          "checks": [ { "control": "ext_lt.rwy_turn_off", "expect": ["ON"] } ] },
+        { "challenge": "TCAS", "response": "TA/RA",
+          "checks": [ { "control": "tcas.mode", "expect": ["TA/RA"] } ] },
+        { "challenge": "PACKS", "response": "AS RQRD", "panels": ["air_cond"] }
+      ]
+    },
+    {
+      "id": "line_up_cl",
+      "kind": "checklist",
+      "title": "LINE-UP",
+      "phase": "takeoff_cruise",
+      "items": [
+        { "challenge": "T.O RWY", "response": "___ (BOTH)", "both": true },
+        { "challenge": "TCAS", "response": "___",
+          "checks": [ { "control": "tcas.mode", "expect": ["TA", "TA/RA"] } ] },
+        { "challenge": "PACKS 1 & 2", "response": "___", "panels": ["air_cond"] }
+      ]
+    },
+    {
+      "id": "after_takeoff_flow",
+      "kind": "flow",
+      "title": "Después del despegue",
+      "phase": "takeoff_cruise",
+      "summary": "Tren arriba con régimen positivo y flaps según el esquema de velocidades.",
+      "items": [
+        { "challenge": "LDG GEAR", "response": "UP" },
+        { "challenge": "FLAPS", "response": "0", "note": "A la velocidad S.",
+          "checks": [ { "control": "flaps.lever", "expect": ["0"] } ] },
+        { "challenge": "GROUND SPOILERS", "response": "DISARM",
+          "checks": [ { "control": "speedbrake.lever", "expect": ["RET"] } ] },
+        { "challenge": "NOSE LT", "response": "OFF",
+          "checks": [ { "control": "ext_lt.nose", "expect": ["OFF"] } ] },
+        { "challenge": "RWY TURN OFF", "response": "OFF",
+          "checks": [ { "control": "ext_lt.rwy_turn_off", "expect": ["OFF"] } ] },
+        { "challenge": "APU", "response": "OFF",
+          "checks": [ { "control": "apu.master", "expect": ["OFF"] } ] }
+      ]
+    },
+    {
+      "id": "climb_flow",
+      "kind": "flow",
+      "title": "Ascenso (FL100)",
+      "phase": "takeoff_cruise",
+      "items": [
+        { "challenge": "LAND LT", "response": "RETRACT",
+          "checks": [ { "control": "ext_lt.land_l", "expect": ["RETRACT"] }, { "control": "ext_lt.land_r", "expect": ["RETRACT"] } ] },
+        { "challenge": "SEAT BELTS", "response": "AS RQRD", "optional": true,
+          "checks": [ { "control": "signs.seat_belts", "expect": ["OFF"] } ] },
+        { "challenge": "BARO REF", "response": "STD", "note": "Al cruzar la altitud de transición.", "panels": ["fcu"] }
+      ]
+    },
+    {
+      "id": "descent_flow",
+      "kind": "flow",
+      "title": "Descenso y preparación",
+      "phase": "approach",
+      "summary": "Prepara la aproximación antes del punto de descenso.",
+      "items": [
+        { "challenge": "MCDU APPR", "response": "PREPARED", "note": "F-PLN, RAD NAV, PERF APPR con QNH, viento y mínimos.", "panels": ["mcdu"] },
+        { "challenge": "AUTO BRAKE", "response": "AS RQRD" },
+        { "challenge": "BARO REF", "response": "SET", "note": "Al cruzar el nivel de transición.", "panels": ["fcu"] },
+        { "challenge": "LAND LT", "response": "ON", "note": "Por debajo de FL100.",
+          "checks": [ { "control": "ext_lt.land_l", "expect": ["ON"] }, { "control": "ext_lt.land_r", "expect": ["ON"] } ] },
+        { "challenge": "SEAT BELTS", "response": "ON",
+          "checks": [ { "control": "signs.seat_belts", "expect": ["ON"] } ] }
+      ]
+    },
+    {
+      "id": "approach_cl",
+      "kind": "checklist",
+      "title": "APPROACH",
+      "phase": "approach",
+      "items": [
+        { "challenge": "BARO REF", "response": "___ SET (BOTH)", "both": true, "panels": ["fcu"] },
+        { "challenge": "SEAT BELTS", "response": "ON",
+          "checks": [ { "control": "signs.seat_belts", "expect": ["ON"] } ] },
+        { "challenge": "MINIMUM", "response": "___", "panels": ["mcdu"] },
+        { "challenge": "AUTO BRAKE", "response": "___" },
+        { "challenge": "ENG MODE SEL", "response": "AS RQRD",
+          "checks": [ { "control": "eng.mode", "expect": ["NORM", "IGN/START"] } ] }
+      ]
+    },
+    {
+      "id": "landing_cl",
+      "kind": "checklist",
+      "title": "LANDING",
+      "phase": "approach",
+      "items": [
+        { "challenge": "ECAM MEMO", "response": "LDG NO BLUE", "panels": ["ecp"],
+          "sub": ["LDG GEAR DN", "SIGNS ON", "CABIN READY", "SPLRS ARM", "FLAPS SET"] },
+        { "challenge": "CABIN", "response": "READY" }
+      ]
+    },
+    {
+      "id": "after_landing_flow",
+      "kind": "flow",
+      "title": "Después del aterrizaje",
+      "phase": "approach",
+      "summary": "Fuera de la pista activa.",
+      "items": [
+        { "challenge": "GROUND SPOILERS", "response": "DISARM",
+          "checks": [ { "control": "speedbrake.lever", "expect": ["RET"] } ] },
+        { "challenge": "FLAPS", "response": "0",
+          "checks": [ { "control": "flaps.lever", "expect": ["0"] } ] },
+        { "challenge": "STROBE", "response": "AUTO",
+          "checks": [ { "control": "ext_lt.strobe", "expect": ["AUTO"] } ] },
+        { "challenge": "LAND LT", "response": "RETRACT",
+          "checks": [ { "control": "ext_lt.land_l", "expect": ["RETRACT"] }, { "control": "ext_lt.land_r", "expect": ["RETRACT"] } ] },
+        { "challenge": "NOSE LT", "response": "TAXI",
+          "checks": [ { "control": "ext_lt.nose", "expect": ["TAXI"] } ] },
+        { "challenge": "TCAS", "response": "STBY",
+          "checks": [ { "control": "tcas.mode", "expect": ["STBY"] } ] },
+        { "challenge": "ENG MODE SEL", "response": "NORM",
+          "checks": [ { "control": "eng.mode", "expect": ["NORM"] } ] },
+        { "challenge": "APU", "response": "START", "optional": true,
+          "checks": [ { "control": "apu.master", "expect": ["ON"] } ] }
+      ]
+    },
+    {
+      "id": "after_landing_cl",
+      "kind": "checklist",
+      "title": "AFTER LANDING",
+      "phase": "approach",
+      "items": [
+        { "challenge": "RADAR & PRED W/S", "response": "OFF" }
+      ]
+    },
+    {
+      "id": "parking_flow",
+      "kind": "flow",
+      "title": "Parking",
+      "phase": "shutdown",
+      "summary": "En el puesto de estacionamiento.",
+      "items": [
+        { "challenge": "PARKING BRAKE", "response": "ON",
+          "checks": [ { "control": "park.brake", "expect": ["ON"] } ] },
+        { "challenge": "APU BLEED", "response": "ON", "optional": true,
+          "checks": [ { "control": "air_cond.apu_bleed", "expect": ["ON"] } ] },
+        { "challenge": "ENG MASTER 1 + 2", "response": "OFF",
+          "checks": [ { "control": "eng.master1", "expect": ["OFF"] }, { "control": "eng.master2", "expect": ["OFF"] } ] },
+        { "challenge": "SEAT BELTS", "response": "OFF",
+          "checks": [ { "control": "signs.seat_belts", "expect": ["OFF"] } ] },
+        { "challenge": "BEACON", "response": "OFF", "note": "Con los motores parados.",
+          "checks": [ { "control": "ext_lt.beacon", "expect": ["OFF"] } ] },
+        { "challenge": "NOSE LT", "response": "OFF",
+          "checks": [ { "control": "ext_lt.nose", "expect": ["OFF"] } ] },
+        { "challenge": "WING LT", "response": "OFF",
+          "checks": [ { "control": "ext_lt.wing", "expect": ["OFF"] } ] },
+        { "challenge": "FUEL PUMPS", "response": "OFF",
+          "checks": [ { "control": "fuel.l_pump1", "expect": ["OFF"] }, { "control": "fuel.l_pump2", "expect": ["OFF"] }, { "control": "fuel.ctr_pump1", "expect": ["OFF"] }, { "control": "fuel.ctr_pump2", "expect": ["OFF"] }, { "control": "fuel.r_pump1", "expect": ["OFF"] }, { "control": "fuel.r_pump2", "expect": ["OFF"] } ] },
+        { "challenge": "ATC", "response": "STBY",
+          "checks": [ { "control": "atc.mode", "expect": ["STBY"] } ] }
+      ]
+    },
+    {
+      "id": "parking_cl",
+      "kind": "checklist",
+      "title": "PARKING",
+      "phase": "shutdown",
+      "items": [
+        { "challenge": "PARK BRK or CHOCKS", "response": "SET",
+          "checks": [ { "control": "park.brake", "expect": ["ON"] } ] },
+        { "challenge": "ENGINES", "response": "OFF",
+          "checks": [ { "control": "eng.master1", "expect": ["OFF"] }, { "control": "eng.master2", "expect": ["OFF"] } ] },
+        { "challenge": "WINGS LIGHT", "response": "OFF",
+          "checks": [ { "control": "ext_lt.wing", "expect": ["OFF"] } ] },
+        { "challenge": "FUEL PUMPS", "response": "OFF",
+          "checks": [ { "control": "fuel.l_pump1", "expect": ["OFF"] }, { "control": "fuel.l_pump2", "expect": ["OFF"] }, { "control": "fuel.ctr_pump1", "expect": ["OFF"] }, { "control": "fuel.ctr_pump2", "expect": ["OFF"] }, { "control": "fuel.r_pump1", "expect": ["OFF"] }, { "control": "fuel.r_pump2", "expect": ["OFF"] } ] },
+        { "challenge": "YELLOW ELEC PUMP", "response": "OFF", "panels": ["hyd"] }
+      ]
+    },
+    {
+      "id": "securing_flow",
+      "kind": "flow",
+      "title": "Asegurar el avión",
+      "phase": "shutdown",
+      "summary": "Antes de abandonar el avión.",
+      "items": [
+        { "challenge": "ADIRS 1, 2, 3", "response": "OFF",
+          "checks": [ { "control": "adirs.ir1", "expect": ["OFF"] }, { "control": "adirs.ir2", "expect": ["OFF"] }, { "control": "adirs.ir3", "expect": ["OFF"] } ] },
+        { "challenge": "CREW SUPPLY", "response": "OFF",
+          "checks": [ { "control": "oxy.crew_supply", "expect": ["OFF"] } ] },
+        { "challenge": "EMER EXIT LT", "response": "OFF",
+          "checks": [ { "control": "signs.emer_exit_lt", "expect": ["OFF"] } ] },
+        { "challenge": "NO SMOKING", "response": "OFF",
+          "checks": [ { "control": "signs.no_smoking", "expect": ["OFF"] } ] },
+        { "challenge": "APU BLEED", "response": "OFF",
+          "checks": [ { "control": "air_cond.apu_bleed", "expect": ["OFF"] } ] },
+        { "challenge": "APU MASTER SW", "response": "OFF",
+          "checks": [ { "control": "apu.master", "expect": ["OFF"] } ] },
+        { "challenge": "NAV & LOGO LT", "response": "OFF",
+          "checks": [ { "control": "ext_lt.nav_logo", "expect": ["OFF"] } ] },
+        { "challenge": "EXT PWR", "response": "OFF", "optional": true,
+          "checks": [ { "control": "elec.ext_pwr", "expect": ["OFF"] } ] },
+        { "challenge": "BAT 1 + 2", "response": "OFF", "note": "Último paso: espera a que el APU termine de pararse.",
+          "checks": [ { "control": "elec.bat1", "expect": ["OFF"] }, { "control": "elec.bat2", "expect": ["OFF"] } ] }
+      ]
+    },
+    {
+      "id": "securing_cl",
+      "kind": "checklist",
+      "title": "SECURING THE AIRCRAFT",
+      "phase": "shutdown",
+      "items": [
+        { "challenge": "OXYGEN", "response": "OFF",
+          "checks": [ { "control": "oxy.crew_supply", "expect": ["OFF"] } ] },
+        { "challenge": "EMER EXIT LT", "response": "OFF",
+          "checks": [ { "control": "signs.emer_exit_lt", "expect": ["OFF"] } ] },
+        { "challenge": "BATTERIES", "response": "OFF",
+          "checks": [ { "control": "elec.bat1", "expect": ["OFF"] }, { "control": "elec.bat2", "expect": ["OFF"] } ] }
+      ]
+    }
+  ]
+}

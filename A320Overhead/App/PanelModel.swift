@@ -58,6 +58,8 @@ enum PanelSelection: Hashable {
     case subpanel(String)
     /// A panel built by the user.
     case custom(String)
+    /// The panels a flow or checklist works on, with the checklist beside them.
+    case procedure(String)
 
     var storageValue: String {
         switch self {
@@ -66,6 +68,7 @@ enum PanelSelection: Hashable {
         case .phase(let id): return "phase:\(id)"
         case .subpanel(let id): return "subpanel:\(id)"
         case .custom(let id): return "custom:\(id)"
+        case .procedure(let id): return "procedure:\(id)"
         }
     }
 
@@ -83,6 +86,8 @@ enum PanelSelection: Hashable {
             self = .subpanel(String(storageValue.dropFirst(9)))
         } else if storageValue.hasPrefix("custom:") {
             self = .custom(String(storageValue.dropFirst(7)))
+        } else if storageValue.hasPrefix("procedure:") {
+            self = .procedure(String(storageValue.dropFirst(10)))
         } else {
             self = .all
         }
@@ -144,6 +149,10 @@ final class PanelModel {
         didSet {
             UserDefaults.standard.set(selection.storageValue, forKey: Keys.selection)
             autoFit = true
+            if case .procedure(let id) = selection {
+                activeProcedureID = id
+                showChecklist = true
+            }
         }
     }
     /// Integral lighting of legends and keys.
@@ -194,6 +203,27 @@ final class PanelModel {
         didSet { UserDefaults.standard.set(extraDatarefs, forKey: Keys.extras) }
     }
 
+    /// Flows and checklists from `mapping/procedures`, in flight order.
+    private(set) var procedures: [Procedure] = []
+    /// Items ticked by hand, keyed "procedureID#itemIndex". Sensed items tick themselves.
+    private(set) var manualChecks: Set<String> {
+        didSet { UserDefaults.standard.set(Array(manualChecks), forKey: Keys.checks) }
+    }
+    /// Procedure shown in the checklist column.
+    private(set) var activeProcedureID: String? {
+        didSet { UserDefaults.standard.set(activeProcedureID, forKey: Keys.activeProcedure) }
+    }
+    /// The checklist column beside the panels is open.
+    var showChecklist: Bool {
+        didSet { UserDefaults.standard.set(showChecklist, forKey: Keys.showChecklist) }
+    }
+    /// Control pointed at from a checklist item; it pulses for a moment.
+    private(set) var highlightedControl: String?
+    @ObservationIgnored private var highlightTask: Task<Void, Never>?
+    /// Control id → definition and → subpanel id, built once from the mapping.
+    @ObservationIgnored private var controlsByID: [String: ControlDefinition] = [:]
+    @ObservationIgnored private var panelOfControl: [String: String] = [:]
+
     private(set) var status: Status = .disconnected
     private(set) var subpanels: [SubpanelDefinition] = []
     private(set) var layout: PanelLayout = .empty
@@ -231,6 +261,9 @@ final class PanelModel {
         static let customPanels = "custom.panels"
         static let backlightMode = "ui.backlightMode"
         static let backlightLevel = "ui.backlightLevel"
+        static let checks = "procedures.checks"
+        static let activeProcedure = "procedures.active"
+        static let showChecklist = "procedures.showChecklist"
     }
 
     init() {
@@ -245,6 +278,9 @@ final class PanelModel {
         mcduWideInLandscape = defaults.object(forKey: Keys.mcduWide) as? Bool ?? true
         backlightMode = BacklightMode(rawValue: defaults.string(forKey: Keys.backlightMode) ?? "") ?? .auto
         backlightManualLevel = defaults.object(forKey: Keys.backlightLevel) as? Double ?? 0.75
+        manualChecks = Set(defaults.stringArray(forKey: Keys.checks) ?? [])
+        activeProcedureID = defaults.string(forKey: Keys.activeProcedure)
+        showChecklist = defaults.bool(forKey: Keys.showChecklist)
         if let data = defaults.data(forKey: Keys.customPanels),
            let stored = try? JSONDecoder().decode([CustomPanel].self, from: data) {
             customPanels = stored
@@ -268,6 +304,20 @@ final class PanelModel {
             layout = try PanelLoader.loadLayout(in: directory)
         } catch {
             lastError = "Error leyendo mapping: \(error.localizedDescription)"
+        }
+        for panel in subpanels {
+            for control in panel.controls {
+                controlsByID[control.id] = control
+                panelOfControl[control.id] = panel.id
+            }
+        }
+        let proceduresDirectory = directory.appendingPathComponent("procedures", isDirectory: true)
+        if FileManager.default.fileExists(atPath: proceduresDirectory.path) {
+            do {
+                procedures = try ProcedureLoader.loadAll(in: proceduresDirectory)
+            } catch {
+                lastError = "Error leyendo mapping/procedures: \(error.localizedDescription)"
+            }
         }
         let fcuDirectory = directory.appendingPathComponent("fcu", isDirectory: true)
         if FileManager.default.fileExists(atPath: fcuDirectory.path) {
@@ -309,6 +359,11 @@ final class PanelModel {
         case .custom(let id):
             guard let panel = customPanels.first(where: { $0.id == id }) else { return [] }
             return panel.items.flatMap { wanted -> [PanelItem] in
+                if let items = special(wanted) { return items }
+                return subpanels.first { $0.id == wanted }.map { [.subpanel($0)] } ?? []
+            }
+        case .procedure(let id):
+            return panelIDs(forProcedure: id).flatMap { wanted -> [PanelItem] in
                 if let items = special(wanted) { return items }
                 return subpanels.first { $0.id == wanted }.map { [.subpanel($0)] } ?? []
             }
@@ -401,6 +456,151 @@ final class PanelModel {
     private func saveCustomPanels() {
         if let data = try? JSONEncoder().encode(customPanels) {
             UserDefaults.standard.set(data, forKey: Keys.customPanels)
+        }
+    }
+
+    // MARK: Procedures
+
+    func procedure(_ id: String?) -> Procedure? {
+        guard let id else { return nil }
+        return procedures.first { $0.id == id }
+    }
+
+    /// The procedure in the checklist column; the first one until the user picks another.
+    var activeProcedure: Procedure? {
+        procedure(activeProcedureID) ?? procedures.first
+    }
+
+    /// Panels a procedure works on; a procedure without any shows its flight phase.
+    func panelIDs(forProcedure id: String) -> [String] {
+        guard let procedure = procedure(id) else { return [] }
+        let ids = procedure.panels { self.panelOfControl[$0] }
+        if !ids.isEmpty { return ids }
+        return layout.phases.first { $0.id == procedure.phase }?.subpanels ?? []
+    }
+
+    /// Opens a procedure in the checklist column. While the canvas shows a procedure's panels it
+    /// follows; any other panel the user chose stays on screen.
+    func open(procedure id: String) {
+        activeProcedureID = id
+        showChecklist = true
+        if case .procedure = selection { selection = .procedure(id) }
+    }
+
+    /// Controls of a sensed item that are not where the item wants them, as "LABEL: POSITION".
+    func mismatches(in item: ProcedureItem) -> [String] {
+        (item.checks ?? []).compactMap { check in
+            guard let current = positionName(ofControl: check.control), !check.expect.contains(current),
+                  let control = controlsByID[check.control] else { return nil }
+            let label = control.label.replacingOccurrences(of: "\n", with: " ")
+            return "\(label.isEmpty ? check.control : label): \(current.isEmpty ? "—" : current)"
+        }
+    }
+
+    /// The control to point at for an item: the first one out of place, else the first checked.
+    func controlToLocate(for item: ProcedureItem) -> String? {
+        let checks = item.checks ?? []
+        return checks.first { check in
+            positionName(ofControl: check.control).map { !check.expect.contains($0) } ?? false
+        }?.control ?? checks.first?.control
+    }
+
+    func next(after procedure: Procedure) -> Procedure? {
+        guard let index = procedures.firstIndex(of: procedure), index + 1 < procedures.count else { return nil }
+        return procedures[index + 1]
+    }
+
+    /// Current position name of a control, nil while it is unknown or the sim is not connected.
+    func positionName(ofControl id: String) -> String? {
+        guard status == .connected, let control = controlsByID[id],
+              let index = positions[id], control.positions.indices.contains(index) else { return nil }
+        return control.positions[index]
+    }
+
+    func sensedState(of item: ProcedureItem) -> ProcedureCheckState {
+        item.sensedState(position: positionName(ofControl:))
+    }
+
+    private func checkKey(_ procedure: Procedure, _ index: Int) -> String {
+        "\(procedure.id)#\(index)"
+    }
+
+    func isTicked(_ procedure: Procedure, item index: Int) -> Bool {
+        manualChecks.contains(checkKey(procedure, index))
+    }
+
+    func isDone(_ procedure: Procedure, item index: Int) -> Bool {
+        guard procedure.items.indices.contains(index) else { return false }
+        return isTicked(procedure, item: index) || sensedState(of: procedure.items[index]) == .satisfied
+    }
+
+    func toggleTick(_ procedure: Procedure, item index: Int) {
+        let key = checkKey(procedure, index)
+        if manualChecks.contains(key) { manualChecks.remove(key) } else { manualChecks.insert(key) }
+    }
+
+    func progress(of procedure: Procedure) -> (done: Int, total: Int) {
+        (procedure.items.indices.filter { isDone(procedure, item: $0) }.count, procedure.items.count)
+    }
+
+    func isComplete(_ procedure: Procedure) -> Bool {
+        let progress = progress(of: procedure)
+        return progress.total > 0 && progress.done == progress.total
+    }
+
+    /// First item still to do: the one the checklist column frames.
+    func currentItem(in procedure: Procedure) -> Int? {
+        procedure.items.indices.first { !isDone(procedure, item: $0) }
+    }
+
+    func resetTicks(of procedure: Procedure) {
+        manualChecks = manualChecks.filter { !$0.hasPrefix("\(procedure.id)#") }
+    }
+
+    func resetAllTicks() {
+        manualChecks = []
+    }
+
+    /// Shows the control an item refers to: switches to its section when it is not on screen,
+    /// then makes it pulse.
+    func locate(control id: String) {
+        guard let panel = panelOfControl[id] else { return }
+        if !visibleItems.contains(where: { $0.id == panel }) { selection = .subpanel(panel) }
+        highlightedControl = id
+        highlightTask?.cancel()
+        highlightTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(2.5))
+            guard !Task.isCancelled, self?.highlightedControl == id else { return }
+            self?.highlightedControl = nil
+        }
+    }
+
+    /// Shows a panel an item refers to (MCDU, FCU, a section) when it is not on screen.
+    func locate(panel id: String) {
+        if !visibleItems.contains(where: { $0.id == id }) { selection = .subpanel(id) }
+    }
+
+    /// The sensed controls can be moved to the expected positions from the checklist.
+    func canApply(_ item: ProcedureItem) -> Bool {
+        guard sensedState(of: item) == .unsatisfied else { return false }
+        return (item.checks ?? []).allSatisfy { check in
+            controlsByID[check.control].map { isAvailable($0) } ?? false
+        }
+    }
+
+    /// Moves every sensed control that is out of place to the first expected position.
+    func apply(_ item: ProcedureItem) {
+        for check in item.checks ?? [] {
+            guard let control = controlsByID[check.control], isAvailable(control),
+                  let current = positionName(ofControl: check.control), !check.expect.contains(current),
+                  let wanted = check.expect.first, let target = control.positions.firstIndex(of: wanted) else { continue }
+            let delta = target - position(of: control)
+            switch control.kind {
+            case .korry:
+                press(control)
+            default:
+                move(control, by: delta)
+            }
         }
     }
 
@@ -552,6 +752,8 @@ final class PanelModel {
             return title(ofItem: id)
         case .custom(let id):
             return customPanels.first { $0.id == id }?.title ?? "Panel"
+        case .procedure(let id):
+            return procedure(id)?.title ?? "Procedimiento"
         }
     }
 
