@@ -6,14 +6,13 @@ struct ConnectionBar: View {
     @Binding var showSettings: Bool
     @Binding var showDiagnostics: Bool
 
-
     /// Narrow window (portrait on smaller iPads, Split View): drop the secondary items.
     private var compact: Bool { sizeClass == .compact }
 
     var body: some View {
         HStack(spacing: compact ? 8 : 12) {
-            Circle().fill(model.status.color).frame(width: 10, height: 10)
-            Text(model.status.label)
+            Circle().fill(model.statusColor).frame(width: 10, height: 10)
+            Text(model.statusLabel)
                 .font(.footnote)
                 .foregroundStyle(.white)
                 .lineLimit(1)
@@ -26,7 +25,7 @@ struct ConnectionBar: View {
             }
             Spacer(minLength: 8)
             if !compact {
-                Text("\(model.host):\(String(model.port))")
+                Text(model.demoMode ? "Simulación local" : "\(model.host):\(String(model.port))")
                     .font(.footnote.monospaced())
                     .foregroundStyle(.white.opacity(0.7))
                     .lineLimit(1)
@@ -45,6 +44,12 @@ struct ConnectionBar: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
+            if !model.status.isActive && !model.demoMode {
+                Button("Demo") { model.startDemo() }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .help("Probar el panel sin X-Plane")
+            }
             Button(model.status.isActive ? "Desconectar" : "Conectar") {
                 model.toggleConnection()
             }
@@ -68,10 +73,11 @@ struct ConnectionBar: View {
     }
 }
 
-extension PanelModel.Status {
-    var color: Color {
-        switch self {
-        case .connected: return .green
+extension PanelModel {
+    /// Status dot: green connected, cyan in demo mode, yellow connecting, red on error.
+    var statusColor: Color {
+        switch status {
+        case .connected: return demoMode ? .cyan : .green
         case .connecting, .reconnecting: return .yellow
         case .disconnected: return .gray
         case .error: return .red

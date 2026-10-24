@@ -167,7 +167,8 @@ public actor XPlaneClient {
     }
 
     /// Press-and-release (`duration` 0) or hold for `duration` seconds, then release.
-    public func fire(command name: String, duration: Double = 0) async throws {
+    /// Calls without `duration` go through `SimulatorConnection.fire(command:)`.
+    public func fire(command name: String, duration: Double) async throws {
         let info = try await command(named: name)
         try await rest.activate(commandID: info.id, duration: duration)
     }

@@ -41,6 +41,8 @@ open A320Overhead.xcodeproj
 
 En Xcode: selecciona tu equipo en *Signing & Capabilities* (o rellena `DEVELOPMENT_TEAM` en `project.yml`), elige tu iPad como destino y ejecuta. Los tests de la capa de red se ejecutan con `cd Packages/XPlaneKit && swift test`.
 
+**Sin simulador:** pulsa **Demo** en la barra superior (o activa *Modo demo* en el engranaje). La app simula el avión en el propio iPad a partir del mapeo: interruptores y pulsadores con sus leyendas, FCU, radios y MCDU responden como si hubiera X-Plane. Útil para probar la interfaz, enseñarla o desarrollar sin el PC. El estado arranca de cero en cada conexión.
+
 **3. En el iPad**
 
 Pulsa el engranaje, introduce la IP del PC y el puerto 8087, y *Guardar y conectar*. Con el ToLiss cargado, los interruptores reflejan el estado del avión.

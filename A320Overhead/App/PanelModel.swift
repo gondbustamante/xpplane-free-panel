@@ -95,7 +95,8 @@ enum PanelSelection: Hashable {
 }
 
 /// Single source of truth for the UI: connection status, loaded subpanels and the live
-/// position of every control. Owns the `XPlaneClient` and its update streams.
+/// position of every control. Owns the connection (`XPlaneClient`, or
+/// `DemoSimulator` in demo mode) and its update streams.
 @MainActor
 @Observable
 final class PanelModel {
@@ -129,6 +130,14 @@ final class PanelModel {
     }
     var port: Int {
         didSet { UserDefaults.standard.set(port, forKey: Keys.port) }
+    }
+    /// Demo mode: the panel runs against `DemoSimulator` instead of X-Plane, to try it without a
+    /// simulator. Changing it while connected reconnects in the new mode.
+    var demoMode: Bool {
+        didSet {
+            UserDefaults.standard.set(demoMode, forKey: Keys.demoMode)
+            if demoMode != oldValue, status.isActive { connect() }
+        }
     }
     var showVerificationBadges: Bool {
         didSet { UserDefaults.standard.set(showVerificationBadges, forKey: Keys.badges) }
@@ -242,15 +251,17 @@ final class PanelModel {
     private(set) var lastError: String?
     private(set) var lastCommandResult: String?
 
-    @ObservationIgnored private var client: XPlaneClient?
+    @ObservationIgnored private var client: (any SimulatorConnection)?
     @ObservationIgnored private var listeners: [Task<Void, Never>] = []
     @ObservationIgnored private var reconnectTask: Task<Void, Never>?
     @ObservationIgnored private var wantsConnection = false
     @ObservationIgnored private var reconnectAttempt = 0
+    @ObservationIgnored private var connectGeneration = 0
 
     private enum Keys {
         static let host = "xp.host"
         static let port = "xp.port"
+        static let demoMode = "xp.demoMode"
         // v2: badges are off by default since the overhead aims at realism; mapping work turns them on.
         static let badges = "ui.verificationBadges.v2"
         static let extras = "diag.extraDatarefs"
@@ -271,6 +282,7 @@ final class PanelModel {
         host = defaults.string(forKey: Keys.host) ?? "192.168.1.100"
         let storedPort = defaults.integer(forKey: Keys.port)
         port = storedPort == 0 ? 8087 : storedPort   // 8087 = xp_relay.py default
+        demoMode = defaults.bool(forKey: Keys.demoMode)
         showVerificationBadges = defaults.object(forKey: Keys.badges) as? Bool ?? false
         extraDatarefs = defaults.stringArray(forKey: Keys.extras) ?? []
         let storedUnit = defaults.integer(forKey: Keys.mcduUnit)
@@ -783,6 +795,8 @@ final class PanelModel {
     func connect() {
         wantsConnection = true
         reconnectAttempt = 0
+        reconnectTask?.cancel()
+        reconnectTask = nil
         Task { await self.performConnect() }
     }
 
@@ -791,6 +805,17 @@ final class PanelModel {
         reconnectTask?.cancel()
         reconnectTask = nil
         Task { await self.performDisconnect() }
+    }
+
+    /// Starts the demo from the connection bar, without going through the settings.
+    func startDemo() {
+        demoMode = true
+        connect()
+    }
+
+    /// Status for the connection bar: says when the panel is running on the demo.
+    var statusLabel: String {
+        demoMode && status == .connected ? "Modo demo · sin simulador" : status.label
     }
 
     func toggleConnection() {
@@ -802,21 +827,30 @@ final class PanelModel {
     }
 
     private func performConnect() async {
+        // A newer connect (e.g. switching demo mode, then "Iniciar demo") supersedes this one.
+        connectGeneration += 1
+        let generation = connectGeneration
         await performDisconnect()
+        guard generation == connectGeneration else { return }
         status = reconnectAttempt == 0 ? .connecting : .reconnecting(attempt: reconnectAttempt)
         lastError = nil
 
-        let client = XPlaneClient(host: host.trimmingCharacters(in: .whitespacesAndNewlines), port: port)
+        // A fresh demo per connection: its update stream ends with the listeners that read it.
+        let client: any SimulatorConnection = demoMode
+            ? DemoSimulator(subpanels: subpanels, fcu: fcu)
+            : XPlaneClient(host: host.trimmingCharacters(in: .whitespacesAndNewlines), port: port)
         self.client = client
         listen(to: client)
 
         do {
             try await client.connect()
             let missing = try await client.subscribe(datarefs: subscribedDatarefNames)
+            guard generation == connectGeneration else { return }
             unresolved = Set(missing)
             reconnectAttempt = 0
             status = .connected
         } catch {
+            guard generation == connectGeneration else { return }
             status = .error(describe(error))
             scheduleReconnect()
         }
@@ -845,7 +879,7 @@ final class PanelModel {
         }
     }
 
-    private func listen(to client: XPlaneClient) {
+    private func listen(to client: any SimulatorConnection) {
         listeners.append(Task { [weak self] in
             for await update in client.updates {
                 self?.apply(update)

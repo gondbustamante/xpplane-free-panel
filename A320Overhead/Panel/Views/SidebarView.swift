@@ -424,9 +424,9 @@ private struct SidebarHeader: View {
                     .font(.headline)
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(model.status.color)
+                        .fill(model.statusColor)
                         .frame(width: 7, height: 7)
-                    Text(model.status == .connected ? "X-Plane · \(model.host)" : model.status.label)
+                    Text(model.status == .connected && !model.demoMode ? "X-Plane · \(model.host)" : model.statusLabel)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)

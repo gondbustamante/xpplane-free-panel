@@ -82,7 +82,16 @@ Adelantado desde la fase 2 porque es el panel que más se toca en vuelo y reutil
 - [x] Retroiluminación integral de leyendas, teclas y líneas en todos los paneles, ligada a los mandos de ToLiss o manual
 - [ ] Confirmar el rango 0…1 de los datarefs de iluminación integral en el simulador
 
-## Fase 1g · Procedimientos y barra lateral (2026-10-24)
+## Fase 1g · Modo demo (2026-10-24)
+
+- [x] `DemoSimulator` en XPlaneKit detrás del protocolo `SimulatorConnection`, sin cambios en la capa real
+- [x] Interruptores, Korry con leyendas, palancas, ruedas, FCU, RMP y MCDU responden sin X-Plane
+- [x] Botón «Demo» en la barra y conmutador en Conexión; el estado se distingue en cian
+- [ ] Simular dependencias entre sistemas (p. ej. sin batería no hay luces), si aporta para demos
+
+**Aceptación:** sin red ni simulador, abrir la app, pulsar «Demo» y operar todos los paneles con respuesta visual coherente.
+
+## Fase 1h · Procedimientos y barra lateral (2026-10-24)
 
 - [x] Procedimientos normales (flows) y checklist normal del A320 en `mapping/procedures/normal.json`, 22 listas de Cold & Dark a Securing
 - [x] Ítems detectados: se marcan solos al leer la posición de los mandos; el resto se marca a mano
