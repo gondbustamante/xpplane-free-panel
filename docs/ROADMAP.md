@@ -99,6 +99,9 @@ Adelantado desde la fase 2 porque es el panel que más se toca en vuelo y reutil
 - [x] Barra lateral por secciones plegables, reordenables y ocultables, con búsqueda y estado del simulador
 - [ ] Probar en el simulador la detección de los ítems con mandos aún sin verificar (bombas HYD, FCC)
 - [ ] Procedimientos anormales (QRH) en un segundo archivo
+- [x] Sintonizador de radio: teclear la frecuencia y la app gira el mando del RMP en lazo cerrado hasta verla en STBY, con transferencia opcional, ajuste fino y recientes
+- [x] Mando doble del RMP: arrastre a derecha o arriba sube, etiqueta MHz/kHz mientras se gira, toque abre el sintonizador
+- [ ] Confirmar en el simulador el paso del centro del RMP (25 kHz u 8,33 kHz) y el tiempo de respuesta de la ventana STBY
 
 ## Fase 2 · Overhead completo (2 a 3 meses) — en curso
 

@@ -228,6 +228,14 @@ final class PanelModel {
     }
     /// Control pointed at from a checklist item; it pulses for a moment.
     private(set) var highlightedControl: String?
+    /// Radio panel (RMP) whose tuner is open.
+    var tuningRadioID: String?
+    private(set) var tuning: TuningState = .idle
+    /// Last frequencies tuned from the tuner, newest first, in kHz.
+    private(set) var recentFrequencies: [Int] {
+        didSet { UserDefaults.standard.set(recentFrequencies, forKey: Keys.recentFrequencies) }
+    }
+    @ObservationIgnored private var tuningTask: Task<Void, Never>?
     @ObservationIgnored private var highlightTask: Task<Void, Never>?
     /// Control id → definition and → subpanel id, built once from the mapping.
     @ObservationIgnored private var controlsByID: [String: ControlDefinition] = [:]
@@ -275,6 +283,7 @@ final class PanelModel {
         static let checks = "procedures.checks"
         static let activeProcedure = "procedures.active"
         static let showChecklist = "procedures.showChecklist"
+        static let recentFrequencies = "radio.recentFrequencies"
     }
 
     init() {
@@ -293,6 +302,7 @@ final class PanelModel {
         manualChecks = Set(defaults.stringArray(forKey: Keys.checks) ?? [])
         activeProcedureID = defaults.string(forKey: Keys.activeProcedure)
         showChecklist = defaults.bool(forKey: Keys.showChecklist)
+        recentFrequencies = (defaults.array(forKey: Keys.recentFrequencies) as? [Int]) ?? []
         if let data = defaults.data(forKey: Keys.customPanels),
            let stored = try? JSONDecoder().decode([CustomPanel].self, from: data) {
             customPanels = stored
@@ -1060,6 +1070,173 @@ final class PanelModel {
             return String(format: format, raw)
         }
         return raw > 0.5 ? (control.positions.last ?? "ON") : ""
+    }
+
+    // MARK: Radio tuning
+
+    /// The parts of a radio management panel, found in its subpanel: the two text windows
+    /// (ActiveWindowString / StandbyWindowString), the dual frequency knob, the transfer key
+    /// and the selector keys. Any subpanel with those pieces gets the tuner.
+    struct RadioPanel: Identifiable {
+        let id: String
+        let title: String
+        let active: ControlDefinition
+        let standby: ControlDefinition
+        let knob: ControlDefinition
+        let transfer: ControlDefinition?
+        /// VHF 1, VHF 2… keys that pick the radio being tuned.
+        let selectors: [ControlDefinition]
+    }
+
+    enum TuningState: Equatable {
+        case idle
+        case tuning(Int)
+        case done(Int)
+        case failed(String)
+    }
+
+    var radioPanels: [RadioPanel] {
+        subpanels.compactMap { radio($0.id) }
+    }
+
+    func radio(_ panelID: String?) -> RadioPanel? {
+        guard let panelID, let panel = subpanels.first(where: { $0.id == panelID }) else { return nil }
+        func window(_ fragment: String) -> ControlDefinition? {
+            panel.controls.first { $0.kind == .display && ($0.state?.dataref.contains(fragment) ?? false) }
+        }
+        guard let active = window("ActiveWindow"), let standby = window("StandbyWindow"),
+              let knob = panel.controls.first(where: { $0.kind == .dualKnob }) else { return nil }
+        let transfer = panel.controls.first { $0.commands?.press?.localizedCaseInsensitiveContains("swap") ?? false }
+        let selectors = panel.controls.filter { $0.kind == .korry && ($0.label.hasPrefix("VHF") || $0.label.hasPrefix("HF")) }
+        return RadioPanel(id: panel.id, title: displayTitle(of: panel), active: active, standby: standby,
+                          knob: knob, transfer: transfer, selectors: selectors)
+    }
+
+    /// Radio whose panel holds the control, for controls that open the tuner when tapped.
+    func radio(containing control: ControlDefinition) -> RadioPanel? {
+        guard let panel = panelOfControl[control.id], let radio = radio(panel) else { return nil }
+        return [radio.knob.id, radio.standby.id, radio.active.id].contains(control.id) ? radio : nil
+    }
+
+    /// Window text as a frequency in kHz ("121.800" → 121800), nil for courses, ADF or blank.
+    static func kilohertz(_ text: String) -> Int? {
+        let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard cleaned.contains("."), let value = Double(cleaned), value > 0 else { return nil }
+        return Int((value * 1000).rounded())
+    }
+
+    static func format(kilohertz: Int) -> String {
+        String(format: "%d.%03d", kilohertz / 1000, kilohertz % 1000)
+    }
+
+    func standbyKilohertz(_ radio: RadioPanel) -> Int? {
+        Self.kilohertz(displayText(of: radio.standby))
+    }
+
+    func openTuner(_ radio: RadioPanel) {
+        if case .tuning = tuning {} else { tuning = .idle }
+        tuningRadioID = radio.id
+    }
+
+    func swap(_ radio: RadioPanel) {
+        if let transfer = radio.transfer { press(transfer) }
+    }
+
+    /// One click of the outer ring (MHz) or the inner knob (kHz).
+    func step(_ radio: RadioPanel, megahertz: Bool, by delta: Int) {
+        turn(radio.knob, small: !megahertz, delta: delta)
+    }
+
+    /// Turns the knob until the standby window shows `target` (kHz), then transfers it to active
+    /// when asked. Closed loop: whole MHz on the outer ring, then the inner knob, measuring the
+    /// size of one inner click first, so it works with 25 kHz and 8.33 kHz spacing alike.
+    func tune(_ radio: RadioPanel, to target: Int, transfer: Bool) {
+        tuningTask?.cancel()
+        tuning = .tuning(target)
+        tuningTask = Task { [weak self] in
+            guard let self else { return }
+            let reached = await self.drive(radio, to: target)
+            guard !Task.isCancelled else { return }
+            guard let reached else {
+                self.tuning = .failed("La ventana STBY no muestra una frecuencia. Pulsa VHF 1 o VHF 2.")
+                return
+            }
+            if transfer, reached == target { self.swap(radio) }
+            self.tuning = reached == target ? .done(target) : .failed("Quedó en \(Self.format(kilohertz: reached)): el paso del mando no llega a esa frecuencia.")
+            self.remember(target)
+        }
+    }
+
+    func cancelTuning() {
+        tuningTask?.cancel()
+        tuning = .idle
+    }
+
+    private func remember(_ frequency: Int) {
+        recentFrequencies = Array(([frequency] + recentFrequencies.filter { $0 != frequency }).prefix(8))
+    }
+
+    /// Returns the standby frequency it ended on, nil when the window is not a frequency.
+    private func drive(_ radio: RadioPanel, to target: Int) async -> Int? {
+        guard var current = standbyKilohertz(radio) else { return nil }
+        var innerStep: Int?
+        for _ in 0..<6 {
+            // Outer ring: whole megahertz, one click per MHz.
+            let megahertz = target / 1000 - current / 1000
+            if megahertz != 0 {
+                current = await clicks(radio, megahertz: true, count: megahertz, from: current) ?? current
+                continue
+            }
+            // Inner knob: learn the click size, then go most of the way in one burst.
+            let difference = target % 1000 - current % 1000
+            guard difference != 0 else { return current }
+            guard let step = innerStep else {
+                let before = current
+                guard let after = await clicks(radio, megahertz: false, count: difference > 0 ? 1 : -1, from: current) else { return current }
+                var moved = after % 1000 - before % 1000
+                if moved > 500 { moved -= 1000 } else if moved < -500 { moved += 1000 }
+                guard moved != 0 else { return after }
+                innerStep = abs(moved)
+                current = after
+                continue
+            }
+            let count = Int((Double(difference) / Double(step)).rounded())
+            if count == 0 { return current }
+            guard let after = await clicks(radio, megahertz: false, count: count, from: current) else { return current }
+            current = after
+        }
+        return current
+    }
+
+    /// Fires `count` clicks (sign = direction) and waits for the standby window to settle.
+    private func clicks(_ radio: RadioPanel, megahertz: Bool, count: Int, from current: Int) async -> Int? {
+        guard let client, let commands = radio.knob.commands, count != 0 else { return nil }
+        let name = megahertz ? (count > 0 ? commands.up : commands.down)
+                             : (count > 0 ? commands.upSmall : commands.downSmall)
+        guard let name else { return nil }
+        do {
+            for _ in 0..<min(abs(count), 120) {
+                try await client.fire(command: name)
+            }
+        } catch {
+            lastError = describe(error)
+            return nil
+        }
+        // Wait for the change, then for 0.2 s without further changes (bursts arrive in pieces).
+        var last = current
+        var stableSince = Date()
+        let deadline = Date().addingTimeInterval(2)
+        while Date() < deadline, !Task.isCancelled {
+            try? await Task.sleep(for: .milliseconds(40))
+            guard let now = standbyKilohertz(radio) else { continue }
+            if now != last {
+                last = now
+                stableSince = Date()
+            } else if last != current, Date().timeIntervalSince(stableSince) > 0.2 {
+                break
+            }
+        }
+        return last
     }
 
     // MARK: FCU

@@ -7,6 +7,10 @@ struct RootView: View {
     @State private var showDiagnostics = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
+    private var tunerPresented: Binding<Bool> {
+        Binding(get: { model.tuningRadioID != nil }, set: { if !$0 { model.tuningRadioID = nil } })
+    }
+
     private var showChecklist: Binding<Bool> {
         Binding(get: { model.showChecklist }, set: { model.showChecklist = $0 })
     }
@@ -29,6 +33,14 @@ struct RootView: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
+                        if let radio = model.radioPanels.first { model.openTuner(radio) }
+                    } label: {
+                        Label("Radio", systemImage: "dot.radiowaves.left.and.right")
+                    }
+                    .disabled(model.radioPanels.isEmpty)
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
                         withAnimation { model.showChecklist.toggle() }
                     } label: {
                         Label("Checklist", systemImage: model.showChecklist ? "checklist.checked" : "checklist")
@@ -48,6 +60,9 @@ struct RootView: View {
         }
         .sheet(isPresented: $showDiagnostics) {
             DiagnosticsView()
+        }
+        .sheet(isPresented: tunerPresented) {
+            RadioTunerView()
         }
         .preferredColorScheme(.dark)
         .persistentSystemOverlays(.hidden)

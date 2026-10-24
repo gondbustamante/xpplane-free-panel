@@ -249,9 +249,20 @@ struct AbsoluteControlView: View {
                 model.set(control, fraction: fraction)
             }
         case .display:
-            DisplayView(label: control.label, text: model.displayText(of: control),
-                        width: PanelMetrics.pt(control.size ?? PanelMetrics.displayWidth),
-                        height: PanelMetrics.pt(PanelMetrics.displayHeight))
+            if let radio = model.radio(containing: control) {
+                // RMP windows open the tuner: typing a frequency beats turning the knob.
+                Button { model.openTuner(radio) } label: {
+                    DisplayView(label: control.label, text: model.displayText(of: control),
+                                width: PanelMetrics.pt(control.size ?? PanelMetrics.displayWidth),
+                                height: PanelMetrics.pt(PanelMetrics.displayHeight))
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Abre el sintonizador")
+            } else {
+                DisplayView(label: control.label, text: model.displayText(of: control),
+                            width: PanelMetrics.pt(control.size ?? PanelMetrics.displayWidth),
+                            height: PanelMetrics.pt(PanelMetrics.displayHeight))
+            }
         case .lever:
             LeverView(label: control.label, positions: control.positions, position: model.position(of: control),
                       enabled: enabled, dimmed: dimmed,
@@ -260,7 +271,8 @@ struct AbsoluteControlView: View {
             }
         case .dualKnob:
             DualKnobView(label: control.label, enabled: enabled, dimmed: dimmed,
-                         diameter: PanelMetrics.pt(control.size ?? 22)) { small, delta in
+                         diameter: PanelMetrics.pt(control.size ?? 22),
+                         onTap: model.radio(containing: control).map { radio -> () -> Void in { model.openTuner(radio) } }) { small, delta in
                 model.turn(control, small: small, delta: delta)
             }
         case .korry:
@@ -623,12 +635,19 @@ struct DualKnobView: View {
     let enabled: Bool
     let dimmed: Bool
     let diameter: CGFloat
+    /// Tap: opens the radio tuner when set; otherwise one click towards the tapped side.
+    var onTap: (() -> Void)? = nil
     let onTurn: (_ small: Bool, _ delta: Int) -> Void
 
     @State private var lastStep: Int = 0
     @State private var dragIsInner = false
+    @State private var dragging = false
+    /// Drawn rotation of each part, so a click is seen as well as heard in the sim.
+    @State private var outerAngle: Double = 0
+    @State private var innerAngle: Double = 0
 
-    private let clickDistance: CGFloat = 14
+    /// Finger travel per click. Right or up turns clockwise (increase), left or down decreases.
+    private let clickDistance: CGFloat = 12
 
     var body: some View {
         ZStack {
@@ -636,15 +655,25 @@ struct DualKnobView: View {
             Circle()
                 .fill(RadialGradient(colors: [Color(white: 0.30), Color(white: 0.10)],
                                      center: .center, startRadius: diameter * 0.2, endRadius: diameter * 0.55))
-                .overlay(Circle().stroke(Color.black.opacity(0.8), lineWidth: 1))
-            ForEach(0..<24, id: \.self) { index in
-                Rectangle().fill(Color.white.opacity(0.10)).frame(width: 1, height: diameter * 0.12)
-                    .offset(y: -diameter * 0.44).rotationEffect(.degrees(Double(index) * 15))
+                .overlay(Circle().stroke(dragging && !dragIsInner ? PanelTheme.checklistCyan : Color.black.opacity(0.8),
+                                         lineWidth: dragging && !dragIsInner ? 1.5 : 1))
+            ZStack {
+                ForEach(0..<24, id: \.self) { index in
+                    Rectangle().fill(Color.white.opacity(0.10)).frame(width: 1, height: diameter * 0.12)
+                        .offset(y: -diameter * 0.44).rotationEffect(.degrees(Double(index) * 15))
+                }
             }
-            // Inner cap.
+            .rotationEffect(.degrees(outerAngle))
+            // Inner cap with its index mark.
             Circle()
                 .fill(RadialGradient(colors: [Color(white: 0.92), Color(white: 0.66)],
                                      center: UnitPoint(x: 0.4, y: 0.35), startRadius: 1, endRadius: diameter * 0.32))
+                .overlay(alignment: .top) {
+                    Capsule().fill(Color(white: 0.35)).frame(width: max(diameter * 0.04, 1), height: diameter * 0.14)
+                        .padding(.top, diameter * 0.04)
+                }
+                .rotationEffect(.degrees(innerAngle))
+                .overlay(Circle().stroke(dragging && dragIsInner ? PanelTheme.checklistCyan : .clear, lineWidth: 1.5))
                 .frame(width: diameter * 0.56, height: diameter * 0.56)
                 .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
         }
@@ -654,31 +683,64 @@ struct DualKnobView: View {
         .gesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { value in
-                    if value.translation == .zero {
+                    if !dragging {
                         let center = CGPoint(x: diameter / 2, y: diameter / 2)
                         let dx = value.startLocation.x - center.x, dy = value.startLocation.y - center.y
-                        dragIsInner = (dx * dx + dy * dy).squareRoot() < diameter * 0.28
+                        // A little more than the drawn cap: on a small knob the centre is hard to hit.
+                        dragIsInner = (dx * dx + dy * dy).squareRoot() < diameter * 0.32
                         lastStep = 0
+                        dragging = true
                     }
-                    let step = Int(value.translation.width / clickDistance)
+                    let travel = value.translation.width - value.translation.height
+                    let step = Int(travel / clickDistance)
                     if step != lastStep {
-                        onTurn(dragIsInner, step - lastStep)
+                        click(step - lastStep)
                         lastStep = step
                     }
                 }
                 .onEnded { value in
-                    // A tap (no drag): one click towards the tapped side.
-                    if abs(value.translation.width) < 4 && abs(value.translation.height) < 4 {
-                        onTurn(dragIsInner, value.startLocation.x < diameter / 2 ? -1 : 1)
+                    let isTap = abs(value.translation.width) < 4 && abs(value.translation.height) < 4
+                    if isTap {
+                        if let onTap {
+                            onTap()
+                        } else {
+                            click(value.startLocation.x < diameter / 2 ? -1 : 1)
+                        }
                     }
                     lastStep = 0
+                    dragging = false
                 }
         )
+        .overlay(alignment: .top) {
+            if dragging {
+                Text(dragIsInner ? "kHz" : "MHz")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2)
+                    .background(Capsule().fill(PanelTheme.checklistCyan))
+                    .fixedSize()
+                    .offset(y: -16)
+                    .allowsHitTesting(false)
+            }
+        }
         .overlay(alignment: .bottom) {
             if !label.isEmpty { ControlLabel(text: label, size: 7).offset(y: 12) }
         }
         .opacity(dimmed ? 0.5 : 1)
         .disabled(!enabled)
+        .sensoryFeedback(.selection, trigger: outerAngle + innerAngle)
+        .accessibilityElement()
+        .accessibilityLabel(label.isEmpty ? "Selector de frecuencia" : label)
+        .accessibilityAdjustableAction { direction in
+            click(direction == .increment ? 1 : -1)
+        }
+    }
+
+    private func click(_ delta: Int) {
+        guard delta != 0 else { return }
+        if dragIsInner { innerAngle += Double(delta) * 15 } else { outerAngle += Double(delta) * 15 }
+        onTurn(dragIsInner, delta)
     }
 }
 
