@@ -222,9 +222,35 @@ Cada archivo es un libro con una lista `procedures`, en orden de vuelo:
 - `phase`: id de una fase de `layout.json`; agrupa la lista en la barra lateral.
 - `checks`: el ítem se marca solo cuando todos los mandos están en una de las posiciones de `expect`, con los nombres de `positions` del mando. Sin `checks`, se marca a mano.
 - `panels`: subpaneles, `fcu` o `mcdu` que el ítem necesita además de los de sus mandos. La vista del procedimiento muestra todos.
-- `optional`, `both` y `sub` (líneas del memo ECAM) son informativos.
+- `why`: el porqué del paso. Se muestra en el ítem actual y, en los demás, con el botón «¿Por qué?».
+- `optional`, `both` y `sub` (sublíneas: memo ECAM o pasos del MCDU) son informativos.
 
 El validador comprueba que cada mando, posición, panel y fase existe.
+
+## Guía del modo aprender (`mapping/guide/*.json`)
+
+Explicaciones que aparecen al tocar un mando con el modo aprender activo (birrete en la barra superior). Viven aparte del mapeo para que el contenido crezca sin tocar lo que habla con el simulador.
+
+```jsonc
+{
+  "id": "systems", "title": "Sistemas del A320",
+  "systems": [
+    { "id": "apu", "title": "APU", "panels": ["apu"],          // subpaneles, "fcu" o "mcdu" del sistema
+      "summary": "Qué hace el sistema", "details": ["Párrafos extra"], "ecam": "APU" }
+  ],
+  "explanations": [
+    { "controls": ["apu.master"], "title": "APU MASTER SW",     // varios ids si son idénticos (RMP 1 y 2)
+      "what": "Qué hace",
+      "positions": { "ON": "Qué significa ON", "OFF": "…" },    // nombres de `positions` del mando
+      "normal": "Cuándo se usa en operación normal",
+      "caution": "Errores típicos" }
+  ]
+}
+```
+
+- Los ids son los de los mandos del mapeo, los del FCU (`fcu.spd`, `fcu.ap1`…) y las teclas de página del MCDU como `mcdu.<sufijo del comando>` (`mcdu.Init`, `mcdu.Perf`, `mcdu.Fpln`…).
+- La hoja de cada mando enlaza además los procedimientos que lo usan (sus `checks`, o `panels` para el FCU y el MCDU).
+- Un mando sin entrada muestra sus posiciones y su sistema, y un aviso de que falta la explicación. El validador lista los que faltan, comprueba ids, posiciones y paneles, y no admite dos entradas para un mismo mando.
 
 ## Procedimiento de verificación
 

@@ -145,6 +145,14 @@ final class PanelModel {
     var showVerificationBadges: Bool {
         didSet { UserDefaults.standard.set(showVerificationBadges, forKey: Keys.badges) }
     }
+    /// Learn mode: touching a control explains it instead of moving it.
+    var learnMode: Bool {
+        didSet { UserDefaults.standard.set(learnMode, forKey: Keys.learnMode) }
+    }
+    /// Control whose explanation sheet is open (panel control id, FCU id or "mcdu.<key>").
+    var explainingControlID: String?
+    /// Explanations of systems and controls from `mapping/guide`.
+    private(set) var guide: Guide = .empty
     /// Zoom of the panel canvas (1 = native size). Pinch or the − / + buttons change it.
     var canvasScale: Double {
         didSet { UserDefaults.standard.set(canvasScale, forKey: Keys.scale) }
@@ -275,6 +283,7 @@ final class PanelModel {
         static let demoMode = "xp.demoMode"
         // v2: badges are off by default since the overhead aims at realism; mapping work turns them on.
         static let badges = "ui.verificationBadges.v2"
+        static let learnMode = "ui.learnMode"
         static let extras = "diag.extraDatarefs"
         static let selection = "ui.selection"
         static let scale = "ui.canvasScale"
@@ -297,6 +306,7 @@ final class PanelModel {
         port = storedPort == 0 ? 8087 : storedPort   // 8087 = xp_relay.py default
         demoMode = defaults.bool(forKey: Keys.demoMode)
         showVerificationBadges = defaults.object(forKey: Keys.badges) as? Bool ?? false
+        learnMode = defaults.bool(forKey: Keys.learnMode)
         extraDatarefs = defaults.stringArray(forKey: Keys.extras) ?? []
         let storedUnit = defaults.integer(forKey: Keys.mcduUnit)
         mcduUnit = storedUnit == 2 ? 2 : 1
@@ -345,6 +355,14 @@ final class PanelModel {
                 procedures = try ProcedureLoader.loadAll(in: proceduresDirectory)
             } catch {
                 lastError = "Error leyendo mapping/procedures: \(error.localizedDescription)"
+            }
+        }
+        let guideDirectory = directory.appendingPathComponent("guide", isDirectory: true)
+        if FileManager.default.fileExists(atPath: guideDirectory.path) {
+            do {
+                guide = try GuideLoader.load(in: guideDirectory)
+            } catch {
+                lastError = "Error leyendo mapping/guide: \(error.localizedDescription)"
             }
         }
         let fcuDirectory = directory.appendingPathComponent("fcu", isDirectory: true)
@@ -636,6 +654,47 @@ final class PanelModel {
         }
     }
 
+    // MARK: Learn mode
+
+    /// Opens the explanation sheet of a control.
+    func explain(control id: String) {
+        explainingControlID = id
+    }
+
+    func hasExplanation(_ id: String) -> Bool {
+        guide.explanation(for: id) != nil
+    }
+
+    func control(withID id: String) -> ControlDefinition? {
+        controlsByID[id]
+    }
+
+    /// Subpanel id of a control: its mapping file, or "fcu" / "mcdu" for those units.
+    func panelID(ofControl id: String) -> String? {
+        if let panel = panelOfControl[id] { return panel }
+        if fcu?.selectors.contains(where: { $0.id == id }) == true || fcu?.buttons.contains(where: { $0.id == id }) == true {
+            return "fcu"
+        }
+        return id.hasPrefix("mcdu.") ? "mcdu" : nil
+    }
+
+    func system(ofControl id: String) -> SystemGuide? {
+        panelID(ofControl: id).flatMap { guide.system(forPanel: $0) }
+    }
+
+    /// Procedures that move or check a control, in flight order. FCU and MCDU controls are not
+    /// sensed, so for them it is the procedures that bring up their unit.
+    func proceduresUsing(control id: String) -> [Procedure] {
+        let unit = panelID(ofControl: id).flatMap { $0 == "fcu" || $0 == "mcdu" ? $0 : nil }
+        return procedures.filter { procedure in
+            procedure.items.contains { item in
+                if (item.checks ?? []).contains(where: { $0.control == id }) { return true }
+                if let unit { return (item.panels ?? []).contains(unit) }
+                return false
+            }
+        }
+    }
+
     // MARK: Integral lighting
 
     /// Level (0…1) of the integral lighting for a panel group or built-in panel id.
@@ -712,7 +771,12 @@ final class PanelModel {
     }
 
     /// Presses an MCDU key: `key` is the ToLiss command suffix, e.g. "LSK1L", "KeyA", "DirTo".
+    /// In learn mode the page keys explain their page instead; data keys keep typing.
     func pressMCDU(_ key: String, duration: Double = 0) {
+        if learnMode, guide.explanation(for: "mcdu.\(key)") != nil {
+            explain(control: "mcdu.\(key)")
+            return
+        }
         guard let client, status == .connected else { return }
         let command = "AirbusFBW/MCDU\(mcduUnit)\(key)"
         Task {

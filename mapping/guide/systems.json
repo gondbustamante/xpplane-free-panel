@@ -1,0 +1,2294 @@
+{
+  "id": "systems",
+  "title": "Sistemas del A320",
+  "source": "Explicaciones propias para el modo aprender, redactadas a partir de la operación normal del A320 y del ToLiss. Solo para simulación; no sustituyen al FCOM.",
+  "systems": [
+    {
+      "id": "elec",
+      "title": "Eléctrico",
+      "panels": [
+        "elec",
+        "emer_elec"
+      ],
+      "summary": "Genera y reparte la energía eléctrica: corriente alterna (AC, 115 V) y continua (DC, 28 V).",
+      "details": [
+        "Fuentes por orden de prioridad: los generadores de los motores (GEN 1 y 2, movidos por las IDG), la toma de tierra (EXT PWR) y el generador del APU. En emergencia, la RAT mueve un generador de emergencia y quedan las baterías.",
+        "Cada generador alimenta su barra AC (AC BUS 1 y 2). Las barras esenciales (AC ESS, DC ESS) son las que mantienen vivo el avión en emergencia: pantallas del capitán, una radio, un MCDU.",
+        "En el sinóptico del panel las líneas verdes representan ese reparto. El BUS TIE une ambos lados cuando solo hay una fuente."
+      ],
+      "ecam": "ELEC"
+    },
+    {
+      "id": "apu",
+      "title": "APU",
+      "panels": [
+        "apu"
+      ],
+      "summary": "Pequeña turbina en la cola. En tierra da electricidad y aire (para cabina y para arrancar motores) sin necesidad de GPU ni de motores.",
+      "details": [
+        "El arranque tarda alrededor de un minuto. Cuando está lista se enciende AVAIL en verde.",
+        "Al apagarla sigue girando un rato para enfriarse (cool-down) antes de pararse del todo."
+      ],
+      "ecam": "APU"
+    },
+    {
+      "id": "adirs",
+      "title": "ADIRS",
+      "panels": [
+        "adirs"
+      ],
+      "summary": "Tres unidades (ADIRU) que dan al avión su actitud, rumbo, posición y datos de aire. Sin ellas no hay pantallas ni piloto automático.",
+      "details": [
+        "Cada ADIRU tiene dos partes: ADR (Air Data Reference: velocidad, altitud, temperatura, ángulo de ataque, desde las sondas) e IR (Inertial Reference: actitud, rumbo y posición, desde giróscopos y acelerómetros).",
+        "Las IR necesitan alinearse en tierra, con el avión quieto: miden la rotación de la Tierra para saber dónde está el norte. En el avión real tarda unos 10 minutos (más en latitudes altas).",
+        "La ADIRU 1 alimenta al capitán, la 2 al copiloto y la 3 queda de reserva y puede sustituir a cualquiera de las dos."
+      ]
+    },
+    {
+      "id": "fuel",
+      "title": "Combustible",
+      "panels": [
+        "fuel"
+      ],
+      "summary": "Lleva el combustible de los depósitos a los motores. Hay un depósito central y uno en cada ala; cada ala alimenta a su motor.",
+      "details": [
+        "Cada ala tiene dos bombas (1 y 2) y el central otras dos. Las bombas del central bombean con más presión, así que mientras funcionan se gasta primero el central y las alas se conservan, que es lo que alivia la estructura.",
+        "La válvula de alimentación cruzada (X FEED) une el lado izquierdo con el derecho."
+      ],
+      "ecam": "FUEL"
+    },
+    {
+      "id": "hyd",
+      "title": "Hidráulico",
+      "panels": [
+        "hyd"
+      ],
+      "summary": "Tres sistemas independientes (verde, azul y amarillo) mueven los mandos de vuelo, el tren, los frenos, los flaps y la dirección de la rueda de morro.",
+      "details": [
+        "Verde: bomba del motor 1. Amarillo: bomba del motor 2, una bomba eléctrica y una manual (para las puertas de carga). Azul: una bomba eléctrica y, en emergencia, la RAT.",
+        "La PTU transfiere potencia entre verde y amarillo sin mezclar líquido. Es el «ladrido» característico del A320 en tierra.",
+        "Con dos sistemas cualesquiera el avión se controla con normalidad."
+      ],
+      "ecam": "HYD"
+    },
+    {
+      "id": "fire",
+      "title": "Fuego de motores y APU",
+      "panels": [
+        "fire"
+      ],
+      "summary": "Detecta y extingue fuego en cada motor y en el APU. Cada motor tiene dos botellas de extintor; el APU, una.",
+      "details": [
+        "La detección usa dos lazos por motor: si los dos detectan calor (o uno, si el otro ha fallado) salta la alarma FIRE.",
+        "En tierra el APU se apaga y descarga su botella solo si detecta fuego."
+      ]
+    },
+    {
+      "id": "air_cond",
+      "title": "Aire acondicionado y sangrado",
+      "panels": [
+        "air_cond"
+      ],
+      "summary": "Toma aire caliente a presión de los motores o del APU (sangrado, «bleed») y lo enfría en dos packs para ventilar, presurizar y climatizar la cabina.",
+      "details": [
+        "Los dos packs reciben el aire por un colector con dos lados. La válvula X BLEED une ambos lados, por ejemplo para alimentar los dos packs desde el APU.",
+        "El aire de sangrado también arranca los motores y alimenta el antihielo de las alas.",
+        "La temperatura se ajusta por zonas (cabina de pilotos, cabina delantera y trasera) mezclando aire caliente (HOT AIR)."
+      ],
+      "ecam": "BLEED · COND"
+    },
+    {
+      "id": "anti_ice",
+      "title": "Antihielo",
+      "panels": [
+        "anti_ice",
+        "probe_window"
+      ],
+      "summary": "Evita la formación de hielo en las alas, en las tomas de los motores, en las sondas y en los parabrisas.",
+      "details": [
+        "Alas y motores usan aire caliente de sangrado. Sondas y ventanas usan calefacción eléctrica.",
+        "Hay condiciones de engelamiento con temperatura total (TAT) de 10 °C o menos y humedad visible: nubes, niebla, lluvia, nieve o agua en la pista."
+      ]
+    },
+    {
+      "id": "cabin_press",
+      "title": "Presurización",
+      "panels": [
+        "cabin_press"
+      ],
+      "summary": "Mantiene dentro una altitud de cabina cómoda (por debajo de unos 8.000 ft) regulando la válvula de salida de aire (outflow valve).",
+      "details": [
+        "En automático el controlador usa los datos del FMGS (aeropuerto de destino y elevación) para planificar el ascenso y el descenso de la cabina.",
+        "Por eso es importante tener bien introducido el destino en el MCDU."
+      ],
+      "ecam": "PRESS"
+    },
+    {
+      "id": "ext_lt",
+      "title": "Luces exteriores",
+      "panels": [
+        "ext_lt"
+      ],
+      "summary": "Hacen visible el avión y avisan de lo que va a hacer: moverse, arrancar, entrar en pista. También iluminan la pista o el rodaje.",
+      "details": [
+        "La secuencia típica: NAV desde el encendido, BEACON antes del pushback, NOSE TAXI al rodar, STROBE y LAND al entrar en pista. LAND se apaga al pasar FL100 en ascenso y se enciende al pasarlo en descenso."
+      ]
+    },
+    {
+      "id": "signs",
+      "title": "Señales de cabina",
+      "panels": [
+        "signs"
+      ],
+      "summary": "Carteles para el pasaje (cinturones, no fumar o no usar dispositivos) y alumbrado de emergencia de la cabina."
+    },
+    {
+      "id": "int_lt",
+      "title": "Iluminación interior",
+      "panels": [
+        "int_lt"
+      ],
+      "summary": "Luces de la cabina de pilotos y prueba de todas las lámparas de los paneles."
+    },
+    {
+      "id": "eng",
+      "title": "Motores",
+      "panels": [
+        "eng",
+        "eng_pedestal"
+      ],
+      "summary": "Arranque y control de los dos motores. El arranque es automático: lo gestiona el FADEC (el ordenador de cada motor).",
+      "details": [
+        "Secuencia normal: ENG MODE en IGN/START, MASTER 2 ON y, estabilizado, MASTER 1 ON (primero el 2 porque mueve el hidráulico amarillo, que alimenta el freno de aparcamiento). Después, ENG MODE en NORM.",
+        "El FADEC abre la válvula de arranque, da encendido y combustible en el momento justo, y aborta solo si detecta un problema."
+      ],
+      "ecam": "ENG"
+    },
+    {
+      "id": "flt_ctl",
+      "title": "Mandos de vuelo",
+      "panels": [
+        "flt_ctl_1",
+        "flt_ctl_2"
+      ],
+      "summary": "Ordenadores del fly-by-wire. El sidestick no mueve las superficies: envía órdenes a estos ordenadores, que las mueven y protegen el avión.",
+      "details": [
+        "ELAC (2): profundidad, alerones y estabilizador. SEC (3): spoilers y reserva de la profundidad. FAC (2): timón (amortiguador de guiñada, compensación, limitador) y cálculo de velocidades mínimas y de protección.",
+        "Si fallan suficientes ordenadores, el avión pasa de ley normal a ley alternativa o directa y se pierden protecciones."
+      ],
+      "ecam": "F/CTL"
+    },
+    {
+      "id": "evac",
+      "title": "Evacuación",
+      "panels": [
+        "evac"
+      ],
+      "summary": "Ordena y avisa de una evacuación del avión a la tripulación de cabina."
+    },
+    {
+      "id": "gpws",
+      "title": "GPWS",
+      "panels": [
+        "gpws"
+      ],
+      "summary": "Avisos de proximidad al terreno: descenso excesivo, terreno delante, por debajo de la senda, o cerca del suelo sin el tren o los flaps listos.",
+      "details": [
+        "La parte mejorada (TERR) compara la posición con una base de datos de terreno y avisa con antelación."
+      ]
+    },
+    {
+      "id": "rcdr",
+      "title": "Registradores",
+      "panels": [
+        "rcdr"
+      ],
+      "summary": "Grabador de voz de cabina (CVR) y de datos de vuelo (DFDR), las cajas negras."
+    },
+    {
+      "id": "oxygen",
+      "title": "Oxígeno",
+      "panels": [
+        "oxygen"
+      ],
+      "summary": "Oxígeno para la tripulación (botella con máscaras de colocación rápida) y para el pasaje (generadores químicos con máscaras que caen)."
+    },
+    {
+      "id": "calls",
+      "title": "Llamadas",
+      "panels": [
+        "calls"
+      ],
+      "summary": "Llamadas a la tripulación de cabina y al mecánico en tierra."
+    },
+    {
+      "id": "wiper",
+      "title": "Limpiaparabrisas",
+      "panels": [
+        "wiper_l",
+        "wiper_r"
+      ],
+      "summary": "Limpiaparabrisas y repelente de lluvia de cada lado."
+    },
+    {
+      "id": "ventilation",
+      "title": "Ventilación",
+      "panels": [
+        "ventilation"
+      ],
+      "summary": "Ventilación de la aviónica (los ordenadores necesitan refrigeración) y ventiladores de recirculación de la cabina."
+    },
+    {
+      "id": "cargo",
+      "title": "Bodegas",
+      "panels": [
+        "cargo_heat",
+        "cargo_smoke"
+      ],
+      "summary": "Calefacción y ventilación de las bodegas y detección y extinción de humo en ellas."
+    },
+    {
+      "id": "ecam",
+      "title": "ECAM",
+      "panels": [
+        "ecp",
+        "master"
+      ],
+      "summary": "El ECAM (Electronic Centralized Aircraft Monitor) son las dos pantallas centrales: arriba, motores y avisos con lo que hay que hacer; abajo, páginas de sistema (sinópticos).",
+      "details": [
+        "Ante una avería el ECAM muestra el aviso y la acción en azul. Se ejecuta, se borra con CLR y se pasa a la siguiente; al final, STATUS resume las limitaciones.",
+        "Rojo: peligro, acción inmediata (MASTER WARN). Ámbar: atención, acción no inmediata (MASTER CAUT)."
+      ]
+    },
+    {
+      "id": "efis",
+      "title": "EFIS",
+      "panels": [
+        "efis_capt",
+        "efis_fo"
+      ],
+      "summary": "Panel de cada piloto para elegir qué ven su PFD (pantalla de vuelo) y su ND (navegación), y para ajustar la referencia barométrica del altímetro."
+    },
+    {
+      "id": "fcu",
+      "title": "FCU",
+      "panels": [
+        "fcu"
+      ],
+      "summary": "Panel del piloto automático en el glareshield. Elige lo que hace el avión cuando no se vuela a mano.",
+      "details": [
+        "Cada mando tiene dos formas de usarse: empujar (PUSH) le da el control al FMGS, que sigue el plan de vuelo (modo gestionado, punto blanco en la ventana). Tirar (PULL) usa el valor de la ventana (modo seleccionado).",
+        "Regla de oro: lo que se pone en el FCU se comprueba en el FMA, la franja superior del PFD. El FMA es la única verdad de lo que está haciendo el avión."
+      ]
+    },
+    {
+      "id": "mcdu",
+      "title": "MCDU y FMGS",
+      "panels": [
+        "mcdu"
+      ],
+      "summary": "El MCDU es el teclado y la pantalla del FMGS, el sistema de gestión de vuelo: ruta, performance, combustible y radioayudas.",
+      "details": [
+        "Las 6 teclas de cada lado (LSK) seleccionan la línea de al lado. Se escribe en la línea de abajo (scratchpad) y se pulsa la LSK donde va el dato.",
+        "Colores: casillas ámbar (obligatorio), azul (modificable), verde (calculado, fijo), magenta (restricciones), blanco (títulos).",
+        "Orden de preparación profesional: DATA, INIT, F-PLN, SEC F-PLN, RAD NAV, INIT B o FUEL PRED, PERF. El procedimiento «Preparación del MCDU» lo explica paso a paso."
+      ]
+    },
+    {
+      "id": "radio",
+      "title": "Radios (RMP)",
+      "panels": [
+        "rmp1",
+        "rmp2"
+      ],
+      "summary": "Radio Management Panel: sintoniza las radios de comunicación (VHF, HF). En reserva, también las radioayudas.",
+      "details": [
+        "Ventana ACTIVE: frecuencia en uso. STBY: la que se prepara. La flecha (⇄) intercambia ambas.",
+        "Normalmente RMP 1 trabaja con VHF 1 (control) y RMP 2 con VHF 2 (121.5 de emergencia o compañía). VHF 3 suele ir a datos (ACARS)."
+      ]
+    },
+    {
+      "id": "atc_tcas",
+      "title": "Transpondedor y TCAS",
+      "panels": [
+        "atc_tcas"
+      ],
+      "summary": "El transpondedor responde al radar del control con el código asignado y la altitud. El TCAS lo usa para detectar otros aviones y dar avisos (TA) y órdenes de evitación (RA)."
+    },
+    {
+      "id": "cockpit_door",
+      "title": "Puerta de cabina",
+      "panels": [
+        "cockpit_door"
+      ],
+      "summary": "Puerta blindada de la cabina de pilotos."
+    },
+    {
+      "id": "flaps",
+      "title": "Flaps y speedbrake",
+      "panels": [
+        "flaps",
+        "speedbrake"
+      ],
+      "summary": "Dispositivos hipersustentadores (slats y flaps) para volar despacio en despegue y aterrizaje, y aerofrenos (spoilers) para frenar y descender.",
+      "details": [
+        "Cada posición de la palanca de flaps corresponde a una configuración (CONF): 1, 1+F, 2, 3 y FULL. Cada una tiene una velocidad máxima (VFE) que se ve en el PFD.",
+        "Al aterrizar, los ground spoilers armados se despliegan solos para pegar el avión a la pista."
+      ]
+    },
+    {
+      "id": "park_brk",
+      "title": "Freno de aparcamiento",
+      "panels": [
+        "park_brk"
+      ],
+      "summary": "Freno que mantiene el avión quieto en el aparcamiento con presión del sistema amarillo o de su acumulador."
+    },
+    {
+      "id": "rud_trim",
+      "title": "Compensación del timón",
+      "panels": [
+        "rud_trim"
+      ],
+      "summary": "Ajusta la posición neutra del timón de dirección."
+    },
+    {
+      "id": "wxr",
+      "title": "Radar meteorológico",
+      "panels": [
+        "wxr"
+      ],
+      "summary": "Detecta precipitación y turbulencia delante del avión y avisa de cizalladura (windshear) en despegue y aproximación."
+    }
+  ],
+  "explanations": [
+    {
+      "controls": [
+        "elec.bat1",
+        "elec.bat2"
+      ],
+      "title": "BAT 1 / BAT 2",
+      "what": "Conecta cada batería a la barra de baterías. Son la primera fuente al encender el avión frío y la última reserva en emergencia.",
+      "positions": {
+        "ON": "AUTO en el avión real (luz apagada): la batería se conecta cuando hace falta, para cargarse, arrancar el APU o alimentar las barras esenciales.",
+        "OFF": "Batería desconectada (OFF blanco). Con ambas en OFF y sin otra fuente, el avión se apaga."
+      },
+      "normal": "En AUTO (ON) desde el encendido hasta asegurar el avión. Es lo primero que se toca en Cold & Dark y lo último al irse.",
+      "caution": "En tierra, solo con baterías, la autonomía es corta (unos 30 min). Conecta la GPU o arranca el APU cuanto antes. Al apagar, espera a que la toma de aire del APU se cierre antes de quitar las baterías."
+    },
+    {
+      "controls": [
+        "elec.bat1_v",
+        "elec.bat2_v"
+      ],
+      "title": "Voltímetro BAT",
+      "what": "Voltímetro de cada batería.",
+      "normal": "Antes de conectar las baterías comprueba que marcan más de 25,5 V. Si no, hay que cargarlas con la GPU o el APU antes de volar."
+    },
+    {
+      "controls": [
+        "elec.ext_pwr"
+      ],
+      "title": "EXT PWR",
+      "what": "Conecta la toma de corriente de tierra (GPU) a la red del avión.",
+      "positions": {
+        "OFF": "Si la GPU está enchufada y en buen estado se ve AVAIL verde: disponible, pero no alimenta.",
+        "ON": "ON azul: la GPU alimenta las barras AC. Los generadores de los motores tienen prioridad sobre ella; ella, sobre el APU."
+      },
+      "normal": "En el aparcamiento, con la GPU conectada: EXT PWR ON para no gastar combustible con el APU. Se desconecta antes del pushback, cuando el APU ya da corriente.",
+      "caution": "Con EXT PWR ON el generador del APU no alimenta aunque esté en marcha: es normal, la GPU tiene prioridad."
+    },
+    {
+      "controls": [
+        "elec.gpu"
+      ],
+      "title": "GND PWR (simulador)",
+      "what": "Atajo de la app para conectar o retirar la unidad de tierra (GPU), como el menú ISCS de ToLiss. No existe en el avión real: en la realidad lo hace el personal de tierra.",
+      "positions": {
+        "OFF": "GPU retirada.",
+        "ON": "GPU conectada: EXT PWR mostrará AVAIL."
+      },
+      "normal": "Conéctala al llegar al aparcamiento y retírala antes del pushback."
+    },
+    {
+      "controls": [
+        "elec.gen1",
+        "elec.gen2"
+      ],
+      "title": "GEN 1 / GEN 2",
+      "what": "Generador movido por cada motor a través de su IDG (una caja que lo hace girar a velocidad constante). Es la fuente principal en vuelo.",
+      "positions": {
+        "OFF": "Generador desconectado de su barra (OFF blanco). Solo en procedimientos de avería o humo.",
+        "ON": "Normal (luz apagada): conecta su barra en cuanto el motor gira."
+      },
+      "normal": "Siempre ON. Al arrancar el motor, el generador toma la carga solo."
+    },
+    {
+      "controls": [
+        "elec.apu_gen"
+      ],
+      "what": "Generador del APU.",
+      "positions": {
+        "OFF": "Desconectado.",
+        "ON": "Normal: alimenta la red si el APU está disponible y no hay una fuente con más prioridad."
+      },
+      "normal": "Siempre ON. Alimenta el avión en tierra hasta que arrancan los motores, y puede sustituir a un generador averiado en vuelo."
+    },
+    {
+      "controls": [
+        "elec.idg1",
+        "elec.idg2"
+      ],
+      "title": "IDG 1 / IDG 2",
+      "what": "Desacopla mecánicamente la IDG de su motor. Tiene guarda porque no se puede volver a acoplar en vuelo.",
+      "positions": {
+        "ON": "Acoplada (normal).",
+        "DISC": "Desacoplada: ese generador se pierde hasta que mantenimiento la reacople en tierra."
+      },
+      "normal": "No se toca. Solo si el ECAM pide desacoplar por sobretemperatura o baja presión de aceite de la IDG, con el motor en marcha.",
+      "caution": "No mantengas pulsado más de 3 s. Es irreversible durante el vuelo."
+    },
+    {
+      "controls": [
+        "elec.bus_tie"
+      ],
+      "what": "Une las dos barras AC cuando solo hay una fuente para ambas: en tierra con APU o GPU, o en vuelo con un generador perdido.",
+      "positions": {
+        "OFF": "Barras aisladas entre sí.",
+        "AUTO": "Normal: el sistema decide cuándo unirlas."
+      },
+      "normal": "Siempre AUTO."
+    },
+    {
+      "controls": [
+        "elec.ac_ess_feed"
+      ],
+      "what": "Elige de qué lado se alimenta la barra AC ESS, la que mantiene los equipos esenciales.",
+      "positions": {
+        "NORM": "Desde AC BUS 1 (normal).",
+        "ALTN": "Desde AC BUS 2, si se ha perdido AC BUS 1."
+      },
+      "normal": "NORM. Se pasa a ALTN solo si el ECAM lo pide."
+    },
+    {
+      "controls": [
+        "elec.galley"
+      ],
+      "title": "GALY & CAB",
+      "what": "Corta la alimentación de las cocinas y de cargas de cabina.",
+      "positions": {
+        "OFF": "Cocinas y cabina sin corriente (FAULT si hay sobrecarga).",
+        "AUTO": "Normal: se desconectan solas si falta capacidad eléctrica."
+      },
+      "normal": "AUTO. OFF en procedimientos de humo o de pérdida de generadores."
+    },
+    {
+      "controls": [
+        "elec.commercial"
+      ],
+      "what": "Corta todas las cargas comerciales: iluminación de cabina, cocinas, entretenimiento.",
+      "positions": {
+        "OFF": "Cargas comerciales desconectadas.",
+        "ON": "Normal."
+      },
+      "normal": "ON. OFF en procedimientos de humo o de fallo eléctrico."
+    },
+    {
+      "controls": [
+        "emer_elec.man_on"
+      ],
+      "title": "EMER ELEC PWR · MAN ON",
+      "what": "Despliega la RAT (turbina de aire de impacto) y conecta el generador de emergencia a mano.",
+      "positions": {
+        "OFF": "Normal.",
+        "ON": "RAT desplegada: alimenta las barras esenciales en la configuración de emergencia."
+      },
+      "normal": "No se toca. La RAT sale sola si se pierden todas las barras AC en vuelo; este pulsador es el respaldo manual.",
+      "caution": "La RAT no se puede recoger en vuelo."
+    },
+    {
+      "controls": [
+        "emer_elec.gen1_line"
+      ],
+      "title": "GEN 1 LINE",
+      "what": "Abre el contactor de línea del GEN 1: el generador queda conectado solo a algunas bombas de combustible.",
+      "positions": {
+        "OFF": "Contactor abierto (procedimiento de humo).",
+        "ON": "Normal."
+      },
+      "normal": "ON. Solo se apaga en el procedimiento de humo eléctrico o de aviónica."
+    },
+    {
+      "controls": [
+        "emer_elec.rat_fault"
+      ],
+      "title": "RAT & EMER GEN",
+      "what": "Indicador del generador de emergencia: FAULT si la RAT está desplegada pero el generador no da corriente."
+    },
+    {
+      "controls": [
+        "emer_elec.gen_test"
+      ],
+      "title": "EMER GEN TEST",
+      "what": "Prueba de mantenimiento del generador de emergencia, solo en tierra.",
+      "normal": "No forma parte de los procedimientos normales del piloto."
+    },
+    {
+      "controls": [
+        "apu.master"
+      ],
+      "title": "APU MASTER SW",
+      "what": "Prepara el APU: alimenta su ordenador (ECB), abre la toma de aire y prepara el combustible.",
+      "positions": {
+        "OFF": "APU apagado; si estaba en marcha, inicia el enfriamiento y la parada.",
+        "ON": "ON azul: APU preparado para arrancar."
+      },
+      "normal": "ON en el encendido (después de las baterías y las luces NAV) y OFF después del aterrizaje, cuando hay GPU o tras llegar al aparcamiento.",
+      "caution": "Espera unos segundos entre MASTER SW y START: la toma de aire tiene que abrirse. Tras apagar el APU, no quites las baterías hasta que la toma de aire se cierre (unos 2 min)."
+    },
+    {
+      "controls": [
+        "apu.start"
+      ],
+      "title": "APU START",
+      "what": "Arranca el APU.",
+      "positions": {
+        "OFF": "Reposo.",
+        "ON": "ON azul durante el arranque; se apaga y aparece AVAIL verde cuando el APU está a régimen."
+      },
+      "normal": "Una pulsación tras MASTER SW ON. Espera AVAIL antes de conectar APU BLEED."
+    },
+    {
+      "controls": [
+        "adirs.ir1",
+        "adirs.ir2",
+        "adirs.ir3"
+      ],
+      "title": "ADIR 1 / 2 / 3",
+      "what": "Selector de modo de cada ADIRU.",
+      "positions": {
+        "OFF": "Apagada. Pasar a OFF y volver a NAV obliga a alinear de nuevo.",
+        "NAV": "Normal: navegación completa (actitud, rumbo y posición) tras la alineación.",
+        "ATT": "Reserva si se pierde la navegación inercial: solo actitud, y el rumbo hay que introducirlo a mano."
+      },
+      "normal": "Los tres a NAV en la preparación de cabina, cuanto antes, porque la alineación es lo que más tarda. OFF al asegurar el avión.",
+      "caution": "No muevas el avión durante la alineación. En vuelo una IR no se puede realinear."
+    },
+    {
+      "controls": [
+        "adirs.ir1_pb",
+        "adirs.ir2_pb",
+        "adirs.ir3_pb"
+      ],
+      "title": "IR 1 / 2 / 3",
+      "what": "Pulsador de la parte IR (inercial) de cada ADIRU.",
+      "positions": {
+        "OFF": "IR desconectada de los sistemas (OFF blanco). Muestra FAULT si falla; ALIGN parpadeando si la alineación tiene un problema.",
+        "ON": "Normal."
+      },
+      "normal": "ON. Solo se apaga cuando el ECAM lo pide por una avería."
+    },
+    {
+      "controls": [
+        "adirs.adr1_pb",
+        "adirs.adr2_pb",
+        "adirs.adr3_pb"
+      ],
+      "title": "ADR 1 / 2 / 3",
+      "what": "Pulsador de la parte ADR (datos de aire) de cada ADIRU.",
+      "positions": {
+        "OFF": "ADR desconectada: sus datos dejan de usarse.",
+        "ON": "Normal."
+      },
+      "normal": "ON. Se apaga si una ADR da datos erróneos (velocidad o altitud incoherentes) y el ECAM o el QRH lo piden."
+    },
+    {
+      "controls": [
+        "adirs.on_bat"
+      ],
+      "title": "ON BAT",
+      "what": "Indicador ON BAT: alguna ADIRU se está alimentando de las baterías.",
+      "normal": "Se enciende unos segundos al empezar la alineación. Si sigue encendido, la ADIRU está perdiendo su alimentación normal."
+    },
+    {
+      "controls": [
+        "fuel.l_pump1",
+        "fuel.l_pump2",
+        "fuel.r_pump1",
+        "fuel.r_pump2"
+      ],
+      "title": "Bombas de ala (L/R 1-2)",
+      "what": "Bombas de los depósitos de ala, dos por lado.",
+      "positions": {
+        "OFF": "Bomba parada (OFF blanco).",
+        "ON": "Normal (luz apagada). LO ámbar si da poca presión."
+      },
+      "normal": "Todas ON en la preparación de cabina y OFF al asegurar el avión.",
+      "caution": "Un motor puede alimentarse por gravedad sin bombas, pero con limitaciones de altitud."
+    },
+    {
+      "controls": [
+        "fuel.ctr_pump1",
+        "fuel.ctr_pump2"
+      ],
+      "title": "CTR TK PUMP 1 / 2",
+      "what": "Bombas del depósito central.",
+      "positions": {
+        "OFF": "Parada.",
+        "ON": "Normal: en modo AUTO las controla el sistema."
+      },
+      "normal": "ON. Con MODE SEL en AUTO funcionan cuando hay combustible en el central y conviene usarlo."
+    },
+    {
+      "controls": [
+        "fuel.mode_sel"
+      ],
+      "title": "MODE SEL",
+      "what": "Modo de control de las bombas del central.",
+      "positions": {
+        "MAN": "Manual: las bombas del central funcionan según su pulsador (FAULT si quedan alas sin llenar).",
+        "AUTO": "Normal: el sistema las arranca y para solo. Tras el arranque funcionan 2 min, se paran con los slats extendidos y se reactivan en vuelo hasta vaciar el central."
+      },
+      "normal": "AUTO. MAN solo si el ECAM lo pide por una avería de la lógica automática."
+    },
+    {
+      "controls": [
+        "fuel.x_feed"
+      ],
+      "title": "X FEED",
+      "what": "Abre la válvula que une la alimentación izquierda y derecha.",
+      "positions": {
+        "OFF": "Cerrada (normal): cada ala alimenta a su motor.",
+        "ON": "Abierta (OPEN verde): ambos lados conectados."
+      },
+      "normal": "Cerrada. Se abre para corregir un desequilibrio de combustible entre alas o para alimentar un motor desde el otro lado.",
+      "caution": "En una sospecha de fuga de combustible no se abre: vaciarías también el ala buena."
+    },
+    {
+      "controls": [
+        "hyd.eng1_pump",
+        "hyd.eng2_pump"
+      ],
+      "title": "ENG 1 / ENG 2 PUMP",
+      "what": "Bomba hidráulica movida por cada motor: motor 1 para el verde, motor 2 para el amarillo.",
+      "positions": {
+        "OFF": "Bomba despresurizada (OFF blanco).",
+        "ON": "Normal: da presión cuando el motor gira (LO ámbar con el motor parado)."
+      },
+      "normal": "Siempre ON. El LO ámbar en tierra con motores parados es normal."
+    },
+    {
+      "controls": [
+        "hyd.elec_pump_b"
+      ],
+      "title": "BLUE ELEC PUMP",
+      "what": "Bomba eléctrica del sistema azul.",
+      "positions": {
+        "OFF": "Parada.",
+        "AUTO": "Normal: funciona con al menos un motor en marcha, y en vuelo."
+      },
+      "normal": "AUTO."
+    },
+    {
+      "controls": [
+        "hyd.elec_pump_y"
+      ],
+      "title": "YELLOW ELEC PUMP",
+      "what": "Bomba eléctrica del sistema amarillo.",
+      "positions": {
+        "OFF": "Normal en vuelo.",
+        "ON": "Presuriza el amarillo con los motores parados."
+      },
+      "normal": "OFF normalmente. En tierra se pone ON para tener presión con los motores parados: freno de aparcamiento, puertas de carga, o durante el pushback y el arranque si la aerolínea lo pide.",
+      "caution": "Si la dejas ON en vuelo no pasa nada grave, pero el flujo normal la apaga después del arranque."
+    },
+    {
+      "controls": [
+        "hyd.ptu"
+      ],
+      "title": "PTU",
+      "what": "Unidad de transferencia de potencia entre verde y amarillo.",
+      "positions": {
+        "OFF": "PTU inhibida.",
+        "AUTO": "Normal: se activa sola si la diferencia de presión entre verde y amarillo supera 500 psi."
+      },
+      "normal": "AUTO. Su ladrido durante el rodaje con un solo motor es normal."
+    },
+    {
+      "controls": [
+        "hyd.rat_man_on"
+      ],
+      "title": "RAT MAN ON",
+      "what": "Despliega la RAT a mano para presurizar el azul.",
+      "positions": {
+        "OFF": "Normal.",
+        "ON": "RAT desplegada."
+      },
+      "normal": "No se toca en operación normal. La RAT sale sola si se pierden ambas barras AC o los dos motores.",
+      "caution": "No se puede recoger en vuelo."
+    },
+    {
+      "controls": [
+        "fire.eng1",
+        "fire.eng2"
+      ],
+      "title": "ENG FIRE pb",
+      "what": "Pulsador de fuego del motor (con guarda roja): aísla el motor.",
+      "positions": {
+        "NORM": "Normal.",
+        "PUSHED": "Silencia la alarma, arma las botellas y corta combustible, hidráulico, sangrado de aire y generador de ese motor."
+      },
+      "normal": "Solo en un fuego, siguiendo el ECAM: thrust lever a IDLE, ENG MASTER OFF, después este pulsador.",
+      "caution": "Asegúrate de que es el motor correcto: tras pulsarlo, ese motor no se recupera."
+    },
+    {
+      "controls": [
+        "fire.eng1_agent1",
+        "fire.eng1_agent2",
+        "fire.eng2_agent1",
+        "fire.eng2_agent2"
+      ],
+      "title": "AGENT 1 / 2",
+      "what": "Descarga una botella de extintor en el motor. Solo funciona con el pulsador de fuego pulsado.",
+      "positions": {
+        "OFF": "Botella disponible (SQUIB blanco cuando está armada).",
+        "DISCH": "Botella descargada (DISCH ámbar)."
+      },
+      "normal": "En vuelo: AGENT 1 a los 10 s de pulsar el ENG FIRE pb (para dar tiempo al motor a pararse) y AGENT 2 si el fuego sigue 30 s después."
+    },
+    {
+      "controls": [
+        "fire.eng1_test",
+        "fire.eng2_test",
+        "fire.apu_test"
+      ],
+      "title": "FIRE TEST",
+      "what": "Prueba la detección de fuego y los circuitos de las botellas.",
+      "positions": {
+        "OFF": "Reposo.",
+        "ON": "Mantenido: se encienden el pulsador de fuego, SQUIB, DISCH, MASTER WARN, la alarma y FIRE en el pedestal."
+      },
+      "normal": "La prueba del APU se hace en el encendido; la de los motores, en la preparación de cabina."
+    },
+    {
+      "controls": [
+        "fire.apu"
+      ],
+      "title": "APU FIRE pb",
+      "what": "Pulsador de fuego del APU: lo apaga y lo aísla.",
+      "positions": {
+        "NORM": "Normal.",
+        "PUSHED": "Apaga el APU, corta su combustible y arma su botella."
+      },
+      "normal": "Solo en un fuego del APU."
+    },
+    {
+      "controls": [
+        "fire.apu_agent"
+      ],
+      "title": "APU AGENT",
+      "what": "Descarga la botella del APU.",
+      "positions": {
+        "OFF": "Disponible.",
+        "DISCH": "Descargada."
+      },
+      "normal": "Tras pulsar el APU FIRE pb, si el fuego sigue."
+    },
+    {
+      "controls": [
+        "air_cond.pack1",
+        "air_cond.pack2"
+      ],
+      "title": "PACK 1 / 2",
+      "what": "Cada pack enfría y regula el aire que entra en la cabina.",
+      "positions": {
+        "OFF": "Pack cerrado (OFF blanco).",
+        "ON": "Normal. Se cierra solo durante el arranque de motores."
+      },
+      "normal": "ON. Algunos despegues se hacen con PACKS OFF para tener más empuje, y se reconectan tras la reducción de potencia."
+    },
+    {
+      "controls": [
+        "air_cond.pack_flow"
+      ],
+      "title": "PACK FLOW",
+      "what": "Caudal de aire de los packs.",
+      "positions": {
+        "LO": "Reducido: ahorra combustible con poca ocupación.",
+        "NORM": "Normal.",
+        "HI": "Alto: calor, humedad o para despejar humo u olores."
+      },
+      "normal": "NORM. La aerolínea marca cuándo usar LO."
+    },
+    {
+      "controls": [
+        "air_cond.ckpt_temp",
+        "air_cond.fwd_temp",
+        "air_cond.aft_temp"
+      ],
+      "title": "Temperatura de zona",
+      "what": "Temperatura deseada de cada zona.",
+      "positions": {
+        "COLD": "Unos 18 °C.",
+        "HOT": "Unos 30 °C. En el centro, unos 24 °C."
+      },
+      "normal": "En el centro, salvo petición de la tripulación de cabina."
+    },
+    {
+      "controls": [
+        "air_cond.hot_air"
+      ],
+      "title": "HOT AIR",
+      "what": "Válvula de aire caliente que ajusta la temperatura de cada zona.",
+      "positions": {
+        "OFF": "Sin ajuste fino: todas las zonas a la temperatura del pack.",
+        "ON": "Normal."
+      },
+      "normal": "ON."
+    },
+    {
+      "controls": [
+        "air_cond.eng1_bleed",
+        "air_cond.eng2_bleed"
+      ],
+      "title": "ENG 1 / 2 BLEED",
+      "what": "Válvula de sangrado de cada motor.",
+      "positions": {
+        "OFF": "Cerrada (OFF blanco).",
+        "ON": "Normal: se abre sola con el motor en marcha, salvo si se usa el APU BLEED."
+      },
+      "normal": "ON. Se cierran en averías (fuga, sobretemperatura) siguiendo el ECAM."
+    },
+    {
+      "controls": [
+        "air_cond.apu_bleed"
+      ],
+      "title": "APU BLEED",
+      "what": "Aire del APU hacia el colector.",
+      "positions": {
+        "OFF": "Cerrado.",
+        "ON": "ON azul: el APU alimenta los packs y el arranque de motores; las válvulas de motor se cierran."
+      },
+      "normal": "ON cuando aparece APU AVAIL, para climatizar y arrancar los motores. OFF en el flujo después del arranque.",
+      "caution": "Con APU BLEED ON y X BLEED en AUTO la válvula cruzada se abre: es lo esperado."
+    },
+    {
+      "controls": [
+        "air_cond.x_bleed"
+      ],
+      "title": "X BLEED",
+      "what": "Válvula cruzada del colector de sangrado.",
+      "positions": {
+        "SHUT": "Cerrada siempre.",
+        "AUTO": "Normal: se abre al usar el APU BLEED y se cierra si hay una fuga.",
+        "OPEN": "Abierta siempre."
+      },
+      "normal": "AUTO. OPEN, por ejemplo, para arrancar un motor con el aire del otro."
+    },
+    {
+      "controls": [
+        "air_cond.ram_air"
+      ],
+      "title": "RAM AIR",
+      "what": "Abre una toma de aire exterior para ventilar si fallan los dos packs o hay que evacuar humo.",
+      "positions": {
+        "OFF": "Normal.",
+        "ON": "Toma abierta. Solo entra aire si la diferencia de presión es pequeña (por debajo de 1 psi)."
+      },
+      "normal": "OFF. Se usa en vuelo bajo, tras despresurizar."
+    },
+    {
+      "controls": [
+        "anti_ice.eng1",
+        "anti_ice.eng2"
+      ],
+      "title": "ENG 1 / 2 ANTI ICE",
+      "what": "Aire caliente en la toma de aire de cada motor.",
+      "positions": {
+        "OFF": "Apagado.",
+        "ON": "ON azul: antihielo activo. Sube el ralentí y el consumo y reduce un poco el empuje disponible."
+      },
+      "normal": "ON en tierra y en vuelo en condiciones de engelamiento (salvo en ascenso y crucero con SAT por debajo de -40 °C)."
+    },
+    {
+      "controls": [
+        "anti_ice.wing"
+      ],
+      "title": "WING ANTI ICE",
+      "what": "Aire caliente en los slats exteriores de cada ala.",
+      "positions": {
+        "OFF": "Apagado.",
+        "ON": "ON azul: activo. En tierra solo funciona unos 30 s, como prueba."
+      },
+      "normal": "En vuelo, cuando hay hielo acumulado o se espera engelamiento fuerte.",
+      "caution": "No sustituye al deshielo en tierra: el avión debe despegar limpio."
+    },
+    {
+      "controls": [
+        "anti_ice.probe_window"
+      ],
+      "title": "PROBE / WINDOW HEAT",
+      "what": "Calefacción de las sondas (pitot, estáticas, ángulo de ataque, temperatura) y de los parabrisas.",
+      "positions": {
+        "AUTO": "Normal: se activa con un motor en marcha y en vuelo.",
+        "ON": "Forzada, con los motores parados en tierra o si el automatismo falla."
+      },
+      "normal": "AUTO."
+    },
+    {
+      "controls": [
+        "press.mode_sel"
+      ],
+      "title": "MODE SEL",
+      "what": "Modo de presurización.",
+      "positions": {
+        "AUTO": "Normal: el sistema lo gestiona solo.",
+        "MAN": "Manual: el piloto mueve la válvula de salida con MAN V/S CTL."
+      },
+      "normal": "AUTO. MAN solo si fallan los dos controladores."
+    },
+    {
+      "controls": [
+        "press.man_vs"
+      ],
+      "title": "MAN V/S CTL",
+      "what": "Mueve la válvula de salida de aire en modo manual.",
+      "positions": {
+        "UP": "Abre la válvula: la cabina sube.",
+        "DN": "Cierra la válvula: la cabina baja."
+      },
+      "normal": "Solo con MODE SEL en MAN.",
+      "caution": "Mueve poco a poco y vigila la variación de cabina en el ECAM PRESS: los cambios bruscos molestan en los oídos."
+    },
+    {
+      "controls": [
+        "press.ldg_elev"
+      ],
+      "title": "LDG ELEV",
+      "what": "Elevación del aeropuerto de aterrizaje que usa la presurización.",
+      "positions": {
+        "AUTO": "Normal: la toma del FMGS (destino del F-PLN).",
+        "14": "Extremo del selector: elevación manual, hasta 14.000 ft."
+      },
+      "normal": "AUTO. Manual si el FMGS no tiene el dato."
+    },
+    {
+      "controls": [
+        "press.ditching"
+      ],
+      "title": "DITCHING",
+      "what": "Cierra la válvula de salida y las aberturas bajo la línea de flotación, para un amerizaje.",
+      "positions": {
+        "OFF": "Normal.",
+        "ON": "Todo cerrado."
+      },
+      "normal": "OFF. Solo en el procedimiento de amerizaje.",
+      "caution": "En tierra, con los packs en marcha, la cabina se presurizaría."
+    },
+    {
+      "controls": [
+        "ext_lt.beacon"
+      ],
+      "title": "BEACON",
+      "what": "Luz roja giratoria: avisa al personal de tierra de que los motores van a arrancar o están en marcha.",
+      "positions": {
+        "OFF": "Apagada.",
+        "ON": "Encendida."
+      },
+      "normal": "ON antes del pushback o del arranque, OFF con los motores parados en el aparcamiento.",
+      "caution": "Es la señal de seguridad más importante para el personal de tierra: no la apagues con un motor en marcha."
+    },
+    {
+      "controls": [
+        "ext_lt.strobe"
+      ],
+      "title": "STROBE",
+      "what": "Destellos blancos de anticolisión.",
+      "positions": {
+        "OFF": "Apagadas.",
+        "AUTO": "Se encienden solas en vuelo (tren sin peso).",
+        "ON": "Encendidas."
+      },
+      "normal": "ON al entrar en pista; AUTO después del aterrizaje y antes de rodar."
+    },
+    {
+      "controls": [
+        "ext_lt.nav_logo"
+      ],
+      "title": "NAV & LOGO",
+      "what": "Luces de navegación (roja a la izquierda, verde a la derecha y blanca en la cola) y luces del logotipo de la deriva.",
+      "positions": {
+        "OFF": "Apagadas.",
+        "1": "Sistema 1.",
+        "2": "Sistema 2 (reserva si falla el 1)."
+      },
+      "normal": "En 1 o 2 desde el encendido hasta asegurar el avión."
+    },
+    {
+      "controls": [
+        "ext_lt.wing"
+      ],
+      "title": "WING",
+      "what": "Ilumina el borde de ataque y la góndola para comprobar si hay hielo de noche.",
+      "positions": {
+        "OFF": "Apagadas.",
+        "ON": "Encendidas."
+      },
+      "normal": "Cuando haga falta inspeccionar las alas. Algunas aerolíneas la usan también al entrar en pista para ser más visibles."
+    },
+    {
+      "controls": [
+        "ext_lt.rwy_turn_off"
+      ],
+      "title": "RWY TURN OFF",
+      "what": "Luces laterales del tren de morro: iluminan los giros y las salidas de pista.",
+      "positions": {
+        "OFF": "Apagadas.",
+        "ON": "Encendidas."
+      },
+      "normal": "ON al rodar de noche y para el despegue; OFF al dejar la pista tras el aterrizaje si no hacen falta."
+    },
+    {
+      "controls": [
+        "ext_lt.land_l",
+        "ext_lt.land_r"
+      ],
+      "title": "LAND L / R",
+      "what": "Luces de aterrizaje, en el ala, que se extienden fuera del fuselaje.",
+      "positions": {
+        "RETRACT": "Recogidas: sin resistencia aerodinámica.",
+        "OFF": "Extendidas y apagadas.",
+        "ON": "Extendidas y encendidas."
+      },
+      "normal": "ON al entrar en pista, RETRACT pasando FL100 en ascenso, ON pasando FL100 en descenso, RETRACT al dejar la pista.",
+      "caution": "Extendidas generan resistencia: no las dejes fuera en crucero."
+    },
+    {
+      "controls": [
+        "ext_lt.nose"
+      ],
+      "title": "NOSE",
+      "what": "Luces del tren de morro.",
+      "positions": {
+        "OFF": "Apagadas.",
+        "TAXI": "Luz de rodaje.",
+        "T.O": "Luz de despegue, más potente."
+      },
+      "normal": "TAXI al empezar a rodar, T.O al entrar en pista, OFF parado o al ceder el paso de frente a otro avión. Se apagan solas al subir el tren."
+    },
+    {
+      "controls": [
+        "signs.seat_belts"
+      ],
+      "title": "SEAT BELTS",
+      "what": "Cartel de abrocharse los cinturones.",
+      "positions": {
+        "OFF": "Apagado.",
+        "ON": "Encendido, con aviso sonoro en cabina."
+      },
+      "normal": "ON antes del arranque y hasta que el avión se estabiliza tras el despegue; ON de nuevo en el descenso o con turbulencia."
+    },
+    {
+      "controls": [
+        "signs.no_smoking"
+      ],
+      "title": "NO SMOKING",
+      "what": "Cartel de no fumar o de no usar dispositivos electrónicos.",
+      "positions": {
+        "OFF": "Apagado.",
+        "AUTO": "Se enciende solo con el tren abajo.",
+        "ON": "Encendido."
+      },
+      "normal": "AUTO o ON según la aerolínea, durante todo el vuelo."
+    },
+    {
+      "controls": [
+        "signs.emer_exit_lt"
+      ],
+      "title": "EMER EXIT LT",
+      "what": "Alumbrado de emergencia de la cabina y señalización de salidas.",
+      "positions": {
+        "OFF": "Apagado; se ve EMER EXIT LT OFF ámbar.",
+        "ARM": "Normal: se enciende solo si falla la alimentación normal.",
+        "ON": "Encendido."
+      },
+      "normal": "ARM antes del vuelo y OFF al asegurar el avión."
+    },
+    {
+      "controls": [
+        "signs.emer_exit_ind"
+      ],
+      "title": "EMER EXIT LT OFF",
+      "what": "Indicador OFF ámbar: el alumbrado de emergencia está apagado y no se encenderá solo."
+    },
+    {
+      "controls": [
+        "int_lt.integ"
+      ],
+      "title": "OVHD INTEG LT",
+      "what": "Brillo de la iluminación integral del overhead (rótulos y líneas).",
+      "normal": "Según la luz ambiente. De noche, bajo para no deslumbrarte."
+    },
+    {
+      "controls": [
+        "int_lt.stby_compass"
+      ],
+      "title": "ICE IND & STBY COMPASS",
+      "what": "Ilumina el compás magnético de reserva y el indicador de hielo.",
+      "positions": {
+        "OFF": "Apagado.",
+        "ON": "Encendido."
+      }
+    },
+    {
+      "controls": [
+        "int_lt.dome"
+      ],
+      "title": "DOME",
+      "what": "Luz de techo de la cabina de pilotos.",
+      "positions": {
+        "OFF": "Apagada.",
+        "DIM": "Baja.",
+        "BRT": "Alta."
+      },
+      "normal": "BRT en la preparación de cabina y en el aparcamiento; OFF o DIM en vuelo de noche."
+    },
+    {
+      "controls": [
+        "int_lt.ann_lt"
+      ],
+      "title": "ANN LT",
+      "what": "Brillo de las lámparas de los pulsadores y prueba de lámparas.",
+      "positions": {
+        "DIM": "Bajo, de noche.",
+        "BRT": "Normal.",
+        "TEST": "Enciende todas las lámparas de la cabina para comprobar que ninguna está fundida."
+      },
+      "normal": "TEST en la preparación de cabina y después BRT."
+    },
+    {
+      "controls": [
+        "eng.master1",
+        "eng.master2"
+      ],
+      "title": "ENG MASTER 1 / 2",
+      "what": "Interruptor maestro de cada motor: combustible y encendido.",
+      "positions": {
+        "OFF": "Corta el combustible: para el motor.",
+        "ON": "Con ENG MODE en IGN/START inicia el arranque automático; en vuelo mantiene el motor en marcha."
+      },
+      "normal": "ON en el arranque, uno tras otro. OFF en el aparcamiento.",
+      "caution": "En vuelo, OFF solo con el ECAM (fuego, daño severo) y confirmándolo con el otro piloto."
+    },
+    {
+      "controls": [
+        "eng.mode"
+      ],
+      "title": "ENG MODE",
+      "what": "Selector de modo de arranque y encendido.",
+      "positions": {
+        "CRANK": "Hace girar el motor con aire sin encendido: ventilación o pruebas.",
+        "NORM": "Normal con los motores en marcha. El encendido se activa solo si hace falta.",
+        "IGN/START": "Arranque. Con los motores en marcha, da encendido continuo (lluvia fuerte, turbulencia, pista contaminada)."
+      },
+      "normal": "IGN/START para arrancar y NORM después. El flujo de alineación lo vuelve a poner en IGN/START si las condiciones lo piden."
+    },
+    {
+      "controls": [
+        "eng.man_start1",
+        "eng.man_start2"
+      ],
+      "title": "MAN START 1 / 2",
+      "what": "Arranque manual: abre la válvula de arranque del motor.",
+      "positions": {
+        "OFF": "Normal.",
+        "ON": "Válvula de arranque abierta (arranque manual o motor en CRANK)."
+      },
+      "normal": "OFF. Solo en arranques manuales que pide el QRH, por ejemplo tras un arranque automático fallido."
+    },
+    {
+      "controls": [
+        "eng.n1_mode1",
+        "eng.n1_mode2"
+      ],
+      "title": "N1 MODE",
+      "what": "En los motores IAE, cambia el control de empuje de EPR a N1.",
+      "positions": {
+        "OFF": "Normal: control por EPR.",
+        "ON": "Modo N1, de reserva si el EPR no es fiable."
+      },
+      "normal": "OFF. Solo si el ECAM lo pide."
+    },
+    {
+      "controls": [
+        "flt_ctl.elac1",
+        "flt_ctl.elac2"
+      ],
+      "title": "ELAC 1 / 2",
+      "what": "Elevator Aileron Computer: profundidad, alerones y estabilizador horizontal.",
+      "positions": {
+        "OFF": "Ordenador desconectado (OFF blanco).",
+        "ON": "Normal. FAULT ámbar si falla."
+      },
+      "normal": "ON. Un FAULT se intenta reiniciar (OFF y después ON) solo si el ECAM lo pide."
+    },
+    {
+      "controls": [
+        "flt_ctl.sec1",
+        "flt_ctl.sec2",
+        "flt_ctl.sec3"
+      ],
+      "title": "SEC 1 / 2 / 3",
+      "what": "Spoiler Elevator Computer: spoilers, frenos aerodinámicos y reserva de la profundidad.",
+      "positions": {
+        "OFF": "Desconectado.",
+        "ON": "Normal."
+      },
+      "normal": "ON."
+    },
+    {
+      "controls": [
+        "flt_ctl.fac1",
+        "flt_ctl.fac2"
+      ],
+      "title": "FAC 1 / 2",
+      "what": "Flight Augmentation Computer: timón, amortiguador de guiñada y velocidades características (VLS, F, S, protecciones).",
+      "positions": {
+        "OFF": "Desconectado.",
+        "ON": "Normal."
+      },
+      "normal": "ON."
+    },
+    {
+      "controls": [
+        "evac.command"
+      ],
+      "title": "EVAC COMMAND",
+      "what": "Activa la alarma de evacuación en cabina y en cabina de pilotos.",
+      "positions": {
+        "OFF": "Normal.",
+        "ON": "EVAC parpadeando y alarma sonando."
+      },
+      "normal": "Solo cuando el comandante ordena evacuar, tras parar el avión y los motores."
+    },
+    {
+      "controls": [
+        "evac.horn_off"
+      ],
+      "title": "HORN SHUT OFF",
+      "what": "Silencia la bocina de evacuación en la cabina de pilotos."
+    },
+    {
+      "controls": [
+        "evac.capt_purs"
+      ],
+      "title": "CAPT & PURS",
+      "what": "Quién puede ordenar la evacuación.",
+      "positions": {
+        "CAPT": "Solo desde la cabina de pilotos.",
+        "CAPT & PURS": "También desde el panel del sobrecargo."
+      },
+      "normal": "Según la aerolínea."
+    },
+    {
+      "controls": [
+        "gpws.sys"
+      ],
+      "title": "GPWS SYS",
+      "what": "Modos básicos del GPWS (1 a 5).",
+      "positions": {
+        "OFF": "Avisos básicos desactivados.",
+        "ON": "Normal."
+      },
+      "normal": "ON. OFF solo si da avisos falsos y el QRH lo permite."
+    },
+    {
+      "controls": [
+        "gpws.terr"
+      ],
+      "title": "TERR",
+      "what": "Avisos predictivos de terreno con base de datos.",
+      "positions": {
+        "ON": "Normal.",
+        "OFF": "Desactivados."
+      },
+      "normal": "ON. OFF si la navegación no es precisa o el aeropuerto no está en la base de datos."
+    },
+    {
+      "controls": [
+        "gpws.gs_mode"
+      ],
+      "title": "G/S MODE",
+      "what": "Aviso de desviación por debajo de la senda de planeo del ILS.",
+      "positions": {
+        "ON": "Normal.",
+        "OFF": "Inhibido."
+      },
+      "normal": "ON."
+    },
+    {
+      "controls": [
+        "gpws.flap_mode"
+      ],
+      "title": "FLAP MODE",
+      "what": "Aviso de «demasiado bajo con flaps» en aproximación.",
+      "positions": {
+        "ON": "Normal.",
+        "OFF": "Inhibido: aterrizaje con flaps anormales por una avería."
+      },
+      "normal": "ON."
+    },
+    {
+      "controls": [
+        "gpws.ldg_flap3"
+      ],
+      "title": "LDG FLAP 3",
+      "what": "Indica al GPWS que se aterriza en CONF 3 en lugar de FULL.",
+      "positions": {
+        "OFF": "Aterrizaje en FULL.",
+        "ON": "Aterrizaje en CONF 3: evita el aviso de flaps."
+      },
+      "normal": "ON cuando el briefing de aproximación prevé aterrizar en CONF 3 (viento fuerte, cizalladura, procedimiento de la aerolínea)."
+    },
+    {
+      "controls": [
+        "rcdr.gnd_ctl"
+      ],
+      "title": "GND CTL",
+      "what": "Enciende los registradores en tierra.",
+      "positions": {
+        "AUTO": "Graban solos con un motor en marcha y en vuelo.",
+        "ON": "Graban ya, en tierra, antes del arranque."
+      },
+      "normal": "ON en la preparación de cabina, para que quede grabada la preparación y los briefings."
+    },
+    {
+      "controls": [
+        "rcdr.cvr_erase"
+      ],
+      "title": "CVR ERASE",
+      "what": "Borra el CVR. Solo funciona en tierra con el freno de aparcamiento puesto.",
+      "caution": "Tras un incidente no se borra: es la prueba de lo ocurrido."
+    },
+    {
+      "controls": [
+        "rcdr.cvr_test"
+      ],
+      "title": "CVR TEST",
+      "what": "Prueba el CVR: suena un tono en los altavoces."
+    },
+    {
+      "controls": [
+        "oxy.crew_supply"
+      ],
+      "title": "CREW SUPPLY",
+      "what": "Abre el suministro de oxígeno a las máscaras de la tripulación.",
+      "positions": {
+        "OFF": "Cerrado (OFF blanco).",
+        "ON": "Normal."
+      },
+      "normal": "ON en la preparación de cabina, durante todo el vuelo; OFF al asegurar el avión."
+    },
+    {
+      "controls": [
+        "oxy.pax_mask"
+      ],
+      "title": "MASK MAN ON",
+      "what": "Deja caer las máscaras del pasaje a mano.",
+      "positions": {
+        "OFF": "Normal.",
+        "ON": "Máscaras liberadas."
+      },
+      "normal": "Caen solas si la altitud de cabina supera unos 14.000 ft; este pulsador es el respaldo manual."
+    },
+    {
+      "controls": [
+        "oxy.passenger"
+      ],
+      "title": "PASSENGER",
+      "what": "Indicador SYS ON: las máscaras del pasaje se han liberado."
+    },
+    {
+      "controls": [
+        "calls.mech"
+      ],
+      "title": "MECH",
+      "what": "Llama al mecánico: suena una bocina en el tren de morro. Se usa en el pushback y el arranque."
+    },
+    {
+      "controls": [
+        "calls.fwd",
+        "calls.aft",
+        "calls.all"
+      ],
+      "title": "FWD / AFT / ALL",
+      "what": "Llama a la tripulación de cabina: delante, detrás o a todos."
+    },
+    {
+      "controls": [
+        "calls.emer"
+      ],
+      "title": "EMER CALL",
+      "what": "Llamada de emergencia a la tripulación de cabina. También se ilumina si la cabina hace una llamada de emergencia."
+    },
+    {
+      "controls": [
+        "wiper.left",
+        "wiper.right"
+      ],
+      "title": "WIPER",
+      "what": "Limpiaparabrisas de cada lado.",
+      "positions": {
+        "OFF": "Parado.",
+        "SLOW": "Lento.",
+        "FAST": "Rápido."
+      },
+      "normal": "Con lluvia, en rodaje, despegue y aterrizaje. Velocidad máxima de uso: 230 kt.",
+      "caution": "No lo uses con el cristal seco: lo raya."
+    },
+    {
+      "controls": [
+        "wiper.rain_l",
+        "wiper.rain_r"
+      ],
+      "title": "RAIN RPLNT",
+      "what": "Rocía repelente de lluvia en el parabrisas. Muchas aerolíneas lo tienen desactivado.",
+      "caution": "Nunca con el cristal seco: deja una película que reduce la visibilidad."
+    },
+    {
+      "controls": [
+        "vent.blower",
+        "vent.extract"
+      ],
+      "title": "BLOWER / EXTRACT",
+      "what": "Ventiladores de soplado y de extracción de la aviónica.",
+      "positions": {
+        "AUTO": "Normal.",
+        "OVRD": "Configuración cerrada: el aire de los packs refrigera la aviónica (humo en aviónica o avería)."
+      },
+      "normal": "AUTO. OVRD solo en procedimientos de humo o avería de ventilación."
+    },
+    {
+      "controls": [
+        "vent.cab_fans"
+      ],
+      "title": "CAB FANS",
+      "what": "Ventiladores de recirculación de la cabina.",
+      "positions": {
+        "OFF": "Parados.",
+        "ON": "Normal."
+      },
+      "normal": "ON."
+    },
+    {
+      "controls": [
+        "cargo.fwd_isol",
+        "cargo.aft_isol"
+      ],
+      "title": "ISOL VALVE",
+      "what": "Válvulas de aislamiento de la ventilación de cada bodega.",
+      "positions": {
+        "OFF": "Cerradas.",
+        "ON": "Normal."
+      },
+      "normal": "ON. Se cierran solas si se detecta humo."
+    },
+    {
+      "controls": [
+        "cargo.hot_air"
+      ],
+      "title": "CARGO HOT AIR",
+      "what": "Aire caliente para la bodega.",
+      "positions": {
+        "OFF": "Apagado.",
+        "ON": "Normal."
+      },
+      "normal": "ON."
+    },
+    {
+      "controls": [
+        "cargo.fwd_temp",
+        "cargo.aft_temp"
+      ],
+      "title": "Temperatura de bodega",
+      "what": "Temperatura de la bodega (útil con animales vivos o mercancía sensible)."
+    },
+    {
+      "controls": [
+        "cargo.fwd_smoke",
+        "cargo.aft_smoke"
+      ],
+      "title": "SMOKE",
+      "what": "Indicador SMOKE: humo detectado en la bodega delantera o trasera."
+    },
+    {
+      "controls": [
+        "cargo.fwd_agent",
+        "cargo.aft_agent"
+      ],
+      "title": "DISCH",
+      "what": "Descarga el extintor en la bodega con humo.",
+      "positions": {
+        "OFF": "Disponible.",
+        "DISCH": "Descargado."
+      },
+      "normal": "Solo en un aviso de humo en bodega, siguiendo el ECAM."
+    },
+    {
+      "controls": [
+        "cargo.test"
+      ],
+      "title": "CARGO SMOKE TEST",
+      "what": "Prueba la detección de humo de las bodegas."
+    },
+    {
+      "controls": [
+        "ecp.eng",
+        "ecp.bleed",
+        "ecp.press",
+        "ecp.elec",
+        "ecp.hyd",
+        "ecp.fuel",
+        "ecp.apu",
+        "ecp.cond",
+        "ecp.door",
+        "ecp.wheel",
+        "ecp.fctl"
+      ],
+      "title": "Páginas del ECAM",
+      "what": "Muestra la página de ese sistema en la pantalla inferior del ECAM. Otra pulsación vuelve a la página automática.",
+      "normal": "Se usan para revisar sistemas en la preparación (DOOR para ver las puertas, FUEL para el combustible, APU durante su arranque) y cuando el ECAM indica una avería."
+    },
+    {
+      "controls": [
+        "ecp.all"
+      ],
+      "title": "ALL",
+      "what": "Pasa por todas las páginas de sistema, una tras otra, mientras se mantiene pulsada."
+    },
+    {
+      "controls": [
+        "ecp.clr_capt",
+        "ecp.clr_fo"
+      ],
+      "title": "CLR",
+      "what": "Borra el aviso o la página del ECAM cuando sus acciones están hechas.",
+      "caution": "Antes de pulsar CLR, el otro piloto confirma que todas las acciones están completas."
+    },
+    {
+      "controls": [
+        "ecp.sts"
+      ],
+      "title": "STS",
+      "what": "Página STATUS: limitaciones, sistemas perdidos y procedimientos aplazados.",
+      "normal": "Se revisa tras gestionar una avería y en la preparación de la aproximación."
+    },
+    {
+      "controls": [
+        "ecp.rcl"
+      ],
+      "title": "RCL",
+      "what": "Vuelve a mostrar los avisos borrados o inhibidos.",
+      "normal": "RCL en la preparación de cabina, para ver si hay avisos pendientes."
+    },
+    {
+      "controls": [
+        "ecp.emer_canc"
+      ],
+      "title": "EMER CANC",
+      "what": "Cancela un aviso sonoro de warning o anula una caution durante el resto del vuelo (si es falsa)."
+    },
+    {
+      "controls": [
+        "ecp.to_config"
+      ],
+      "title": "T.O CONFIG",
+      "what": "Simula aplicar potencia de despegue y comprueba la configuración: flaps, trim, spoilers, frenos.",
+      "normal": "Antes del despegue, en el flujo o el checklist BEFORE TAKEOFF: debe salir T.O CONFIG NORMAL."
+    },
+    {
+      "controls": [
+        "ecp.upper_brt",
+        "ecp.lower_brt"
+      ],
+      "title": "Brillo de pantallas ECAM",
+      "what": "Brillo de la pantalla superior o inferior del ECAM. Al mínimo, la pantalla se apaga."
+    },
+    {
+      "controls": [
+        "master.warn"
+      ],
+      "title": "MASTER WARN",
+      "what": "Luz roja MASTER WARN: un aviso de nivel rojo, con campana continua.",
+      "positions": {
+        "OFF": "Sin aviso.",
+        "ON": "Aviso activo. Pulsarla apaga la luz y la campana; el aviso sigue en el ECAM."
+      },
+      "normal": "Se pulsa para silenciar y después se lee el ECAM: «ECAM ACTIONS»."
+    },
+    {
+      "controls": [
+        "master.caut"
+      ],
+      "title": "MASTER CAUT",
+      "what": "Luz ámbar MASTER CAUT: un aviso de nivel ámbar, con un toque de campana.",
+      "positions": {
+        "OFF": "Sin aviso.",
+        "ON": "Aviso activo. Pulsarla la apaga."
+      },
+      "normal": "Se pulsa y se lee el ECAM."
+    },
+    {
+      "controls": [
+        "efis_capt.baro_window",
+        "efis_fo.baro_window",
+        "efis_capt.baro",
+        "efis_fo.baro"
+      ],
+      "title": "BARO",
+      "what": "Referencia barométrica del altímetro. Tirar (PULL) es QNH: el altímetro marca altitud sobre el nivel del mar. Empujar (PUSH) es STD (1013 hPa): marca niveles de vuelo.",
+      "normal": "QNH del aeropuerto en tierra y hasta la altitud de transición; STD al cruzarla en ascenso. En descenso, QNH al cruzar el nivel de transición. Los dos pilotos comprueban que coinciden.",
+      "caution": "Un QNH mal puesto desplaza todas las altitudes: 1 hPa son unos 30 ft."
+    },
+    {
+      "controls": [
+        "efis_capt.baro_unit",
+        "efis_fo.baro_unit"
+      ],
+      "title": "hPa / inHg",
+      "what": "Unidad del ajuste barométrico.",
+      "positions": {
+        "inHg": "Pulgadas de mercurio (América).",
+        "hPa": "Hectopascales (Europa y la mayoría del mundo)."
+      },
+      "normal": "La del país donde se vuela."
+    },
+    {
+      "controls": [
+        "efis_capt.fd",
+        "efis_fo.fd"
+      ],
+      "title": "FD",
+      "what": "Director de vuelo: las barras verdes del PFD que indican cómo volar para seguir los modos del piloto automático.",
+      "positions": {
+        "OFF": "Barras ocultas.",
+        "ON": "Barras visibles (luz verde)."
+      },
+      "normal": "ON desde la preparación de cabina hasta el aparcamiento. Se apagan en aproximaciones visuales sin automatismos."
+    },
+    {
+      "controls": [
+        "efis_capt.ls",
+        "efis_fo.ls"
+      ],
+      "title": "LS",
+      "what": "Muestra en el PFD las escalas de desviación del ILS (localizador y senda).",
+      "positions": {
+        "OFF": "Escalas ocultas.",
+        "ON": "Escalas visibles."
+      },
+      "normal": "ON en las aproximaciones ILS, desde la preparación de la aproximación."
+    },
+    {
+      "controls": [
+        "efis_capt.cstr",
+        "efis_fo.cstr",
+        "efis_capt.wpt",
+        "efis_fo.wpt",
+        "efis_capt.vord",
+        "efis_fo.vord",
+        "efis_capt.ndb",
+        "efis_fo.ndb",
+        "efis_capt.arpt",
+        "efis_fo.arpt"
+      ],
+      "title": "Filtros del ND",
+      "what": "Filtros del ND: añaden al mapa restricciones del plan de vuelo (CSTR), puntos de notificación (WPT), VOR y DME, NDB o aeropuertos.",
+      "normal": "Uno a la vez y según la fase: CSTR en salidas y llegadas para ver las restricciones de altitud y velocidad."
+    },
+    {
+      "controls": [
+        "efis_capt.nd_mode",
+        "efis_fo.nd_mode"
+      ],
+      "title": "MODE",
+      "what": "Modo de presentación del ND.",
+      "positions": {
+        "LS": "Rosa con la desviación del ILS.",
+        "VOR": "Rosa con la desviación del VOR.",
+        "NAV": "Rosa con el plan de vuelo.",
+        "ARC": "Sector delantero con el plan de vuelo: el más usado en vuelo.",
+        "PLAN": "Plan de vuelo orientado al norte: para revisar la ruta con el MCDU."
+      },
+      "normal": "PLAN en tierra para revisar la ruta con el F-PLN del MCDU; ARC o NAV en vuelo."
+    },
+    {
+      "controls": [
+        "efis_capt.nd_range",
+        "efis_fo.nd_range"
+      ],
+      "title": "RANGE",
+      "what": "Escala del ND en millas náuticas.",
+      "normal": "10 o 20 en salidas y llegadas; 80 a 320 en crucero. Ajusta para ver el siguiente punto relevante."
+    },
+    {
+      "controls": [
+        "efis_capt.adf_vor1",
+        "efis_fo.adf_vor1",
+        "efis_capt.adf_vor2",
+        "efis_fo.adf_vor2"
+      ],
+      "title": "ADF / VOR 1-2",
+      "what": "Agujas de ADF o VOR sobre el ND.",
+      "positions": {
+        "ADF": "Aguja del ADF (NDB).",
+        "OFF": "Sin aguja.",
+        "VOR": "Aguja del VOR."
+      },
+      "normal": "Según la navegación de la salida o la aproximación, para cruzar lo que dice el FMGS con las radioayudas."
+    },
+    {
+      "controls": [
+        "fcu.spd"
+      ],
+      "title": "SPD / MACH",
+      "what": "Velocidad o Mach objetivo.",
+      "normal": "Gestionada (PUSH) casi siempre: el FMGS calcula la velocidad de cada fase. Seleccionada (PULL) cuando el control pide una velocidad."
+    },
+    {
+      "controls": [
+        "fcu.hdg"
+      ],
+      "title": "HDG / TRK",
+      "what": "Rumbo (HDG) o derrota (TRK) objetivo.",
+      "normal": "PUSH (NAV) para seguir la ruta del FMGS. PULL para volar el rumbo de la ventana, por ejemplo con vectores radar."
+    },
+    {
+      "controls": [
+        "fcu.alt"
+      ],
+      "title": "ALT",
+      "what": "Altitud objetivo. El avión no la sobrepasa.",
+      "normal": "Se pone la altitud autorizada por el control. PUSH para subir o bajar en modo gestionado (CLB/DES, respetando las restricciones del plan), PULL para OP CLB/OP DES (directo, sin restricciones).",
+      "caution": "La ventana ALT siempre debe tener la autorización vigente."
+    },
+    {
+      "controls": [
+        "fcu.vs"
+      ],
+      "title": "V/S / FPA",
+      "what": "Velocidad vertical (V/S, ft/min) o ángulo de trayectoria (FPA, grados).",
+      "normal": "PULL para usar el valor de la ventana. PUSH nivela (V/S 0)."
+    },
+    {
+      "controls": [
+        "fcu.spd_mach"
+      ],
+      "title": "SPD/MACH",
+      "what": "Cambia la ventana de velocidad entre nudos y Mach.",
+      "normal": "El FMGS cambia solo en modo gestionado; a mano, al cruzar la altitud de cambio."
+    },
+    {
+      "controls": [
+        "fcu.hdg_trk"
+      ],
+      "title": "HDG V/S / TRK FPA",
+      "what": "Cambia la pareja de referencias HDG-V/S por TRK-FPA, en el FCU y en el PFD.",
+      "normal": "HDG-V/S es lo normal. TRK-FPA se usa en aproximaciones de no precisión con trayectoria fija."
+    },
+    {
+      "controls": [
+        "fcu.ap1",
+        "fcu.ap2"
+      ],
+      "title": "AP1 / AP2",
+      "what": "Conecta el piloto automático 1 o 2.",
+      "normal": "AP1 suele ir con el capitán y AP2 con el copiloto. Se conecta a partir de 100 ft tras el despegue. Para desconectar se usa el botón del sidestick."
+    },
+    {
+      "controls": [
+        "fcu.athr"
+      ],
+      "title": "A/THR",
+      "what": "Autoempuje: ajusta solo el empuje para mantener la velocidad o el empuje del modo.",
+      "normal": "Se arma al poner potencia de despegue y queda activo con las palancas en CL. Se desconecta con los botones de las palancas de gases."
+    },
+    {
+      "controls": [
+        "fcu.loc"
+      ],
+      "title": "LOC",
+      "what": "Arma la captura del localizador del ILS (solo guiado lateral).",
+      "normal": "Cuando el control autoriza a interceptar el localizador sin la senda todavía."
+    },
+    {
+      "controls": [
+        "fcu.appr"
+      ],
+      "title": "APPR",
+      "what": "Arma la aproximación: en un ILS, localizador y senda; en una RNAV, la trayectoria final del FMGS.",
+      "normal": "Tras la autorización para la aproximación. Comprueba en el FMA que salen LOC y G/S en azul (armados)."
+    },
+    {
+      "controls": [
+        "fcu.exped"
+      ],
+      "title": "EXPED",
+      "what": "Ascenso o descenso con la máxima velocidad vertical posible.",
+      "normal": "Poco usado; muchas aerolíneas no lo permiten."
+    },
+    {
+      "controls": [
+        "fcu.metric_alt"
+      ],
+      "title": "METRIC ALT",
+      "what": "Muestra la altitud también en metros en el PFD.",
+      "normal": "Solo en espacios aéreos que usan metros."
+    },
+    {
+      "controls": [
+        "fcu.alt_step"
+      ],
+      "title": "ALT 100 / 1000",
+      "what": "Cambia el paso de la rueda de altitud entre 100 y 1000 ft."
+    },
+    {
+      "controls": [
+        "mcdu.Data"
+      ],
+      "title": "DATA",
+      "what": "Páginas de datos: estado de la base de datos de navegación (AIRAC), posiciones de las IRS y del GPS, y puntos guardados por el piloto.",
+      "normal": "Primera página de la preparación: comprobar que la base de datos está en vigor."
+    },
+    {
+      "controls": [
+        "mcdu.Init"
+      ],
+      "title": "INIT",
+      "what": "INIT A: ruta de compañía o origen y destino, alterno, número de vuelo, cost index, nivel de crucero y temperatura. Con la flecha, INIT B: pesos y combustible (en algunas versiones del FMS de ToLiss esos datos van en FUEL PRED).",
+      "normal": "Segunda página de la preparación, justo tras DATA."
+    },
+    {
+      "controls": [
+        "mcdu.Fpln"
+      ],
+      "title": "F-PLN",
+      "what": "Plan de vuelo: pista y salida (SID), aerovías y puntos, llegada (STAR) y aproximación. Desde aquí se revisan restricciones y se borran discontinuidades.",
+      "normal": "Tras INIT A. Con el ND en PLAN se recorre la ruta con las flechas."
+    },
+    {
+      "controls": [
+        "mcdu.SecFpln"
+      ],
+      "title": "SEC F-PLN",
+      "what": "Plan de vuelo secundario: una copia para preparar alternativas (otra pista, el alterno) y activarlas de golpe.",
+      "normal": "Copia del plan activo tras prepararlo; se modifica para la pista o salida alternativa más probable."
+    },
+    {
+      "controls": [
+        "mcdu.RadNav"
+      ],
+      "title": "RAD NAV",
+      "what": "Radioayudas sintonizadas: VOR, ILS y ADF. El FMGS las elige solo; aquí se fuerzan.",
+      "normal": "Comprobar el ILS de la pista de despegue (para el retorno) y, en la aproximación, el ILS de llegada."
+    },
+    {
+      "controls": [
+        "mcdu.Perf"
+      ],
+      "title": "PERF",
+      "what": "Performance de cada fase: TAKE OFF (V1, VR, V2, flaps, FLEX), CLB, CRZ, DES, APPR (QNH, viento, mínimos, VAPP) y GO AROUND.",
+      "normal": "Última página de la preparación, con los datos de la hoja de cálculo de despegue. En el descenso se rellena PERF APPR."
+    },
+    {
+      "controls": [
+        "mcdu.FuelPred"
+      ],
+      "title": "FUEL PRED",
+      "what": "Predicciones de combustible: estimado en destino y en el alterno, reserva y extra. En algunas versiones del FMS sustituye a INIT B en tierra para introducir ZFW y combustible.",
+      "normal": "Revisar en crucero que el combustible estimado en destino supera la reserva."
+    },
+    {
+      "controls": [
+        "mcdu.Prog"
+      ],
+      "title": "PROG",
+      "what": "Progreso del vuelo: nivel óptimo y máximo, distancia y tiempo al destino, precisión de la navegación.",
+      "normal": "En crucero, para comprobar que el nivel es razonable y la precisión de navegación es HIGH."
+    },
+    {
+      "controls": [
+        "mcdu.DirTo"
+      ],
+      "title": "DIR",
+      "what": "Directo a un punto: el avión vuela en línea recta a un punto del plan o a uno escrito.",
+      "normal": "Cuando el control autoriza un directo. Se revisa en la página antes de insertarlo."
+    },
+    {
+      "controls": [
+        "mcdu.Menu"
+      ],
+      "title": "MCDU MENU",
+      "what": "Menú del MCDU: elige el sistema (FMGC, ACARS, AIDS, CFDS)."
+    },
+    {
+      "controls": [
+        "mcdu.Airport"
+      ],
+      "title": "AIRPORT",
+      "what": "Lleva el F-PLN al siguiente aeropuerto del plan (destino o alterno)."
+    },
+    {
+      "controls": [
+        "mcdu.ATC"
+      ],
+      "title": "ATC COMM",
+      "what": "Comunicaciones por datos con el control (CPDLC), en los aviones equipados."
+    },
+    {
+      "controls": [
+        "rmp1.active",
+        "rmp2.active",
+        "rmp1.stby",
+        "rmp2.stby"
+      ],
+      "title": "ACTIVE / STBY",
+      "what": "Ventanas ACTIVE (frecuencia en uso) y STBY (la que se prepara).",
+      "normal": "Se prepara la siguiente frecuencia en STBY y se intercambia cuando el control la da. En la app, tocar la ventana abre el sintonizador para teclearla."
+    },
+    {
+      "controls": [
+        "rmp1.xfer",
+        "rmp2.xfer"
+      ],
+      "title": "Transferencia ⇄",
+      "what": "Intercambia la frecuencia activa y la de reserva.",
+      "normal": "Al cambiar de frecuencia, tras colacionar la instrucción del control."
+    },
+    {
+      "controls": [
+        "rmp1.freq",
+        "rmp2.freq"
+      ],
+      "title": "Mando de frecuencia",
+      "what": "Mando doble de frecuencia: el aro exterior cambia los MHz y el centro los kHz de la ventana STBY."
+    },
+    {
+      "controls": [
+        "rmp1.vhf1",
+        "rmp2.vhf1",
+        "rmp1.vhf2",
+        "rmp2.vhf2",
+        "rmp1.vhf3",
+        "rmp2.vhf3",
+        "rmp1.hf1",
+        "rmp2.hf1",
+        "rmp1.hf2",
+        "rmp2.hf2"
+      ],
+      "title": "Selección de radio",
+      "what": "Elige qué radio se controla desde este RMP.",
+      "normal": "RMP 1 en VHF 1, RMP 2 en VHF 2. HF se usa en vuelos oceánicos."
+    },
+    {
+      "controls": [
+        "rmp1.am",
+        "rmp2.am"
+      ],
+      "title": "AM",
+      "what": "Modo AM en HF."
+    },
+    {
+      "controls": [
+        "rmp1.nav",
+        "rmp2.nav"
+      ],
+      "title": "NAV",
+      "what": "Navegación de reserva (con guarda): el RMP sintoniza las radioayudas en lugar del FMGS.",
+      "normal": "Solo si fallan los dos FMGC."
+    },
+    {
+      "controls": [
+        "rmp1.vor",
+        "rmp2.vor",
+        "rmp1.ils",
+        "rmp2.ils",
+        "rmp1.adf",
+        "rmp2.adf",
+        "rmp1.bfo",
+        "rmp2.bfo"
+      ],
+      "title": "VOR / ILS / ADF / BFO",
+      "what": "Con NAV activo, elige qué radioayuda se sintoniza (VOR, ILS o ADF). BFO sirve para identificar NDB que no emiten modulación."
+    },
+    {
+      "controls": [
+        "rmp1.power",
+        "rmp2.power"
+      ],
+      "title": "RMP ON/OFF",
+      "what": "Enciende o apaga el RMP.",
+      "positions": {
+        "OFF": "Apagado.",
+        "ON": "Encendido."
+      },
+      "normal": "ON."
+    },
+    {
+      "controls": [
+        "atc.code"
+      ],
+      "title": "Código",
+      "what": "Código del transpondedor (squawk) que asigna el control.",
+      "normal": "Se pone el código de la autorización en la preparación de cabina. 7700 es emergencia, 7600 fallo de radio y 7500 interferencia ilícita."
+    },
+    {
+      "controls": [
+        "atc.key1",
+        "atc.key2",
+        "atc.key3",
+        "atc.key4",
+        "atc.key5",
+        "atc.key6",
+        "atc.key7",
+        "atc.key0",
+        "atc.keyclr"
+      ],
+      "title": "Teclado ATC",
+      "what": "Teclado del código del transpondedor (solo dígitos del 0 al 7) y CLR para borrar."
+    },
+    {
+      "controls": [
+        "atc.mode"
+      ],
+      "title": "ATC MODE",
+      "what": "Modo del transpondedor.",
+      "positions": {
+        "STBY": "No transmite.",
+        "AUTO": "Transmite solo en vuelo; en tierra, según el equipo.",
+        "ON": "Transmite siempre."
+      },
+      "normal": "AUTO u ON según el aeropuerto (muchos piden ON al empezar a rodar para verte en el radar de superficie). STBY al llegar al aparcamiento."
+    },
+    {
+      "controls": [
+        "atc.system"
+      ],
+      "title": "SYS 1/2",
+      "what": "Elige el transpondedor 1 o 2.",
+      "positions": {
+        "1": "Sistema 1.",
+        "2": "Sistema 2."
+      },
+      "normal": "Según el día (par o impar) o la aerolínea."
+    },
+    {
+      "controls": [
+        "atc.alt_rptg"
+      ],
+      "title": "ALT RPTG",
+      "what": "Envía la altitud junto con el código.",
+      "positions": {
+        "OFF": "Sin altitud.",
+        "ON": "Normal."
+      },
+      "normal": "ON. OFF solo si el control lo pide por altitud errónea."
+    },
+    {
+      "controls": [
+        "atc.ident"
+      ],
+      "title": "IDENT",
+      "what": "Destaca tu avión en la pantalla del controlador durante unos segundos.",
+      "normal": "Solo cuando el control dice «squawk ident»."
+    },
+    {
+      "controls": [
+        "tcas.mode"
+      ],
+      "title": "TCAS MODE",
+      "what": "Modo del TCAS.",
+      "positions": {
+        "STBY": "Apagado.",
+        "TA": "Solo avisos de tráfico, sin órdenes de evitación.",
+        "TA/RA": "Normal: avisos y órdenes de evitación."
+      },
+      "normal": "TA/RA al entrar en pista y STBY al dejarla tras el aterrizaje. TA en ciertos fallos (motor) o aproximaciones paralelas si se pide.",
+      "caution": "Si el TCAS da un RA, se obedece aunque el control diga otra cosa."
+    },
+    {
+      "controls": [
+        "tcas.range"
+      ],
+      "title": "TCAS TRAFFIC",
+      "what": "Qué tráfico muestra el ND.",
+      "positions": {
+        "THRT": "Solo amenazas.",
+        "ALL": "Todo el tráfico cercano.",
+        "ABV": "Amplía hacia arriba: útil en ascenso.",
+        "BLW": "Amplía hacia abajo: útil en descenso."
+      },
+      "normal": "ABV en ascenso, BLW en descenso, ALL en crucero."
+    },
+    {
+      "controls": [
+        "door.switch"
+      ],
+      "title": "COCKPIT DOOR",
+      "what": "Control de la cerradura.",
+      "positions": {
+        "LOCK": "Bloquea la puerta e impide el acceso de emergencia durante un tiempo.",
+        "NORM": "Normal: cerrada, se abre desde dentro o tras la petición de cabina.",
+        "UNLOCK": "Desbloquea para dejar entrar."
+      },
+      "normal": "NORM en vuelo. UNLOCK al dejar entrar a alguien tras identificarlo."
+    },
+    {
+      "controls": [
+        "door.open"
+      ],
+      "title": "Puerta abierta",
+      "what": "Indicador: la puerta está abierta."
+    },
+    {
+      "controls": [
+        "flaps.lever"
+      ],
+      "title": "FLAPS",
+      "what": "Palanca de flaps.",
+      "positions": {
+        "0": "Limpio: crucero.",
+        "1": "CONF 1 (1+F en despegue): primera posición de aproximación o despegue.",
+        "2": "CONF 2: despegue o aproximación.",
+        "3": "CONF 3: despegue o aterrizaje.",
+        "FULL": "Aterrizaje normal."
+      },
+      "normal": "Despegue en 1+F, 2 o 3 según la hoja de performance. En aproximación se extienden por pasos al pasar por la velocidad indicada en el PFD (S, F).",
+      "caution": "No pases de la VFE de cada configuración."
+    },
+    {
+      "controls": [
+        "speedbrake.lever"
+      ],
+      "title": "SPEED BRAKE",
+      "what": "Palanca de aerofrenos y armado de los ground spoilers.",
+      "positions": {
+        "FULL": "Aerofrenos al máximo.",
+        "1/2": "Aerofrenos a la mitad.",
+        "RET": "Recogidos.",
+        "ARM": "Ground spoilers armados: salen solos al aterrizar o en un despegue abortado."
+      },
+      "normal": "ARM antes del despegue y en la aproximación (ARM SPLRS); RET tras el aterrizaje. En vuelo, para descender más rápido o perder velocidad.",
+      "caution": "En vuelo con flaps FULL los aerofrenos no actúan. No los uses cerca del suelo."
+    },
+    {
+      "controls": [
+        "park.brake"
+      ],
+      "title": "PARKING BRK",
+      "what": "Freno de aparcamiento.",
+      "positions": {
+        "OFF": "Suelto.",
+        "ON": "Puesto."
+      },
+      "normal": "ON en el aparcamiento y durante el arranque si no hay pushback; OFF cuando el personal de tierra lo pide para el pushback o al empezar a rodar.",
+      "caution": "Antes de soltarlo, confirma que hay calzos o tractor conectado, o que estás listo para rodar."
+    },
+    {
+      "controls": [
+        "rudtrim.knob"
+      ],
+      "title": "RUD TRIM",
+      "what": "Mando de compensación: morro a la izquierda o a la derecha.",
+      "normal": "Rara vez se toca: con el piloto automático la compensación es automática. Se usa con un motor parado y vuelo manual."
+    },
+    {
+      "controls": [
+        "rudtrim.reset"
+      ],
+      "title": "RESET",
+      "what": "Lleva la compensación del timón a cero.",
+      "normal": "En la preparación de cabina, para empezar con el timón centrado."
+    },
+    {
+      "controls": [
+        "rudtrim.display"
+      ],
+      "title": "Indicador RUD TRIM",
+      "what": "Indicador de la compensación en grados, L o R.",
+      "normal": "Debe marcar 0 antes del despegue."
+    },
+    {
+      "controls": [
+        "wxr.sys"
+      ],
+      "title": "SYS",
+      "what": "Elige el sistema de radar 1 o 2.",
+      "positions": {
+        "1": "Sistema 1.",
+        "OFF": "Apagado.",
+        "2": "Sistema 2."
+      },
+      "normal": "1 o 2 al alinearse en pista; OFF al dejarla.",
+      "caution": "No lo enciendas con personal cerca de la proa en tierra."
+    },
+    {
+      "controls": [
+        "wxr.pws"
+      ],
+      "title": "PWS",
+      "what": "Aviso predictivo de cizalladura (windshear) por radar.",
+      "positions": {
+        "OFF": "Apagado.",
+        "AUTO": "Normal: activo por debajo de 1.500 ft."
+      },
+      "normal": "AUTO antes del despegue."
+    },
+    {
+      "controls": [
+        "wxr.multiscan"
+      ],
+      "title": "MULTISCAN",
+      "what": "Barrido automático a varias inclinaciones.",
+      "positions": {
+        "MAN": "Inclinación y ganancia manuales.",
+        "AUTO": "Normal."
+      },
+      "normal": "AUTO."
+    },
+    {
+      "controls": [
+        "wxr.mode"
+      ],
+      "title": "MODE",
+      "what": "Qué muestra el radar.",
+      "positions": {
+        "WX": "Precipitación.",
+        "WX+T": "Precipitación y turbulencia.",
+        "TURB": "Solo turbulencia.",
+        "MAP": "Terreno."
+      },
+      "normal": "WX o WX+T."
+    },
+    {
+      "controls": [
+        "wxr.gain"
+      ],
+      "title": "GAIN",
+      "what": "Sensibilidad del radar.",
+      "positions": {
+        "CAL": "Calibrada (normal).",
+        "MAX": "Máxima."
+      },
+      "normal": "CAL."
+    },
+    {
+      "controls": [
+        "wxr.tilt"
+      ],
+      "title": "TILT",
+      "what": "Inclinación de la antena, en grados.",
+      "normal": "En modo manual: ligeramente hacia arriba en tierra y hacia abajo en crucero, para no ver el suelo."
+    }
+  ]
+}

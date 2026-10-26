@@ -71,21 +71,8 @@ struct FCUSelectorColumn: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            modeLabels
-            FCUWindowView(text: windowText,
-                          managed: model.isFCUPowered && model.isOn(selector.managed),
-                          verified: selector.isVerified || !model.showVerificationBadges,
-                          enabled: enabled) {
-                entryText = ""
-                entryRejected = false
-                entryShown = true
-            }
-            FCUKnobView(enabled: enabled,
-                        hasPush: selector.commands?.push != nil,
-                        hasPull: selector.commands?.pull != nil,
-                        onTurn: { steps in model.turn(selector, steps: steps) },
-                        onPush: { model.push(selector) },
-                        onPull: { model.pull(selector) })
+            selectorBody
+                .learnTarget(selector.id)
             ForEach(buttons) { button in
                 FCUButtonCell(button: button)
             }
@@ -104,6 +91,27 @@ struct FCUSelectorColumn: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("Escribe un número, por ejemplo \(format.text(for: exampleValue)).")
+        }
+    }
+
+    /// Legends, window and knob: the part that learn mode explains as one selector.
+    private var selectorBody: some View {
+        VStack(spacing: 10) {
+            modeLabels
+            FCUWindowView(text: windowText,
+                          managed: model.isFCUPowered && model.isOn(selector.managed),
+                          verified: selector.isVerified || !model.showVerificationBadges,
+                          enabled: enabled) {
+                entryText = ""
+                entryRejected = false
+                entryShown = true
+            }
+            FCUKnobView(enabled: enabled,
+                        hasPush: selector.commands?.push != nil,
+                        hasPull: selector.commands?.pull != nil,
+                        onTurn: { steps in model.turn(selector, steps: steps) },
+                        onPush: { model.push(selector) },
+                        onPull: { model.pull(selector) })
         }
     }
 
@@ -236,6 +244,7 @@ struct FCUButtonCell: View {
                     .offset(x: 5, y: -3)
             }
         }
+        .learnTarget(button.id)
     }
 }
 

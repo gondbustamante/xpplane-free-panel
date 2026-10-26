@@ -172,6 +172,7 @@ private struct ChecklistRow: View {
     let item: ProcedureItem
     let isCurrent: Bool
     @Environment(PanelModel.self) private var model
+    @State private var showWhy = false
 
     var body: some View {
         let done = model.isDone(procedure, item: index)
@@ -211,6 +212,11 @@ private struct ChecklistRow: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
+                if let why = item.why, isCurrent || showWhy {
+                    Label(why, systemImage: "lightbulb")
+                        .font(.footnote)
+                        .foregroundStyle(PanelTheme.checklistCyan.opacity(0.85))
+                }
                 metaLine(sensed: sensed, done: done)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -241,6 +247,9 @@ private struct ChecklistRow: View {
             if model.canApply(item) {
                 Button("Poner en \(item.response)", systemImage: "hand.tap") { model.apply(item) }
             }
+            if let control = item.checks?.first?.control {
+                Button("Explicar el mando", systemImage: "graduationcap") { model.explain(control: control) }
+            }
         }
     }
 
@@ -251,10 +260,19 @@ private struct ChecklistRow: View {
         let locatePanel = item.panels?.first
         let mismatches = sensed == .unsatisfied ? model.mismatches(in: item) : []
         let showsSensing = sensed != .notSensed && !(done && sensed != .satisfied)
-        if item.isOptional || showsSensing || locateControl != nil || locatePanel != nil {
+        let offersWhy = item.why != nil && !isCurrent
+        if item.isOptional || showsSensing || locateControl != nil || locatePanel != nil || offersWhy {
             HStack(spacing: 8) {
                 if item.isOptional {
                     Tag(text: "SI APLICA", colour: .secondary)
+                }
+                if offersWhy {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) { showWhy.toggle() }
+                    } label: {
+                        Label(showWhy ? "Ocultar" : "¿Por qué?", systemImage: "lightbulb")
+                    }
+                    .buttonStyle(.bordered)
                 }
                 if showsSensing {
                     switch sensed {

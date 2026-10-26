@@ -113,6 +113,16 @@ Adelantado desde la fase 2 porque es el panel que más se toca en vuelo y reutil
 - [ ] Confirmar en Diagnóstico los valores de WXPowerSwitch, WXSwitchMode, NDmode/NDrange y el rango de GAIN
 - [ ] Comprobar con X-Camera instalado qué comandos registra y si conviene agruparlos por categoría
 
+## Fase 1j · Modo aprender y preparación del MCDU (2026-10-26)
+
+- [x] Modo aprender: tocar un mando explica qué hace, posición a posición, su sistema y los procedimientos que lo usan; los mandos no se mueven y funciona sin simulador
+- [x] `mapping/guide/systems.json`: 33 sistemas y los 268 mandos del mapeo explicados, más las teclas de página del MCDU; el validador exige ids y posiciones reales
+- [x] Campo `why` en los ítems de procedimiento, visible en el ítem actual y con «¿Por qué?» en los demás
+- [x] Procedimientos «Preparación del MCDU (FMGS)», «Cierre del MCDU con la hoja de carga» y «Preparación de la aproximación en el MCDU»
+- [ ] Revisar las explicaciones con un piloto de A320 y ajustar al SOP de referencia
+- [ ] Ejercicios guiados con nota (cronómetro, errores y orden) sobre los procedimientos
+- [ ] Glosario de siglas buscable
+
  (2 a 3 meses) — en curso
 
 Hecho el 2026-10-22: barra lateral con fases de vuelo y grupos de paneles (`mapping/layout.json`), selector rotatorio, pulsador guardado, y **21 subpaneles del overhead con 124 controles**. Con el volcado real de ToLiss en `mapping/reference/`, los 74 datarefs y 101 comandos del mapeo están comprobados por nombre (el validador lo exige). 59 controles verificados; 65 pendientes de confirmar semántica de valores o índice, de los cuales 24 bloqueados como solo lectura.

@@ -15,6 +15,10 @@ struct RootView: View {
         Binding(get: { model.tuningRadioID != nil }, set: { if !$0 { model.tuningRadioID = nil } })
     }
 
+    private var explanationPresented: Binding<Bool> {
+        Binding(get: { model.explainingControlID != nil }, set: { if !$0 { model.explainingControlID = nil } })
+    }
+
     private var showChecklist: Binding<Bool> {
         Binding(get: { model.showChecklist }, set: { model.showChecklist = $0 })
     }
@@ -27,6 +31,9 @@ struct RootView: View {
                 ConnectionBar(showSettings: $showSettings, showDiagnostics: $showDiagnostics)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
+                if model.learnMode {
+                    LearnModeBanner()
+                }
                 PanelCanvas()
             }
             .background(PanelTheme.cockpitBackground.ignoresSafeArea())
@@ -35,6 +42,15 @@ struct RootView: View {
             .toolbarBackground(PanelTheme.cockpitBackground, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        withAnimation { model.learnMode.toggle() }
+                    } label: {
+                        Label("Aprender", systemImage: model.learnMode ? "graduationcap.fill" : "graduationcap")
+                    }
+                    .tint(model.learnMode ? PanelTheme.checklistCyan : nil)
+                    .help("Tocar un mando explica qué hace")
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         if let baro = model.baroPanels.first { model.openBaroSheet(baro) }
@@ -78,6 +94,11 @@ struct RootView: View {
         }
         .sheet(isPresented: baroPresented) {
             BaroSheet()
+        }
+        .sheet(isPresented: explanationPresented) {
+            if let id = model.explainingControlID {
+                ControlGuideSheet(controlID: id)
+            }
         }
         .preferredColorScheme(.dark)
         .persistentSystemOverlays(.hidden)
@@ -151,6 +172,7 @@ struct ControlView: View {
                     .help(control.notes ?? "Mapeo pendiente de verificar")
             }
         }
+        .learnTarget(control.id)
     }
 
     @ViewBuilder

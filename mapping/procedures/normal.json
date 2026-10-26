@@ -78,8 +78,34 @@
           "checks": [ { "control": "flaps.lever", "expect": ["0"] } ] },
         { "challenge": "ATC", "response": "STBY",
           "checks": [ { "control": "atc.mode", "expect": ["STBY"] } ] },
-        { "challenge": "MCDU", "response": "PREPARED", "note": "INIT, F-PLN, RAD NAV, PERF. Pulsa INIT y sigue las páginas.", "panels": ["mcdu"] },
+        { "challenge": "MCDU", "response": "PREPARED", "note": "Paso a paso en «Preparación del MCDU (FMGS)», el procedimiento siguiente.", "panels": ["mcdu"] },
         { "challenge": "FCU / BARO REF", "response": "SET", "panels": ["fcu", "efis_capt"] }
+      ]
+    },
+    {
+      "id": "fmgs_prep",
+      "kind": "flow",
+      "title": "Preparación del MCDU (FMGS)",
+      "phase": "cold_dark",
+      "summary": "Orden profesional DATA, INIT, F-PLN, SEC F-PLN, RAD NAV, INIT B, PERF (se recuerda como «DIFSRIP»). Con el plan de vuelo operacional (OFP), la autorización y las cartas a mano.",
+      "items": [
+        {"challenge": "PAPELES", "response": "A MANO", "note": "OFP con ruta, nivel, combustible y pesos estimados; carta de la salida (SID); autorización ATC si ya la tienes.", "why": "El MCDU se rellena copiando el plan de la compañía. Con todo delante no hay que volver atrás, y luego el otro piloto puede cruzar dato a dato."},
+        {"challenge": "DATA · A/C STATUS", "response": "CHECKED", "note": "Pulsa DATA y abre A/C STATUS (también aparece al encender el MCDU).", "sub": ["Tipo de avión y motores correctos", "Base de navegación (AIRAC) en vigor: fechas ACTIVE", "Si ha caducado, cambia a la segunda base", "PERF FACTOR (degradación del avión): no se toca"], "why": "Con una base caducada las SID, las STAR y las frecuencias pueden haber cambiado: el avión volaría procedimientos que ya no existen.", "panels": ["mcdu"]},
+        {"challenge": "INIT A · FROM/TO", "response": "INSERT", "note": "INIT → escribe origen/destino en el scratchpad, por ejemplo LEMD/LEBL, y pulsa LSK 1R. Si la compañía tiene ruta guardada, va en CO RTE.", "sub": ["FROM/TO: códigos OACI de 4 letras", "ALTN: el alterno del OFP", "FLT NBR: número de vuelo (LSK 3L)"], "why": "Origen y destino son la base de todo: con ellos el FMGS carga los aeropuertos, sus pistas y el tramo inicial del plan. También alimentan la presurización (elevación de destino).", "panels": ["mcdu"]},
+        {"challenge": "INIT A · COST INDEX", "response": "SET", "note": "Escribe el COST INDEX del OFP y pulsa LSK 5L.", "sub": ["0: máximo ahorro de combustible, vuelo lento", "Valores altos: más rápido, más consumo", "Típico en ruta corta: entre 10 y 40"], "why": "El cost index equilibra el coste del tiempo (tripulación, mantenimiento, conexiones) frente al combustible. De él salen las velocidades de ascenso, crucero y descenso gestionadas.", "panels": ["mcdu"]},
+        {"challenge": "INIT A · CRZ FL/TEMP", "response": "SET", "note": "Escribe el nivel y la temperatura de crucero del OFP, por ejemplo FL350/-54, en LSK 6L.", "sub": ["Si no conoces la temperatura, el FMGS usa la estándar", "TROPO: déjalo por defecto (36.090 ft)"], "why": "Las predicciones de tiempo y combustible dependen del nivel. La temperatura cambia el empuje disponible y la velocidad real.", "panels": ["mcdu"]},
+        {"challenge": "INIT A · ALIGN IRS", "response": "AS RQRD", "note": "Si las IRS siguen alineándose, comprueba que la posición del aeropuerto es correcta y pulsa ALIGN IRS (LSK 3R). En muchos aviones el GPS lo hace solo.", "why": "Las IRS necesitan saber dónde están para terminar la alineación. Una posición inicial errónea arrastra un error de navegación durante todo el vuelo.", "optional": true, "panels": ["mcdu"]},
+        {"challenge": "F-PLN · DEPARTURE", "response": "INSERT", "note": "F-PLN → LSK 1L sobre el aeropuerto de origen → DEPARTURE.", "sub": ["RWY: pista prevista (ATIS o autorización)", "SID: la de la autorización", "TRANS: si la SID tiene transición", "TMPY INSERT (LSK 6R) para confirmar"], "why": "La SID trae ya las restricciones de altitud y velocidad (en magenta) que el avión respetará en modo gestionado. Teclearlas a mano sería lento y propenso a errores.", "panels": ["mcdu"]},
+        {"challenge": "F-PLN · RUTA", "response": "INSERT", "note": "Revisión lateral (LSK izquierda) sobre el último punto de la SID → AIRWAYS para encadenar aerovías, o escribe los puntos uno a uno.", "sub": ["VIA: aerovía (p. ej. UN725)", "TO: punto de salida de la aerovía", "TMPY INSERT al acabar", "La llegada (STAR) puede esperar al crucero, cuando se sepa la pista"], "why": "La ruta del FMGS es la que volará el piloto automático en NAV. Tiene que coincidir punto a punto con el OFP y la autorización.", "panels": ["mcdu"]},
+        {"challenge": "F-PLN · DISCONTINUIDADES", "response": "CHECKED", "note": "Recorre el plan con las flechas. Borra con CLR las F-PLN DISCONTINUITY que unen tramos que sí van seguidos.", "sub": ["Deja las que son intencionadas (tras un tramo por vectores)", "Comprueba restricciones de la SID contra la carta", "Distancia total parecida a la del OFP"], "why": "En una discontinuidad el avión sigue recto con el último rumbo: si es un error, se sale de la ruta sin avisar.", "panels": ["mcdu"]},
+        {"challenge": "ND · PLAN", "response": "CHECKED", "note": "Pon el ND en modo PLAN y avanza por el plan con la flecha del F-PLN: el mapa se centra en cada punto.", "why": "Ver la ruta dibujada descubre errores que en una lista de nombres no se ven: un punto con nombre parecido en otro continente, un zigzag o un tramo que sobra.", "panels": ["mcdu", "efis_capt"]},
+        {"challenge": "SEC F-PLN", "response": "COPY ACTIVE", "note": "SEC F-PLN → COPY ACTIVE. Modifica la copia para la alternativa más probable: otra pista, otra SID o el regreso al aeropuerto de salida.", "why": "Si te cambian la pista justo antes de despegar, se activa el secundario (ACTIVATE SEC) en un toque en lugar de reprogramar con prisas y con el avión moviéndose.", "optional": true, "panels": ["mcdu"]},
+        {"challenge": "RAD NAV", "response": "CHECKED", "note": "RAD NAV: comprueba las radioayudas sintonizadas. Fuerza un VOR si la SID se basa en él.", "sub": ["ILS de la pista de despegue: útil para volver si hay que regresar", "Identificador correcto (no solo la frecuencia)", "Una radioayuda forzada se muestra en letra grande"], "why": "El FMGS sintoniza solo, pero no sabe qué radioayuda pide la carta para vigilar la salida. Con ella se cruza la navegación del FMGS contra una referencia independiente.", "panels": ["mcdu"]},
+        {"challenge": "INIT B · PESOS Y COMBUSTIBLE", "response": "INSERT", "note": "INIT → flecha a la página siguiente (INIT B). En algunas versiones del FMS de ToLiss es FUEL PRED.", "sub": ["ZFW/ZFWCG: peso sin combustible y centro de gravedad estimados del OFP", "BLOCK: combustible total a bordo", "TAXI: combustible de rodaje (por defecto 0,2 t)", "RTE RSV, FINAL, ALTN: del OFP", "Comprueba TOW y TRIP calculados"], "why": "Con el peso el FMGS calcula velocidades (VLS, maniobra), nivel máximo y predicciones. Un ZFW erróneo da velocidades de despegue erróneas: es una de las causas clásicas de incidentes.", "panels": ["mcdu"]},
+        {"challenge": "PERF · TAKE OFF", "response": "INSERT", "note": "PERF muestra TAKE OFF en tierra. Copia los datos del cálculo de despegue.", "sub": ["V1, VR, V2: en este orden, LSK 1L a 3L", "TRANS ALT: de la carta de la SID", "THR RED/ACC: por defecto 1500 ft o los de la compañía", "FLAPS/THS: configuración y compensación, p. ej. 1/UP0.8", "FLEX TO TEMP: empuje reducido, si se usa"], "why": "V2 es la velocidad que el avión mantiene tras despegar con un motor parado; el modo SRS del FD la usa. FLEX reduce el empuje cuando la pista sobra: alarga la vida del motor. El THS sale del centro de gravedad.", "panels": ["mcdu"]},
+        {"challenge": "PERF · CLB / CRZ / DES", "response": "CHECKED", "note": "Pasa por las páginas siguientes de PERF y revisa las velocidades gestionadas.", "sub": ["CLB: ECON, o una velocidad prefijada si el control la pide", "CRZ: Mach económico y nivel", "DES: ECON; se revisa de nuevo antes del descenso"], "why": "Esas velocidades salen del cost index y del peso. Revisarlas confirma que INIT A y INIT B tienen sentido.", "optional": true, "panels": ["mcdu"]},
+        {"challenge": "FCU · VALORES INICIALES", "response": "SET", "note": "En el FCU: ALT con la altitud inicial autorizada, SPD y HDG en rayas (gestionados), FD encendidos y BARO con el QNH.", "sub": ["Rayas en SPD: aparecen solas tras introducir V2", "La altitud autorizada sale de la autorización ATC, no de la carta"], "why": "Con la ventana ALT bien puesta el avión no sobrepasará la autorización. Con SPD y HDG gestionados el FD sigue la SID y las velocidades del FMGS desde el despegue.", "panels": ["mcdu", "fcu", "efis_capt"]},
+        {"challenge": "CRUCE ENTRE PILOTOS", "response": "PERFORMED", "note": "El otro piloto lee del MCDU y tú compruebas en el OFP: ruta, distancia total, combustible estimado en destino, pesos y PERF TAKE OFF.", "why": "Dos personas con fuentes distintas detectan los errores de tecleo. En la simulación, hazlo tú solo leyendo en voz alta.", "panels": ["mcdu"]}
       ]
     },
     {
@@ -98,13 +124,28 @@
       ]
     },
     {
+      "id": "fmgs_final",
+      "kind": "flow",
+      "title": "Cierre del MCDU con la hoja de carga",
+      "phase": "before_start",
+      "summary": "Con la hoja de carga (loadsheet) definitiva: pesos reales, combustible real y datos de despegue finales, antes del briefing de salida.",
+      "items": [
+        {"challenge": "LOADSHEET", "response": "RECEIVED", "note": "Pesos finales: ZFW, ZFWCG o MACZFW, TOW y combustible a bordo.", "why": "Hasta ahora el MCDU tenía la estimación del OFP. La hoja de carga refleja el pasaje y la carga reales."},
+        {"challenge": "INIT B / FUEL PRED · ZFW/ZFWCG", "response": "UPDATED", "note": "Sustituye ZFW y ZFWCG por los de la hoja de carga. Comprueba que el BLOCK coincide con el combustible del ECAM.", "sub": ["TOW del MCDU = TOW de la hoja de carga (±)", "FOB del ECAM ≈ BLOCK"], "why": "Si el peso real es mayor que el previsto, las velocidades de despegue y el FLEX calculados pueden no ser válidos.", "panels": ["mcdu"]},
+        {"challenge": "PERF · TAKE OFF", "response": "FINAL", "note": "Si el TOW cambió más de lo que tolera la compañía, recalcula el despegue. Confirma la pista, las V, el FLEX y FLAPS/THS.", "sub": ["THS: compensación según el CG final", "Pon la rueda de compensación (trim) del pedestal en ese valor"], "why": "Un THS mal puesto hace que el avión rote demasiado pronto o cueste levantarlo.", "panels": ["mcdu"]},
+        {"challenge": "SEC F-PLN", "response": "UPDATED", "note": "Si se cambió la pista o la SID, actualiza también el secundario.", "optional": true, "panels": ["mcdu"]},
+        {"challenge": "BRIEFING DE SALIDA", "response": "PERFORMED", "note": "Con las páginas del MCDU en pantalla: pista y SID (F-PLN), altitud inicial (FCU), velocidades y FLEX (PERF), qué hacer con un fallo de motor y regreso.", "sub": ["Fallo antes de V1: se aborta", "Fallo después de V1: se sigue, se mantiene V2 y se sube a la altitud de aceleración con motor parado (ENG OUT ACC)", "Ruta de regreso: el ILS de la salida y el SEC F-PLN"], "why": "El briefing pone a los dos pilotos de acuerdo con el plan antes de tener prisa. Repasar el MCDU en voz alta es la última comprobación de los datos.", "panels": ["mcdu"]},
+        {"challenge": "T.O DATA", "response": "CROSS-CHECKED", "note": "Los dos pilotos leen V1, VR, V2 y FLEX del MCDU y comprueban que coinciden con el cálculo.", "why": "Es el ítem T.O SPEEDS & THRUST del checklist BEFORE START: lo que se lee ahí tiene que estar ya comprobado.", "panels": ["mcdu"]}
+      ]
+    },
+    {
       "id": "before_start_flow",
       "kind": "flow",
       "title": "Antes del arranque",
       "phase": "before_start",
       "summary": "Con la autorización IFR y la hoja de carga.",
       "items": [
-        { "challenge": "T.O DATA (MCDU PERF)", "response": "INSERTED", "panels": ["mcdu"] },
+        { "challenge": "T.O DATA (MCDU PERF)", "response": "INSERTED", "note": "Con la hoja de carga: «Cierre del MCDU con la hoja de carga».", "panels": ["mcdu"] },
         { "challenge": "DOORS / WINDOWS", "response": "CLOSED" },
         { "challenge": "FUEL PUMPS", "response": "ON",
           "checks": [ { "control": "fuel.l_pump1", "expect": ["ON"] }, { "control": "fuel.l_pump2", "expect": ["ON"] }, { "control": "fuel.r_pump1", "expect": ["ON"] }, { "control": "fuel.r_pump2", "expect": ["ON"] } ] },
@@ -265,13 +306,34 @@
       ]
     },
     {
+      "id": "fmgs_appr",
+      "kind": "flow",
+      "title": "Preparación de la aproximación en el MCDU",
+      "phase": "approach",
+      "summary": "En crucero, unos 15 minutos o unas 100 NM antes del punto de descenso (TOD), con el ATIS, las cartas y el combustible a la vista.",
+      "items": [
+        {"challenge": "ATIS / METEO", "response": "OBTAINED", "note": "Pista en servicio, QNH, viento, temperatura, nivel de transición y meteorología del alterno.", "why": "Todo lo que sigue depende de la pista y del tiempo en destino. Sin el ATIS se prepara una aproximación que luego hay que rehacer."},
+        {"challenge": "F-PLN · ARRIVAL", "response": "INSERT", "note": "F-PLN → LSK izquierda sobre el destino → ARRIVAL.", "sub": ["APPR: la aproximación, p. ej. ILS24R", "VIA: transición a la aproximación, si existe", "STAR: la llegada asignada", "TRANS: transición de la STAR", "TMPY INSERT"], "why": "Al cargar la llegada el FMGS recalcula la distancia hasta la pista y por tanto el punto de descenso y el combustible.", "panels": ["mcdu"]},
+        {"challenge": "F-PLN · REVISIÓN", "response": "CHECKED", "note": "Recorre la llegada con el ND en PLAN: discontinuidades, restricciones de altitud y velocidad contra la carta, y frustrada tras la pista.", "sub": ["Discontinuidad entre la ruta y la STAR: bórrala si van seguidas", "Restricciones en magenta: coinciden con la carta", "MISSED APPROACH: presente tras el aterrizaje"], "why": "En el descenso gestionado el avión respetará esas restricciones. Si la frustrada no está cargada, el avión no sabrá qué hacer al motor y al aire.", "panels": ["mcdu", "efis_capt"]},
+        {"challenge": "RAD NAV · ILS", "response": "CHECKED", "note": "Comprueba que el ILS de la pista está sintonizado: frecuencia, identificador y curso de la carta.", "why": "El ILS lo elige el FMGS a partir de la aproximación. Si la carta dice otro curso, el avión interceptará mal el localizador.", "panels": ["mcdu"]},
+        {"challenge": "PERF · APPR", "response": "INSERT", "note": "PERF → página APPR.", "sub": ["QNH, TEMP y MAG WIND del ATIS", "TRANS FL: nivel de transición", "VAPP: la calcula sola (VLS + corrección de viento)", "MDA o DH: mínimos de la carta (BARO o RADIO)", "LDG CONF: FULL, o 3 con GPWS LDG FLAP 3 ON"], "why": "Con viento y QNH el FMGS calcula la VAPP y el perfil de desaceleración. Los mínimos generan el aviso «MINIMUM» en el PFD.", "panels": ["mcdu"]},
+        {"challenge": "PERF · GO AROUND", "response": "CHECKED", "note": "Altitudes de reducción de empuje y de aceleración en la frustrada.", "why": "Tras motor y al aire el FD sigue estos valores, igual que en el despegue.", "panels": ["mcdu"]},
+        {"challenge": "FUEL PRED", "response": "CHECKED", "note": "Combustible estimado en destino y en el alterno, contra la reserva final y el mínimo de la compañía.", "why": "Es el último momento cómodo para decidir si sobra combustible para esperas o hay que pensar ya en el alterno.", "panels": ["mcdu"]},
+        {"challenge": "SEC F-PLN", "response": "PREPARED", "note": "Copia el activo y prepara la alternativa: otra pista con el viento, una aproximación distinta o el alterno.", "why": "Con un cambio de pista en el descenso se activa el secundario en lugar de reprogramar a baja altura y con mucha carga de trabajo.", "optional": true, "panels": ["mcdu"]},
+        {"challenge": "EFIS / ECAM", "response": "SET", "note": "LS encendido en un ILS, modo y escala del ND, y ECAM STATUS revisado por si hay limitaciones de aterrizaje.", "panels": ["mcdu", "efis_capt", "ecp"]},
+        {"challenge": "BRIEFING DE APROXIMACIÓN", "response": "PERFORMED", "note": "Meteorología, llegada y aproximación, mínimos, frustrada, configuración de aterrizaje y autobrake, y rodaje previsto.", "why": "Igual que en la salida: los dos pilotos llegan a la parte más cargada del vuelo con el mismo plan en la cabeza.", "panels": ["mcdu"]},
+        {"challenge": "DESCENSO", "response": "INITIATED", "note": "En el TOD, con la autorización: ALT en el FCU a la altitud autorizada y PUSH para descenso gestionado (DES).", "sub": ["Regla práctica: altitud en miles × 3 = millas necesarias", "Si vas alto, aerofrenos; si vas bajo, V/S reducida"], "why": "En DES el avión sigue el perfil calculado respetando las restricciones de la STAR.", "panels": ["mcdu", "fcu"]},
+        {"challenge": "ACTIVATE APPR PHASE", "response": "AS RQRD", "note": "En PERF APPR, ACTIVATE APPR PHASE (LSK 6L, dos pulsaciones) cuando el control te da vectores o vas a frenar antes del punto DECEL.", "why": "En fase de aproximación las velocidades gestionadas bajan a la de maniobra de cada configuración (S, F, VAPP). Si no se activa, el avión mantiene la velocidad de descenso.", "optional": true, "panels": ["mcdu"]}
+      ]
+    },
+    {
       "id": "descent_flow",
       "kind": "flow",
       "title": "Descenso y preparación",
       "phase": "approach",
       "summary": "Prepara la aproximación antes del punto de descenso.",
       "items": [
-        { "challenge": "MCDU APPR", "response": "PREPARED", "note": "F-PLN, RAD NAV, PERF APPR con QNH, viento y mínimos.", "panels": ["mcdu"] },
+        { "challenge": "MCDU APPR", "response": "PREPARED", "note": "Paso a paso en «Preparación de la aproximación en el MCDU».", "panels": ["mcdu"] },
         { "challenge": "AUTO BRAKE", "response": "AS RQRD" },
         { "challenge": "BARO REF", "response": "SET", "note": "Al cruzar el nivel de transición.", "panels": ["efis_capt"] },
         { "challenge": "LAND LT", "response": "ON", "note": "Por debajo de FL100.",

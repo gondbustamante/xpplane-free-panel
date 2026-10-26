@@ -51,6 +51,8 @@ public struct ProcedureItem: Codable, Sendable, Hashable {
     public let response: String
     /// Explanation shown under the line.
     public let note: String?
+    /// Why the step is done: the reasoning behind it, shown on demand.
+    public let why: String?
     /// Sub-lines (ECAM memo items).
     public let sub: [String]?
     /// Both pilots answer.

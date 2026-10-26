@@ -224,6 +224,7 @@ struct AbsoluteControlView: View {
                 LocateRing(diameter: PanelMetrics.pt(control.size ?? 22) + 16)
             }
         }
+        .learnTarget(control.id)
     }
 
     /// Tapping a radio or BARO knob opens its sheet; other dual knobs click towards the tap.

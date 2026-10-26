@@ -49,6 +49,12 @@ Pulsa el engranaje, introduce la IP del PC y el puerto 8087, y *Guardar y conect
 
 Un dedo acciona interruptores y pulsadores; dos dedos desplazan y pellizcan para hacer zoom. Un toque con dos dedos acerca la zona tocada a tamaño táctil y otro vuelve a la vista ajustada, igual que el botón de ajuste. La barra lateral elige qué ver: una fase de vuelo (solo los paneles de ese momento) o un grupo completo (Overhead, FCU). En el FCU cada ventana muestra el valor real del avión (con el punto de modo gestionado y las rayas cuando toca); la rueda se gira arrastrando o con − / +, PUSH y PULL hacen lo mismo que empujar o tirar de la rueda, y tocar la ventana permite teclear un valor exacto.
 
+## Modo aprender
+
+El birrete de la barra superior activa el **modo aprender**: tocar cualquier mando (overhead, pedestal, ECAM, EFIS, FCU) abre una hoja con qué hace, qué significa cada posición (marcando la actual), cuándo se usa, errores típicos, el sistema al que pertenece y los procedimientos donde aparece. Los mandos no se mueven mientras está activo, y funciona sin simulador. En el MCDU, las teclas de página (INIT, F-PLN, PERF…) explican su página y el resto del teclado sigue escribiendo.
+
+Los procedimientos incluyen la **preparación del MCDU como la hacen los pilotos de línea** (DATA, INIT, F-PLN, SEC F-PLN, RAD NAV, INIT B, PERF), el cierre con la hoja de carga y la preparación de la aproximación, con los pasos de cada página y el porqué de cada uno.
+
 ## Verificar y ampliar el mapeo
 
 Los índices del array `AirbusFBW/OHPLightSwitches` proceden de scripts publicados por usuarios y hay que confirmarlos en tu versión de ToLiss. El flujo está en [docs/MAPPING.md](docs/MAPPING.md). Desde el iPad: icono del estetoscopio, haz clic en un interruptor de la cabina virtual y mira qué índice se ilumina. Desde la Terminal:
@@ -74,6 +80,7 @@ mapping/ecam/          ECAM Control Panel y MASTER WARN / CAUT
 mapping/pedestal/      RMP 1/2, WX RADAR, speedbrake, flaps, ENG, RUD TRIM, PARKING BRK, ATC/TCAS, COCKPIT DOOR
 mapping/efis/          EFIS capitán y F/O del glareshield (BARO, FD, LS, ND)
 mapping/procedures/    Procedimientos normales y checklist del A320; los ítems ligados a mandos se marcan solos
+mapping/guide/         Explicaciones del modo aprender: qué hace cada sistema y cada mando, posición a posición
 mapping/reference/     Volcado de datarefs y comandos de ToLiss (xp.py dump)
 tools/                 xp_relay.py (relay LAN), xp.py (CLI de descubrimiento), validate_mapping.py, make_icon.py (icono y logo)
 docs/                  Arquitectura, roadmap y guía de mapeo

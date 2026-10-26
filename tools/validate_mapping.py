@@ -5,6 +5,7 @@ mapping/layout.json        panel groups and flight phases
 mapping/<group>/*.json     one subpanel per file (toggle2 | toggle3 | korry | rotary controls)
 mapping/fcu/*.json         the Flight Control Unit (selectors + buttons), its own schema
 mapping/procedures/*.json  flows and checklists; sensed items must name real controls and positions
+mapping/guide/*.json       learn-mode explanations; must name real controls, positions and panels
 mapping/reference/*.txt    xp.py dump of ToLiss; every AirbusFBW/ and toliss_airbus/ name must appear there
 """
 import glob
@@ -23,6 +24,9 @@ FCU_BUTTON_KINDS = {"push", "toggle"}
 DUMP_PREFIXES = ("AirbusFBW/", "toliss_airbus/")
 # Panels drawn by the app itself, without a mapping file.
 BUILTIN_PANELS = {"mcdu", "camera"}
+# MCDU page keys the learn mode can explain, as "mcdu.<ToLiss command suffix>".
+MCDU_KEYS = {"DirTo", "Prog", "Perf", "Init", "Data", "Fpln", "RadNav", "FuelPred", "SecFpln", "ATC", "Menu",
+             "Airport"}
 
 
 # ---------------------------------------------------------------- overhead-style subpanels
@@ -360,6 +364,56 @@ def validate_procedures(root, controls, panel_ids):
     return errors
 
 
+def validate_guide(root, controls, panel_ids):
+    """Explanations: known controls (panel, FCU or MCDU page key), known positions, one entry per control."""
+    errors, explained = [], set()
+    fcu_ids = set()
+    for path in glob.glob(os.path.join(root, "fcu", "*.json")):
+        with open(path, encoding="utf-8") as handle:
+            fcu = json.load(handle)
+        fcu_ids |= {item.get("id") for item in fcu.get("selectors", []) + fcu.get("buttons", [])}
+    mcdu_ids = {f"mcdu.{key}" for key in MCDU_KEYS}
+    paths = sorted(glob.glob(os.path.join(root, "guide", "*.json")))
+    systems = 0
+    for path in paths:
+        name = os.path.relpath(path)
+        with open(path, encoding="utf-8") as handle:
+            book = json.load(handle)
+        for system in book.get("systems", []):
+            systems += 1
+            if not system.get("id") or not system.get("title") or not system.get("summary"):
+                errors.append(f"{name} · sistema '{system.get('id')}': faltan 'id', 'title' o 'summary'")
+            for panel in system.get("panels", []):
+                if panel not in panel_ids:
+                    errors.append(f"{name} · sistema '{system.get('id')}': el panel '{panel}' no existe")
+        for entry in book.get("explanations", []):
+            ids = entry.get("controls") or []
+            where = f"{name} · {', '.join(ids) or '<sin controles>'}"
+            if not ids or not entry.get("what"):
+                errors.append(f"{where}: faltan 'controls' o 'what'")
+            for cid in ids:
+                if cid in explained:
+                    errors.append(f"{where}: '{cid}' ya tiene explicación")
+                explained.add(cid)
+                control = controls.get(cid)
+                if control is None and cid not in fcu_ids and cid not in mcdu_ids:
+                    errors.append(f"{where}: el mando '{cid}' no existe")
+                    continue
+                if control is not None:
+                    for position in (entry.get("positions") or {}):
+                        if position not in control.get("positions", []):
+                            errors.append(f"{where}: '{cid}' no tiene la posición '{position}'"
+                                          f" (posiciones: {control.get('positions')})")
+    if paths:
+        explainable = set(controls) | fcu_ids
+        missing = sorted(explainable - explained)
+        print(f"\nGuía: {systems} sistemas, {len(explained & explainable)} de {len(explainable)} mandos explicados"
+              f" y {len(explained & mcdu_ids)} teclas del MCDU.")
+        if missing:
+            print(f"AVISO: sin explicación: {', '.join(missing)}")
+    return errors
+
+
 def load_reference(root):
     """Names from mapping/reference/*.txt (xp.py dump), or None when no dump exists yet."""
     def read(name):
@@ -384,7 +438,7 @@ def main():
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "mapping")
     files = sorted(f for f in glob.glob(os.path.join(root, "**", "*.json"), recursive=True)
                    if os.path.basename(f) != "layout.json" and os.sep + "reference" + os.sep not in f
-                   and os.sep + "procedures" + os.sep not in f)
+                   and os.sep + "procedures" + os.sep not in f and os.sep + "guide" + os.sep not in f)
     if not files:
         sys.exit("No hay archivos de mapeo.")
     ref_datarefs, ref_commands = load_reference(root)
@@ -423,6 +477,10 @@ def main():
         failed = True
 
     for error in validate_procedures(root, controls, panel_ids | BUILTIN_PANELS | {"fcu"}):
+        print(f"ERROR: {error}")
+        failed = True
+
+    for error in validate_guide(root, controls, panel_ids | BUILTIN_PANELS | {"fcu"}):
         print(f"ERROR: {error}")
         failed = True
 
