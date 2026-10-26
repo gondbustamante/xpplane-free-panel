@@ -19,6 +19,14 @@ struct RootView: View {
         Binding(get: { model.explainingControlID != nil }, set: { if !$0 { model.explainingControlID = nil } })
     }
 
+    private var briefingExercise: Binding<ExerciseDefinition?> {
+        Binding(get: { model.exercise(model.exerciseBriefingID) }, set: { model.exerciseBriefingID = $0?.id })
+    }
+
+    private var resultPresented: Binding<Bool> {
+        Binding(get: { model.exerciseRun?.result != nil }, set: { if !$0 { model.closeExerciseResult() } })
+    }
+
     private var showChecklist: Binding<Bool> {
         Binding(get: { model.showChecklist }, set: { model.showChecklist = $0 })
     }
@@ -34,6 +42,7 @@ struct RootView: View {
                 if model.learnMode {
                     LearnModeBanner()
                 }
+                ExerciseBar()
                 PanelCanvas()
             }
             .background(PanelTheme.cockpitBackground.ignoresSafeArea())
@@ -73,7 +82,8 @@ struct RootView: View {
                     } label: {
                         Label("Checklist", systemImage: model.showChecklist ? "checklist.checked" : "checklist")
                     }
-                    .disabled(model.procedures.isEmpty)
+                    // In an exam the checklist would give the answers away.
+                    .disabled(model.procedures.isEmpty || model.isExamRunning)
                 }
             }
             // Checklist beside the panels; a sheet when the window is narrow.
@@ -94,6 +104,12 @@ struct RootView: View {
         }
         .sheet(isPresented: baroPresented) {
             BaroSheet()
+        }
+        .sheet(item: briefingExercise) { exercise in
+            ExerciseBriefingSheet(exercise: exercise)
+        }
+        .sheet(isPresented: resultPresented) {
+            ExerciseResultSheet()
         }
         .sheet(isPresented: explanationPresented) {
             if let id = model.explainingControlID {

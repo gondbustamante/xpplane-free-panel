@@ -53,6 +53,10 @@ Un dedo acciona interruptores y pulsadores; dos dedos desplazan y pellizcan para
 
 El birrete de la barra superior activa el **modo aprender**: tocar cualquier mando (overhead, pedestal, ECAM, EFIS, FCU) abre una hoja con qué hace, qué significa cada posición (marcando la actual), cuándo se usa, errores típicos, el sistema al que pertenece y los procedimientos donde aparece. Los mandos no se mueven mientras está activo, y funciona sin simulador. En el MCDU, las teclas de página (INIT, F-PLN, PERF…) explican su página y el resto del teclado sigue escribiendo.
 
+Cada paso de cada procedimiento explica **por qué** se hace («¿Por qué?» en el checklist).
+
+En la barra lateral, **Ejercicios** propone ocho ejercicios cronometrados, del encendido del avión a dejarlo asegurado, más la preparación del MCDU. En modo guiado se hacen con el checklist a la vista; en modo examen, de memoria, con pistas que cuestan puntos. La app vigila los mandos y puntúa el tiempo, el orden, los pasos deshechos y los mandos que no tocaban, con tres estrellas como máximo y un resumen de qué repasar. Funcionan con X-Plane o en modo demo.
+
 Los procedimientos incluyen la **preparación del MCDU como la hacen los pilotos de línea** (DATA, INIT, F-PLN, SEC F-PLN, RAD NAV, INIT B, PERF), el cierre con la hoja de carga y la preparación de la aproximación, con los pasos de cada página y el porqué de cada uno.
 
 ## Verificar y ampliar el mapeo
@@ -81,6 +85,7 @@ mapping/pedestal/      RMP 1/2, WX RADAR, speedbrake, flaps, ENG, RUD TRIM, PARK
 mapping/efis/          EFIS capitán y F/O del glareshield (BARO, FD, LS, ND)
 mapping/procedures/    Procedimientos normales y checklist del A320; los ítems ligados a mandos se marcan solos
 mapping/guide/         Explicaciones del modo aprender: qué hace cada sistema y cada mando, posición a posición
+mapping/exercises/     Ejercicios cronometrados sobre los procedimientos (tiempo objetivo, nivel)
 mapping/reference/     Volcado de datarefs y comandos de ToLiss (xp.py dump)
 tools/                 xp_relay.py (relay LAN), xp.py (CLI de descubrimiento), validate_mapping.py, make_icon.py (icono y logo)
 docs/                  Arquitectura, roadmap y guía de mapeo

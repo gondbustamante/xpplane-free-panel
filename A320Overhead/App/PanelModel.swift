@@ -53,6 +53,18 @@ enum BacklightMode: String, CaseIterable, Identifiable {
 }
 
 /// What the main canvas shows: every subpanel, one panel group, or the subpanels of a flight phase.
+/// One run of an exercise: the tracker while it is flown, then its result.
+struct ExerciseRun {
+    var tracker: ExerciseTracker
+    let startedAt: Date
+    /// Set when the run ends; the result sheet shows it.
+    var result: ExerciseResult?
+    /// Exam mode: steps revealed with the hint button.
+    var revealed: Set<Int> = []
+
+    var isRunning: Bool { result == nil }
+}
+
 enum PanelSelection: Hashable {
     case all
     case group(String)
@@ -153,6 +165,24 @@ final class PanelModel {
     var explainingControlID: String?
     /// Explanations of systems and controls from `mapping/guide`.
     private(set) var guide: Guide = .empty
+    /// Timed exercises from `mapping/exercises`.
+    private(set) var exercises: [ExerciseDefinition] = []
+    /// The exercise being flown, and its result once it ends.
+    private(set) var exerciseRun: ExerciseRun?
+    /// Results by exercise id, newest first.
+    private(set) var exerciseResults: [String: [ExerciseResult]] = [:] {
+        didSet {
+            if let data = try? JSONEncoder().encode(exerciseResults) {
+                UserDefaults.standard.set(data, forKey: Keys.exerciseResults)
+            }
+        }
+    }
+    /// Exercise whose briefing sheet is open.
+    var exerciseBriefingID: String?
+    /// Switches whose position matters: every overhead control and any control a procedure
+    /// checks. Moving one an exercise does not use is a mistake; radios, keypads and display
+    /// keys are not judged.
+    @ObservationIgnored private var configurationControls: Set<String> = []
     /// Zoom of the panel canvas (1 = native size). Pinch or the − / + buttons change it.
     var canvasScale: Double {
         didSet { UserDefaults.standard.set(canvasScale, forKey: Keys.scale) }
@@ -284,6 +314,7 @@ final class PanelModel {
         // v2: badges are off by default since the overhead aims at realism; mapping work turns them on.
         static let badges = "ui.verificationBadges.v2"
         static let learnMode = "ui.learnMode"
+        static let exerciseResults = "exercises.results"
         static let extras = "diag.extraDatarefs"
         static let selection = "ui.selection"
         static let scale = "ui.canvasScale"
@@ -307,6 +338,10 @@ final class PanelModel {
         demoMode = defaults.bool(forKey: Keys.demoMode)
         showVerificationBadges = defaults.object(forKey: Keys.badges) as? Bool ?? false
         learnMode = defaults.bool(forKey: Keys.learnMode)
+        if let data = defaults.data(forKey: Keys.exerciseResults),
+           let stored = try? JSONDecoder().decode([String: [ExerciseResult]].self, from: data) {
+            exerciseResults = stored
+        }
         extraDatarefs = defaults.stringArray(forKey: Keys.extras) ?? []
         let storedUnit = defaults.integer(forKey: Keys.mcduUnit)
         mcduUnit = storedUnit == 2 ? 2 : 1
@@ -365,6 +400,16 @@ final class PanelModel {
                 lastError = "Error leyendo mapping/guide: \(error.localizedDescription)"
             }
         }
+        let exercisesDirectory = directory.appendingPathComponent("exercises", isDirectory: true)
+        if FileManager.default.fileExists(atPath: exercisesDirectory.path) {
+            do {
+                exercises = try ExerciseLoader.loadAll(in: exercisesDirectory)
+            } catch {
+                lastError = "Error leyendo mapping/exercises: \(error.localizedDescription)"
+            }
+        }
+        configurationControls = Set(subpanels.filter { $0.groupID == "overhead" }.flatMap { $0.controls.map(\.id) })
+            .union(procedures.flatMap { $0.items.flatMap { ($0.checks ?? []).map(\.control) } })
         let fcuDirectory = directory.appendingPathComponent("fcu", isDirectory: true)
         if FileManager.default.fileExists(atPath: fcuDirectory.path) {
             do {
@@ -587,6 +632,7 @@ final class PanelModel {
     func toggleTick(_ procedure: Procedure, item index: Int) {
         let key = checkKey(procedure, index)
         if manualChecks.contains(key) { manualChecks.remove(key) } else { manualChecks.insert(key) }
+        refreshExercise()
     }
 
     func progress(of procedure: Procedure) -> (done: Int, total: Int) {
@@ -614,6 +660,11 @@ final class PanelModel {
     /// Shows the control an item refers to: switches to its section when it is not on screen,
     /// then makes it pulse.
     func locate(control id: String) {
+        exerciseHint()
+        highlight(control: id)
+    }
+
+    private func highlight(control id: String) {
         guard let panel = panelOfControl[id] else { return }
         if !visibleItems.contains(where: { $0.id == panel }) { selection = .subpanel(panel) }
         highlightedControl = id
@@ -640,6 +691,7 @@ final class PanelModel {
 
     /// Moves every sensed control that is out of place to the first expected position.
     func apply(_ item: ProcedureItem) {
+        exerciseHint()
         for check in item.checks ?? [] {
             guard let control = controlsByID[check.control], isAvailable(control),
                   let current = positionName(ofControl: check.control), !check.expect.contains(current),
@@ -692,6 +744,136 @@ final class PanelModel {
                 if let unit { return (item.panels ?? []).contains(unit) }
                 return false
             }
+        }
+    }
+
+    // MARK: Exercises
+
+    var isExerciseRunning: Bool { exerciseRun?.isRunning == true }
+    var isExamRunning: Bool { isExerciseRunning && exerciseRun?.tracker.mode == .exam }
+
+    func exercise(_ id: String?) -> ExerciseDefinition? {
+        guard let id else { return nil }
+        return exercises.first { $0.id == id }
+    }
+
+    func bestResult(of id: String) -> ExerciseResult? {
+        exerciseResults[id]?.max { $0.score < $1.score }
+    }
+
+    /// Steps an exercise has in a mode, for its briefing.
+    func exerciseSteps(_ definition: ExerciseDefinition, mode: ExerciseMode) -> [ExerciseStep] {
+        ExerciseTracker(definition: definition, procedures: procedures, mode: mode).steps
+    }
+
+    /// Starts a run: clears the hand ticks of its procedures, records the starting state and
+    /// shows the first procedure (guided) or its flight phase without the checklist (exam).
+    func startExercise(_ id: String, mode: ExerciseMode) {
+        guard status == .connected, let definition = exercise(id) else { return }
+        for procedureID in definition.procedures {
+            if let found = procedure(procedureID) { resetTicks(of: found) }
+        }
+        learnMode = false
+        exerciseBriefingID = nil
+        var tracker = ExerciseTracker(definition: definition, procedures: procedures, mode: mode)
+        tracker.update(at: 0, position: positionName(ofControl:), ticked: isTicked(step:))
+        exerciseRun = ExerciseRun(tracker: tracker, startedAt: Date())
+        guard let first = definition.procedures.first else { return }
+        switch mode {
+        case .guided:
+            selection = .procedure(first)
+        case .exam:
+            showChecklist = false
+            if let phase = procedure(first)?.phase { selection = .phase(phase) }
+        }
+    }
+
+    func abandonExercise() {
+        exerciseRun = nil
+    }
+
+    /// Closes the result sheet.
+    func closeExerciseResult() {
+        exerciseRun = nil
+    }
+
+    func repeatExercise() {
+        guard let run = exerciseRun else { return }
+        exerciseRun = nil
+        startExercise(run.tracker.definition.id, mode: run.tracker.mode)
+    }
+
+    /// Exam mode: shows the next step and points at its control, at the price of a hint.
+    func revealExerciseStep() {
+        guard var run = exerciseRun, run.isRunning, let current = run.tracker.currentStep else { return }
+        run.revealed.insert(current)
+        run.tracker.useHint()
+        exerciseRun = run
+        if let control = run.tracker.steps[current].item.checks?.first?.control {
+            highlight(control: control)
+        }
+    }
+
+    func exerciseElapsed(at date: Date = Date()) -> Double {
+        guard let run = exerciseRun else { return 0 }
+        return run.result?.elapsed ?? date.timeIntervalSince(run.startedAt)
+    }
+
+    /// One line for a mistake, in the result sheet and the exercise bar.
+    func text(for mistake: ExerciseMistake) -> String {
+        let name = mistake.control.map(controlName) ?? ""
+        let step = mistake.step ?? name
+        switch mistake.kind {
+        case .wrongControl: return "Moviste \(name), que no forma parte de este procedimiento."
+        case .undone: return "Deshiciste «\(step)»."
+        case .outOfOrder: return "«\(step)» antes de terminar los pasos anteriores."
+        }
+    }
+
+    /// Readable name of a control: its guide title, else its label, else its id.
+    func controlName(_ id: String) -> String {
+        if let title = guide.explanation(for: id)?.title { return title }
+        if let label = controlsByID[id]?.label.replacingOccurrences(of: "\n", with: " "), !label.isEmpty { return label }
+        return id
+    }
+
+    private func isTicked(step: ExerciseStep) -> Bool {
+        manualChecks.contains("\(step.procedureID)#\(step.index)")
+    }
+
+    private func exerciseTouched(_ control: ControlDefinition) {
+        guard var run = exerciseRun, run.isRunning, configurationControls.contains(control.id) else { return }
+        let before = run.tracker.mistakes.count
+        run.tracker.touch(control: control.id, at: exerciseElapsed())
+        if run.tracker.mistakes.count != before { exerciseRun = run }
+    }
+
+    private func exerciseHint() {
+        guard var run = exerciseRun, run.isRunning else { return }
+        run.tracker.useHint()
+        exerciseRun = run
+    }
+
+    /// Re-reads the run after the simulator or a hand tick changed something. Only writes the
+    /// run back when it changed, so the panels do not redraw on every dataref update.
+    private func refreshExercise() {
+        guard var run = exerciseRun, run.isRunning else { return }
+        let elapsed = exerciseElapsed()
+        let before = (run.tracker.doneCount, run.tracker.mistakes.count, run.tracker.hints)
+        run.tracker.update(at: elapsed, position: positionName(ofControl:), ticked: isTicked(step:))
+        let after = (run.tracker.doneCount, run.tracker.mistakes.count, run.tracker.hints)
+        if run.tracker.isComplete {
+            let result = run.tracker.result(elapsed: elapsed)
+            run.result = result
+            exerciseResults[result.exerciseID, default: []].insert(result, at: 0)
+            exerciseResults[result.exerciseID] = Array(exerciseResults[result.exerciseID, default: []].prefix(20))
+        }
+        guard before != after || run.result != nil else { return }
+        exerciseRun = run
+        // Guided: the checklist column follows the procedure of the next step.
+        if run.isRunning, run.tracker.mode == .guided, let current = run.tracker.currentStep {
+            let procedureID = run.tracker.steps[current].procedureID
+            if activeProcedureID != procedureID { open(procedure: procedureID) }
         }
     }
 
@@ -1018,6 +1200,7 @@ final class PanelModel {
                 }
             }
         }
+        refreshExercise()
     }
 
     private func stampChanges(for update: DatarefUpdate) {
@@ -1052,6 +1235,7 @@ final class PanelModel {
         let current = position(of: control)
         let target = min(max(current + delta, 0), count - 1)
         guard target != current else { return }
+        exerciseTouched(control)
 
         positions[control.id] = target   // optimistic; the subscription confirms or corrects
         Task {
@@ -1078,6 +1262,7 @@ final class PanelModel {
         let current = position(of: control)
         let next = (current + 1) % count
         let duration = control.commands?.duration ?? 0
+        exerciseTouched(control)
         Task {
             do {
                 if let command = control.commands?.press {

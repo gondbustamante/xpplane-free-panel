@@ -6,6 +6,7 @@ import XPlaneKit
 enum SidebarSection: String, CaseIterable, Identifiable {
     case myPanels
     case procedures
+    case exercises
     case phases
     case cockpit
     case sections
@@ -16,6 +17,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         switch self {
         case .myPanels: return "Mis paneles"
         case .procedures: return "Procedimientos"
+        case .exercises: return "Ejercicios"
         case .phases: return "Fases de vuelo"
         case .cockpit: return "Cabina"
         case .sections: return "Secciones"
@@ -26,6 +28,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         switch self {
         case .myPanels: return "square.grid.2x2"
         case .procedures: return "checklist"
+        case .exercises: return "stopwatch"
         case .phases: return "airplane.departure"
         case .cockpit: return "rectangle.3.group"
         case .sections: return "square.split.2x2"
@@ -175,6 +178,7 @@ struct SidebarView: View {
         switch section {
         case .myPanels: myPanels
         case .procedures: procedures
+        case .exercises: ExerciseList()
         case .phases: phaseRows
         case .cockpit: cockpit
         case .sections: sectionGroups
@@ -188,6 +192,9 @@ struct SidebarView: View {
         case .procedures:
             let done = model.procedures.filter { model.isComplete($0) }.count
             return model.procedures.isEmpty ? nil : "\(done)/\(model.procedures.count)"
+        case .exercises:
+            let passed = model.exercises.filter { (model.bestResult(of: $0.id)?.stars ?? 0) > 0 }.count
+            return model.exercises.isEmpty ? nil : "\(passed)/\(model.exercises.count)"
         case .phases:
             return "\(model.layout.phases.count)"
         case .cockpit:

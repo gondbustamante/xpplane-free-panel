@@ -1,0 +1,78 @@
+{
+  "id": "normal",
+  "title": "Ejercicios de procedimientos normales",
+  "exercises": [
+    {
+      "id": "power_up",
+      "title": "Encendido del avión",
+      "level": "Básico",
+      "summary": "De avión frío y oscuro a APU en marcha con su aire disponible.",
+      "start": "Cold & Dark: todo apagado. En modo demo, conecta y empieza.",
+      "procedures": ["power_up"],
+      "targetSeconds": 90
+    },
+    {
+      "id": "cockpit_prep",
+      "title": "Barrido del overhead",
+      "level": "Intermedio",
+      "summary": "La preparación de cabina de memoria: de izquierda a derecha y de arriba abajo, y después el pedestal.",
+      "start": "Avión con energía y APU en marcha (tras «Encendido del avión»).",
+      "procedures": ["cockpit_prep_flow"],
+      "targetSeconds": 240
+    },
+    {
+      "id": "cold_dark_to_ready",
+      "title": "De Cold & Dark a listo para arrancar",
+      "level": "Avanzado",
+      "summary": "Encendido, preparación de cabina y antes del arranque seguidos, como en una salida real.",
+      "start": "Cold & Dark.",
+      "procedures": ["power_up", "cockpit_prep_flow", "before_start_flow"],
+      "targetSeconds": 480
+    },
+    {
+      "id": "engine_start",
+      "title": "Arranque y salida al rodaje",
+      "level": "Intermedio",
+      "summary": "Arranque de los dos motores en el orden correcto y configuración para rodar.",
+      "start": "Listo para arrancar: APU BLEED ON y BEACON ON.",
+      "procedures": ["engine_start_flow", "after_start_flow"],
+      "targetSeconds": 180
+    },
+    {
+      "id": "line_up",
+      "title": "Entrar en pista",
+      "level": "Básico",
+      "summary": "Luces y TCAS al entrar en la pista para despegar.",
+      "start": "Rodando hacia el punto de espera con NOSE en TAXI.",
+      "procedures": ["line_up_flow"],
+      "targetSeconds": 40
+    },
+    {
+      "id": "after_takeoff",
+      "title": "Después del despegue y ascenso",
+      "level": "Básico",
+      "summary": "Limpiar el avión tras el despegue y pasar FL100.",
+      "start": "En el aire, con flaps de despegue y luces de pista encendidas.",
+      "procedures": ["after_takeoff_flow", "climb_flow"],
+      "targetSeconds": 60
+    },
+    {
+      "id": "landing_to_secure",
+      "title": "Del aterrizaje al avión asegurado",
+      "level": "Avanzado",
+      "summary": "Después del aterrizaje, parking y asegurar el avión, hasta dejarlo frío y oscuro.",
+      "start": "Recién aterrizado, saliendo de la pista.",
+      "procedures": ["after_landing_flow", "parking_flow", "securing_flow"],
+      "targetSeconds": 300
+    },
+    {
+      "id": "fmgs_prep",
+      "title": "Preparación del MCDU",
+      "level": "Avanzado",
+      "summary": "DATA, INIT, F-PLN, SEC F-PLN, RAD NAV, INIT B y PERF con un plan de vuelo real. Solo guiado: el MCDU no se puede comprobar solo.",
+      "start": "Avión con energía y las IRS alineándose. Ten a mano un OFP (por ejemplo, de SimBrief).",
+      "procedures": ["fmgs_prep"],
+      "targetSeconds": 900
+    }
+  ]
+}

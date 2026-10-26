@@ -222,10 +222,29 @@ Cada archivo es un libro con una lista `procedures`, en orden de vuelo:
 - `phase`: id de una fase de `layout.json`; agrupa la lista en la barra lateral.
 - `checks`: el ítem se marca solo cuando todos los mandos están en una de las posiciones de `expect`, con los nombres de `positions` del mando. Sin `checks`, se marca a mano.
 - `panels`: subpaneles, `fcu` o `mcdu` que el ítem necesita además de los de sus mandos. La vista del procedimiento muestra todos.
-- `why`: el porqué del paso. Se muestra en el ítem actual y, en los demás, con el botón «¿Por qué?».
+- `why`: el porqué del paso. Se muestra en el ítem actual y, en los demás, con el botón «¿Por qué?». El validador avisa de los ítems que no lo tienen.
 - `optional`, `both` y `sub` (sublíneas: memo ECAM o pasos del MCDU) son informativos.
 
 El validador comprueba que cada mando, posición, panel y fase existe.
+
+## Ejercicios (`mapping/exercises/*.json`)
+
+Ejercicios cronometrados sobre los procedimientos. Cada uno encadena uno o varios procedimientos y fija un tiempo objetivo:
+
+```json
+{ "id": "normal", "title": "Ejercicios",
+  "exercises": [
+    { "id": "power_up", "title": "Encendido del avión", "level": "Básico",
+      "summary": "Qué entrena", "start": "Situación inicial",
+      "procedures": ["power_up"], "targetSeconds": 90 }
+  ] }
+```
+
+- Pasos: los ítems de los procedimientos, sin los opcionales ni los que repiten las mismas `checks` de un paso anterior. En modo examen solo cuentan los ítems con `checks`.
+- Puntuación: 100 puntos menos medio punto por cada 1 % por encima del objetivo (máximo 30), 5 por paso deshecho, 3 por paso fuera de orden, 2 por mover un mando que el ejercicio no usa (solo overhead y mandos de procedimientos; radios y teclados no cuentan) y 5 por pista. 90 o más son tres estrellas, 75 dos y 50 una.
+- Mover un mando hacia lo que pide otro paso del ejercicio no cuenta como deshacer (ENG MODE en NORM al empezar y luego en IGN/START).
+
+El validador comprueba ids únicos, procedimientos existentes y un `targetSeconds` positivo.
 
 ## Guía del modo aprender (`mapping/guide/*.json`)
 

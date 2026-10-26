@@ -10,18 +10,18 @@
       "phase": "cold_dark",
       "summary": "Del avión frío y oscuro a energía eléctrica y APU.",
       "items": [
-        { "challenge": "BAT 1 + 2", "response": "AUTO", "note": "Antes, comprueba BAT > 25,5 V en el panel ELEC.",
+        { "challenge": "BAT 1 + 2", "response": "AUTO", "why": "Las baterías son lo único que hay en un avión frío: sin ellas no se enciende nada, ni siquiera la luz para ver el resto. El voltaje mínimo garantiza que podrán arrancar el APU.", "note": "Antes, comprueba BAT > 25,5 V en el panel ELEC.",
           "checks": [ { "control": "elec.bat1", "expect": ["ON"] }, { "control": "elec.bat2", "expect": ["ON"] } ] },
-        { "challenge": "EXT PWR", "response": "ON", "note": "Solo si la GPU está conectada (AVAIL). Si no, sigue con el APU.",
+        { "challenge": "EXT PWR", "response": "ON", "why": "Si hay GPU, alimentar el avión con ella ahorra combustible y ruido frente al APU, y descarga las baterías de trabajo.", "note": "Solo si la GPU está conectada (AVAIL). Si no, sigue con el APU.",
           "optional": true,
           "checks": [ { "control": "elec.ext_pwr", "expect": ["ON"] } ] },
-        { "challenge": "NAV & LOGO LT", "response": "ON",
+        { "challenge": "NAV & LOGO LT", "response": "ON", "why": "Las luces de navegación indican que el avión tiene energía y está «vivo», y son obligatorias siempre que el avión tenga corriente en la plataforma de noche.",
           "checks": [ { "control": "ext_lt.nav_logo", "expect": ["1", "2"] } ] },
-        { "challenge": "APU FIRE TEST", "response": "PERFORM", "panels": ["fire"] },
-        { "challenge": "APU MASTER SW", "response": "ON",
+        { "challenge": "APU FIRE TEST", "response": "PERFORM", "why": "Antes de arrancar algo que puede incendiarse, se comprueba que la detección y la extinción funcionan. El APU arranca sin nadie mirando en la cola.", "panels": ["fire"] },
+        { "challenge": "APU MASTER SW", "response": "ON", "why": "Prepara el APU: alimenta su ordenador y abre la toma de aire. El arranque no empieza hasta que la toma está abierta.",
           "checks": [ { "control": "apu.master", "expect": ["ON"] } ] },
-        { "challenge": "APU START", "response": "ON", "note": "Espera APU AVAIL en la página APU del ECAM.", "panels": ["apu"] },
-        { "challenge": "APU BLEED", "response": "ON", "note": "Con el APU disponible.",
+        { "challenge": "APU START", "response": "ON", "why": "El APU da electricidad y aire sin depender de equipos de tierra ni de los motores, para que el avión sea autónomo durante la preparación.", "note": "Espera APU AVAIL en la página APU del ECAM.", "panels": ["apu"] },
+        { "challenge": "APU BLEED", "response": "ON", "why": "El aire del APU alimenta los packs (climatización de la cabina mientras embarca el pasaje) y luego arranca los motores.", "note": "Con el APU disponible.",
           "checks": [ { "control": "air_cond.apu_bleed", "expect": ["ON"] } ] }
       ]
     },
@@ -32,54 +32,54 @@
       "phase": "cold_dark",
       "summary": "Barrido del overhead de izquierda a derecha y de arriba abajo, y después el pedestal.",
       "items": [
-        { "challenge": "CREW SUPPLY", "response": "ON",
+        { "challenge": "CREW SUPPLY", "response": "ON", "why": "Las máscaras de oxígeno de la tripulación deben tener oxígeno disponible desde antes del vuelo: en una despresurización no hay tiempo de abrir nada.",
           "checks": [ { "control": "oxy.crew_supply", "expect": ["ON"] } ] },
-        { "challenge": "ADIRS 1, 2, 3", "response": "NAV", "note": "La alineación tarda unos minutos; no muevas el avión.",
+        { "challenge": "ADIRS 1, 2, 3", "response": "NAV", "why": "La alineación de las IRS es lo que más tarda de la preparación (unos 10 min en el avión real), por eso va de las primeras: así termina mientras haces el resto.", "note": "La alineación tarda unos minutos; no muevas el avión.",
           "checks": [ { "control": "adirs.ir1", "expect": ["NAV"] }, { "control": "adirs.ir2", "expect": ["NAV"] }, { "control": "adirs.ir3", "expect": ["NAV"] } ] },
-        { "challenge": "GPWS", "response": "ALL ON",
+        { "challenge": "GPWS", "response": "ALL ON", "why": "Los avisos de proximidad al terreno son la última defensa contra el impacto contra el suelo con el avión controlado. En normal, todos activos.",
           "checks": [ { "control": "gpws.sys", "expect": ["ON"] }, { "control": "gpws.terr", "expect": ["ON"] }, { "control": "gpws.gs_mode", "expect": ["ON"] }, { "control": "gpws.flap_mode", "expect": ["ON"] } ] },
-        { "challenge": "RCDR GND CTL", "response": "ON",
+        { "challenge": "RCDR GND CTL", "response": "ON", "why": "Graba la preparación de cabina y los briefings. Si pasa algo, es parte de lo que se investiga.",
           "checks": [ { "control": "rcdr.gnd_ctl", "expect": ["ON"] } ] },
-        { "challenge": "FUEL PUMPS", "response": "ON",
+        { "challenge": "FUEL PUMPS", "response": "ON", "why": "Las bombas mantienen la presión de combustible hacia los motores y el APU. Un motor sin bombas solo se alimenta por gravedad, con limitaciones.",
           "checks": [ { "control": "fuel.l_pump1", "expect": ["ON"] }, { "control": "fuel.l_pump2", "expect": ["ON"] }, { "control": "fuel.ctr_pump1", "expect": ["ON"] }, { "control": "fuel.ctr_pump2", "expect": ["ON"] }, { "control": "fuel.r_pump1", "expect": ["ON"] }, { "control": "fuel.r_pump2", "expect": ["ON"] } ] },
-        { "challenge": "FUEL MODE SEL", "response": "AUTO",
+        { "challenge": "FUEL MODE SEL", "response": "AUTO", "why": "En AUTO el sistema gestiona las bombas del central para gastar ese combustible primero, que es lo que alivia la estructura de las alas.",
           "checks": [ { "control": "fuel.mode_sel", "expect": ["AUTO"] } ] },
-        { "challenge": "EXT LT STROBE", "response": "AUTO",
+        { "challenge": "EXT LT STROBE", "response": "AUTO", "why": "En AUTO las luces de destellos se encienden solas en vuelo: si un día olvidas encenderlas en pista, al menos en el aire estarán.",
           "checks": [ { "control": "ext_lt.strobe", "expect": ["AUTO"] } ] },
-        { "challenge": "SEAT BELTS", "response": "ON",
+        { "challenge": "SEAT BELTS", "response": "ON", "why": "El pasaje empieza a embarcar enseguida: el cartel debe estar encendido desde antes.",
           "checks": [ { "control": "signs.seat_belts", "expect": ["ON"] } ] },
-        { "challenge": "NO SMOKING", "response": "AUTO",
+        { "challenge": "NO SMOKING", "response": "AUTO", "why": "En AUTO el cartel se enciende solo con el tren abajo, así cubre todo el tiempo en tierra y la aproximación.",
           "checks": [ { "control": "signs.no_smoking", "expect": ["AUTO"] } ] },
-        { "challenge": "EMER EXIT LT", "response": "ARM",
+        { "challenge": "EMER EXIT LT", "response": "ARM", "why": "Armado, el alumbrado de emergencia de la cabina se enciende solo si falla la corriente normal: es lo que guía al pasaje en una evacuación a oscuras.",
           "checks": [ { "control": "signs.emer_exit_lt", "expect": ["ARM"] } ] },
-        { "challenge": "PROBE / WINDOW HEAT", "response": "AUTO",
+        { "challenge": "PROBE / WINDOW HEAT", "response": "AUTO", "why": "Las sondas calientes evitan que el hielo bloquee la velocidad y la altitud. En AUTO se encargan solas de calentar en cuanto arranca un motor.",
           "checks": [ { "control": "anti_ice.probe_window", "expect": ["AUTO"] } ] },
-        { "challenge": "CABIN PRESS MODE SEL", "response": "AUTO",
+        { "challenge": "CABIN PRESS MODE SEL", "response": "AUTO", "why": "En AUTO la presurización se planifica sola con los datos del FMGS. Por eso luego hay que dar bien el destino en el MCDU.",
           "checks": [ { "control": "press.mode_sel", "expect": ["AUTO"] } ] },
-        { "challenge": "PACK 1 + 2", "response": "ON",
+        { "challenge": "PACK 1 + 2", "response": "ON", "why": "Con los packs encendidos la cabina se ventila con el aire del APU mientras embarcan los pasajeros.",
           "checks": [ { "control": "air_cond.pack1", "expect": ["ON"] }, { "control": "air_cond.pack2", "expect": ["ON"] } ] },
-        { "challenge": "ENG BLEED 1 + 2", "response": "ON",
+        { "challenge": "ENG BLEED 1 + 2", "response": "ON", "why": "Las válvulas de sangrado de motor deben estar listas: se abrirán solas al arrancar cada motor.",
           "checks": [ { "control": "air_cond.eng1_bleed", "expect": ["ON"] }, { "control": "air_cond.eng2_bleed", "expect": ["ON"] } ] },
-        { "challenge": "X BLEED", "response": "AUTO",
+        { "challenge": "X BLEED", "response": "AUTO", "why": "En AUTO la válvula cruzada se abre sola cuando hace falta (APU BLEED) y se cierra ante una fuga.",
           "checks": [ { "control": "air_cond.x_bleed", "expect": ["AUTO"] } ] },
-        { "challenge": "ANN LT", "response": "TEST, THEN BRT",
+        { "challenge": "ANN LT", "response": "TEST, THEN BRT", "why": "La prueba de lámparas demuestra que ninguna luz de aviso está fundida. Una lámpara de fallo apagada por estar fundida esconde una avería.",
           "checks": [ { "control": "int_lt.ann_lt", "expect": ["BRT"] } ] },
-        { "challenge": "RMP 1 + 2", "response": "ON",
+        { "challenge": "RMP 1 + 2", "response": "ON", "why": "Las radios deben estar encendidas para pedir la autorización y escuchar el ATIS.",
           "checks": [ { "control": "rmp1.power", "expect": ["ON"] }, { "control": "rmp2.power", "expect": ["ON"] } ] },
-        { "challenge": "ENG MASTER 1 + 2", "response": "OFF",
+        { "challenge": "ENG MASTER 1 + 2", "response": "OFF", "why": "Comprobar que los interruptores de los motores están en OFF evita un arranque inesperado al dar aire o encendido.",
           "checks": [ { "control": "eng.master1", "expect": ["OFF"] }, { "control": "eng.master2", "expect": ["OFF"] } ] },
-        { "challenge": "ENG MODE SEL", "response": "NORM",
+        { "challenge": "ENG MODE SEL", "response": "NORM", "why": "NORM es la posición de reposo del selector. Si quedara en IGN/START, al subir un MASTER el motor intentaría arrancar.",
           "checks": [ { "control": "eng.mode", "expect": ["NORM"] } ] },
-        { "challenge": "PARKING BRAKE", "response": "ON",
+        { "challenge": "PARKING BRAKE", "response": "ON", "why": "El avión no debe moverse mientras no hay calzos o tractor: el freno de aparcamiento lo sujeta.",
           "checks": [ { "control": "park.brake", "expect": ["ON"] } ] },
-        { "challenge": "SPEED BRAKE", "response": "RET",
+        { "challenge": "SPEED BRAKE", "response": "RET", "why": "Los aerofrenos recogidos en tierra son el estado normal. Si se quedan armados o extendidos, el despegue empezaría mal configurado.",
           "checks": [ { "control": "speedbrake.lever", "expect": ["RET"] } ] },
-        { "challenge": "FLAPS", "response": "0",
+        { "challenge": "FLAPS", "response": "0", "why": "Los flaps se suben para que el personal de tierra trabaje con seguridad y para que la configuración de despegue se ponga a propósito más tarde.",
           "checks": [ { "control": "flaps.lever", "expect": ["0"] } ] },
-        { "challenge": "ATC", "response": "STBY",
+        { "challenge": "ATC", "response": "STBY", "why": "El transpondedor en STBY no transmite mientras el avión está aparcado y no satura el radar de superficie.",
           "checks": [ { "control": "atc.mode", "expect": ["STBY"] } ] },
-        { "challenge": "MCDU", "response": "PREPARED", "note": "Paso a paso en «Preparación del MCDU (FMGS)», el procedimiento siguiente.", "panels": ["mcdu"] },
-        { "challenge": "FCU / BARO REF", "response": "SET", "panels": ["fcu", "efis_capt"] }
+        { "challenge": "MCDU", "response": "PREPARED", "why": "El MCDU es el cerebro de la navegación y la performance: sin él no hay ruta ni velocidades de despegue.", "note": "Paso a paso en «Preparación del MCDU (FMGS)», el procedimiento siguiente.", "panels": ["mcdu"] },
+        { "challenge": "FCU / BARO REF", "response": "SET", "why": "La altitud inicial en el FCU y el QNH correcto evitan sobrepasar la autorización y volar con altitudes falsas desde el primer momento.", "panels": ["fcu", "efis_capt"] }
       ]
     },
     {
@@ -89,23 +89,23 @@
       "phase": "cold_dark",
       "summary": "Orden profesional DATA, INIT, F-PLN, SEC F-PLN, RAD NAV, INIT B, PERF (se recuerda como «DIFSRIP»). Con el plan de vuelo operacional (OFP), la autorización y las cartas a mano.",
       "items": [
-        {"challenge": "PAPELES", "response": "A MANO", "note": "OFP con ruta, nivel, combustible y pesos estimados; carta de la salida (SID); autorización ATC si ya la tienes.", "why": "El MCDU se rellena copiando el plan de la compañía. Con todo delante no hay que volver atrás, y luego el otro piloto puede cruzar dato a dato."},
-        {"challenge": "DATA · A/C STATUS", "response": "CHECKED", "note": "Pulsa DATA y abre A/C STATUS (también aparece al encender el MCDU).", "sub": ["Tipo de avión y motores correctos", "Base de navegación (AIRAC) en vigor: fechas ACTIVE", "Si ha caducado, cambia a la segunda base", "PERF FACTOR (degradación del avión): no se toca"], "why": "Con una base caducada las SID, las STAR y las frecuencias pueden haber cambiado: el avión volaría procedimientos que ya no existen.", "panels": ["mcdu"]},
-        {"challenge": "INIT A · FROM/TO", "response": "INSERT", "note": "INIT → escribe origen/destino en el scratchpad, por ejemplo LEMD/LEBL, y pulsa LSK 1R. Si la compañía tiene ruta guardada, va en CO RTE.", "sub": ["FROM/TO: códigos OACI de 4 letras", "ALTN: el alterno del OFP", "FLT NBR: número de vuelo (LSK 3L)"], "why": "Origen y destino son la base de todo: con ellos el FMGS carga los aeropuertos, sus pistas y el tramo inicial del plan. También alimentan la presurización (elevación de destino).", "panels": ["mcdu"]},
-        {"challenge": "INIT A · COST INDEX", "response": "SET", "note": "Escribe el COST INDEX del OFP y pulsa LSK 5L.", "sub": ["0: máximo ahorro de combustible, vuelo lento", "Valores altos: más rápido, más consumo", "Típico en ruta corta: entre 10 y 40"], "why": "El cost index equilibra el coste del tiempo (tripulación, mantenimiento, conexiones) frente al combustible. De él salen las velocidades de ascenso, crucero y descenso gestionadas.", "panels": ["mcdu"]},
-        {"challenge": "INIT A · CRZ FL/TEMP", "response": "SET", "note": "Escribe el nivel y la temperatura de crucero del OFP, por ejemplo FL350/-54, en LSK 6L.", "sub": ["Si no conoces la temperatura, el FMGS usa la estándar", "TROPO: déjalo por defecto (36.090 ft)"], "why": "Las predicciones de tiempo y combustible dependen del nivel. La temperatura cambia el empuje disponible y la velocidad real.", "panels": ["mcdu"]},
-        {"challenge": "INIT A · ALIGN IRS", "response": "AS RQRD", "note": "Si las IRS siguen alineándose, comprueba que la posición del aeropuerto es correcta y pulsa ALIGN IRS (LSK 3R). En muchos aviones el GPS lo hace solo.", "why": "Las IRS necesitan saber dónde están para terminar la alineación. Una posición inicial errónea arrastra un error de navegación durante todo el vuelo.", "optional": true, "panels": ["mcdu"]},
-        {"challenge": "F-PLN · DEPARTURE", "response": "INSERT", "note": "F-PLN → LSK 1L sobre el aeropuerto de origen → DEPARTURE.", "sub": ["RWY: pista prevista (ATIS o autorización)", "SID: la de la autorización", "TRANS: si la SID tiene transición", "TMPY INSERT (LSK 6R) para confirmar"], "why": "La SID trae ya las restricciones de altitud y velocidad (en magenta) que el avión respetará en modo gestionado. Teclearlas a mano sería lento y propenso a errores.", "panels": ["mcdu"]},
-        {"challenge": "F-PLN · RUTA", "response": "INSERT", "note": "Revisión lateral (LSK izquierda) sobre el último punto de la SID → AIRWAYS para encadenar aerovías, o escribe los puntos uno a uno.", "sub": ["VIA: aerovía (p. ej. UN725)", "TO: punto de salida de la aerovía", "TMPY INSERT al acabar", "La llegada (STAR) puede esperar al crucero, cuando se sepa la pista"], "why": "La ruta del FMGS es la que volará el piloto automático en NAV. Tiene que coincidir punto a punto con el OFP y la autorización.", "panels": ["mcdu"]},
-        {"challenge": "F-PLN · DISCONTINUIDADES", "response": "CHECKED", "note": "Recorre el plan con las flechas. Borra con CLR las F-PLN DISCONTINUITY que unen tramos que sí van seguidos.", "sub": ["Deja las que son intencionadas (tras un tramo por vectores)", "Comprueba restricciones de la SID contra la carta", "Distancia total parecida a la del OFP"], "why": "En una discontinuidad el avión sigue recto con el último rumbo: si es un error, se sale de la ruta sin avisar.", "panels": ["mcdu"]},
-        {"challenge": "ND · PLAN", "response": "CHECKED", "note": "Pon el ND en modo PLAN y avanza por el plan con la flecha del F-PLN: el mapa se centra en cada punto.", "why": "Ver la ruta dibujada descubre errores que en una lista de nombres no se ven: un punto con nombre parecido en otro continente, un zigzag o un tramo que sobra.", "panels": ["mcdu", "efis_capt"]},
-        {"challenge": "SEC F-PLN", "response": "COPY ACTIVE", "note": "SEC F-PLN → COPY ACTIVE. Modifica la copia para la alternativa más probable: otra pista, otra SID o el regreso al aeropuerto de salida.", "why": "Si te cambian la pista justo antes de despegar, se activa el secundario (ACTIVATE SEC) en un toque en lugar de reprogramar con prisas y con el avión moviéndose.", "optional": true, "panels": ["mcdu"]},
-        {"challenge": "RAD NAV", "response": "CHECKED", "note": "RAD NAV: comprueba las radioayudas sintonizadas. Fuerza un VOR si la SID se basa en él.", "sub": ["ILS de la pista de despegue: útil para volver si hay que regresar", "Identificador correcto (no solo la frecuencia)", "Una radioayuda forzada se muestra en letra grande"], "why": "El FMGS sintoniza solo, pero no sabe qué radioayuda pide la carta para vigilar la salida. Con ella se cruza la navegación del FMGS contra una referencia independiente.", "panels": ["mcdu"]},
-        {"challenge": "INIT B · PESOS Y COMBUSTIBLE", "response": "INSERT", "note": "INIT → flecha a la página siguiente (INIT B). En algunas versiones del FMS de ToLiss es FUEL PRED.", "sub": ["ZFW/ZFWCG: peso sin combustible y centro de gravedad estimados del OFP", "BLOCK: combustible total a bordo", "TAXI: combustible de rodaje (por defecto 0,2 t)", "RTE RSV, FINAL, ALTN: del OFP", "Comprueba TOW y TRIP calculados"], "why": "Con el peso el FMGS calcula velocidades (VLS, maniobra), nivel máximo y predicciones. Un ZFW erróneo da velocidades de despegue erróneas: es una de las causas clásicas de incidentes.", "panels": ["mcdu"]},
-        {"challenge": "PERF · TAKE OFF", "response": "INSERT", "note": "PERF muestra TAKE OFF en tierra. Copia los datos del cálculo de despegue.", "sub": ["V1, VR, V2: en este orden, LSK 1L a 3L", "TRANS ALT: de la carta de la SID", "THR RED/ACC: por defecto 1500 ft o los de la compañía", "FLAPS/THS: configuración y compensación, p. ej. 1/UP0.8", "FLEX TO TEMP: empuje reducido, si se usa"], "why": "V2 es la velocidad que el avión mantiene tras despegar con un motor parado; el modo SRS del FD la usa. FLEX reduce el empuje cuando la pista sobra: alarga la vida del motor. El THS sale del centro de gravedad.", "panels": ["mcdu"]},
-        {"challenge": "PERF · CLB / CRZ / DES", "response": "CHECKED", "note": "Pasa por las páginas siguientes de PERF y revisa las velocidades gestionadas.", "sub": ["CLB: ECON, o una velocidad prefijada si el control la pide", "CRZ: Mach económico y nivel", "DES: ECON; se revisa de nuevo antes del descenso"], "why": "Esas velocidades salen del cost index y del peso. Revisarlas confirma que INIT A y INIT B tienen sentido.", "optional": true, "panels": ["mcdu"]},
-        {"challenge": "FCU · VALORES INICIALES", "response": "SET", "note": "En el FCU: ALT con la altitud inicial autorizada, SPD y HDG en rayas (gestionados), FD encendidos y BARO con el QNH.", "sub": ["Rayas en SPD: aparecen solas tras introducir V2", "La altitud autorizada sale de la autorización ATC, no de la carta"], "why": "Con la ventana ALT bien puesta el avión no sobrepasará la autorización. Con SPD y HDG gestionados el FD sigue la SID y las velocidades del FMGS desde el despegue.", "panels": ["mcdu", "fcu", "efis_capt"]},
-        {"challenge": "CRUCE ENTRE PILOTOS", "response": "PERFORMED", "note": "El otro piloto lee del MCDU y tú compruebas en el OFP: ruta, distancia total, combustible estimado en destino, pesos y PERF TAKE OFF.", "why": "Dos personas con fuentes distintas detectan los errores de tecleo. En la simulación, hazlo tú solo leyendo en voz alta.", "panels": ["mcdu"]}
+        { "challenge": "PAPELES", "response": "A MANO", "note": "OFP con ruta, nivel, combustible y pesos estimados; carta de la salida (SID); autorización ATC si ya la tienes.", "why": "El MCDU se rellena copiando el plan de la compañía. Con todo delante no hay que volver atrás, y luego el otro piloto puede cruzar dato a dato." },
+        { "challenge": "DATA · A/C STATUS", "response": "CHECKED", "note": "Pulsa DATA y abre A/C STATUS (también aparece al encender el MCDU).", "sub": ["Tipo de avión y motores correctos", "Base de navegación (AIRAC) en vigor: fechas ACTIVE", "Si ha caducado, cambia a la segunda base", "PERF FACTOR (degradación del avión): no se toca"], "why": "Con una base caducada las SID, las STAR y las frecuencias pueden haber cambiado: el avión volaría procedimientos que ya no existen.", "panels": ["mcdu"] },
+        { "challenge": "INIT A · FROM/TO", "response": "INSERT", "note": "INIT → escribe origen/destino en el scratchpad, por ejemplo LEMD/LEBL, y pulsa LSK 1R. Si la compañía tiene ruta guardada, va en CO RTE.", "sub": ["FROM/TO: códigos OACI de 4 letras", "ALTN: el alterno del OFP", "FLT NBR: número de vuelo (LSK 3L)"], "why": "Origen y destino son la base de todo: con ellos el FMGS carga los aeropuertos, sus pistas y el tramo inicial del plan. También alimentan la presurización (elevación de destino).", "panels": ["mcdu"] },
+        { "challenge": "INIT A · COST INDEX", "response": "SET", "note": "Escribe el COST INDEX del OFP y pulsa LSK 5L.", "sub": ["0: máximo ahorro de combustible, vuelo lento", "Valores altos: más rápido, más consumo", "Típico en ruta corta: entre 10 y 40"], "why": "El cost index equilibra el coste del tiempo (tripulación, mantenimiento, conexiones) frente al combustible. De él salen las velocidades de ascenso, crucero y descenso gestionadas.", "panels": ["mcdu"] },
+        { "challenge": "INIT A · CRZ FL/TEMP", "response": "SET", "note": "Escribe el nivel y la temperatura de crucero del OFP, por ejemplo FL350/-54, en LSK 6L.", "sub": ["Si no conoces la temperatura, el FMGS usa la estándar", "TROPO: déjalo por defecto (36.090 ft)"], "why": "Las predicciones de tiempo y combustible dependen del nivel. La temperatura cambia el empuje disponible y la velocidad real.", "panels": ["mcdu"] },
+        { "challenge": "INIT A · ALIGN IRS", "response": "AS RQRD", "note": "Si las IRS siguen alineándose, comprueba que la posición del aeropuerto es correcta y pulsa ALIGN IRS (LSK 3R). En muchos aviones el GPS lo hace solo.", "why": "Las IRS necesitan saber dónde están para terminar la alineación. Una posición inicial errónea arrastra un error de navegación durante todo el vuelo.", "optional": true, "panels": ["mcdu"] },
+        { "challenge": "F-PLN · DEPARTURE", "response": "INSERT", "note": "F-PLN → LSK 1L sobre el aeropuerto de origen → DEPARTURE.", "sub": ["RWY: pista prevista (ATIS o autorización)", "SID: la de la autorización", "TRANS: si la SID tiene transición", "TMPY INSERT (LSK 6R) para confirmar"], "why": "La SID trae ya las restricciones de altitud y velocidad (en magenta) que el avión respetará en modo gestionado. Teclearlas a mano sería lento y propenso a errores.", "panels": ["mcdu"] },
+        { "challenge": "F-PLN · RUTA", "response": "INSERT", "note": "Revisión lateral (LSK izquierda) sobre el último punto de la SID → AIRWAYS para encadenar aerovías, o escribe los puntos uno a uno.", "sub": ["VIA: aerovía (p. ej. UN725)", "TO: punto de salida de la aerovía", "TMPY INSERT al acabar", "La llegada (STAR) puede esperar al crucero, cuando se sepa la pista"], "why": "La ruta del FMGS es la que volará el piloto automático en NAV. Tiene que coincidir punto a punto con el OFP y la autorización.", "panels": ["mcdu"] },
+        { "challenge": "F-PLN · DISCONTINUIDADES", "response": "CHECKED", "note": "Recorre el plan con las flechas. Borra con CLR las F-PLN DISCONTINUITY que unen tramos que sí van seguidos.", "sub": ["Deja las que son intencionadas (tras un tramo por vectores)", "Comprueba restricciones de la SID contra la carta", "Distancia total parecida a la del OFP"], "why": "En una discontinuidad el avión sigue recto con el último rumbo: si es un error, se sale de la ruta sin avisar.", "panels": ["mcdu"] },
+        { "challenge": "ND · PLAN", "response": "CHECKED", "note": "Pon el ND en modo PLAN y avanza por el plan con la flecha del F-PLN: el mapa se centra en cada punto.", "why": "Ver la ruta dibujada descubre errores que en una lista de nombres no se ven: un punto con nombre parecido en otro continente, un zigzag o un tramo que sobra.", "panels": ["mcdu", "efis_capt"] },
+        { "challenge": "SEC F-PLN", "response": "COPY ACTIVE", "note": "SEC F-PLN → COPY ACTIVE. Modifica la copia para la alternativa más probable: otra pista, otra SID o el regreso al aeropuerto de salida.", "why": "Si te cambian la pista justo antes de despegar, se activa el secundario (ACTIVATE SEC) en un toque en lugar de reprogramar con prisas y con el avión moviéndose.", "optional": true, "panels": ["mcdu"] },
+        { "challenge": "RAD NAV", "response": "CHECKED", "note": "RAD NAV: comprueba las radioayudas sintonizadas. Fuerza un VOR si la SID se basa en él.", "sub": ["ILS de la pista de despegue: útil para volver si hay que regresar", "Identificador correcto (no solo la frecuencia)", "Una radioayuda forzada se muestra en letra grande"], "why": "El FMGS sintoniza solo, pero no sabe qué radioayuda pide la carta para vigilar la salida. Con ella se cruza la navegación del FMGS contra una referencia independiente.", "panels": ["mcdu"] },
+        { "challenge": "INIT B · PESOS Y COMBUSTIBLE", "response": "INSERT", "note": "INIT → flecha a la página siguiente (INIT B). En algunas versiones del FMS de ToLiss es FUEL PRED.", "sub": ["ZFW/ZFWCG: peso sin combustible y centro de gravedad estimados del OFP", "BLOCK: combustible total a bordo", "TAXI: combustible de rodaje (por defecto 0,2 t)", "RTE RSV, FINAL, ALTN: del OFP", "Comprueba TOW y TRIP calculados"], "why": "Con el peso el FMGS calcula velocidades (VLS, maniobra), nivel máximo y predicciones. Un ZFW erróneo da velocidades de despegue erróneas: es una de las causas clásicas de incidentes.", "panels": ["mcdu"] },
+        { "challenge": "PERF · TAKE OFF", "response": "INSERT", "note": "PERF muestra TAKE OFF en tierra. Copia los datos del cálculo de despegue.", "sub": ["V1, VR, V2: en este orden, LSK 1L a 3L", "TRANS ALT: de la carta de la SID", "THR RED/ACC: por defecto 1500 ft o los de la compañía", "FLAPS/THS: configuración y compensación, p. ej. 1/UP0.8", "FLEX TO TEMP: empuje reducido, si se usa"], "why": "V2 es la velocidad que el avión mantiene tras despegar con un motor parado; el modo SRS del FD la usa. FLEX reduce el empuje cuando la pista sobra: alarga la vida del motor. El THS sale del centro de gravedad.", "panels": ["mcdu"] },
+        { "challenge": "PERF · CLB / CRZ / DES", "response": "CHECKED", "note": "Pasa por las páginas siguientes de PERF y revisa las velocidades gestionadas.", "sub": ["CLB: ECON, o una velocidad prefijada si el control la pide", "CRZ: Mach económico y nivel", "DES: ECON; se revisa de nuevo antes del descenso"], "why": "Esas velocidades salen del cost index y del peso. Revisarlas confirma que INIT A y INIT B tienen sentido.", "optional": true, "panels": ["mcdu"] },
+        { "challenge": "FCU · VALORES INICIALES", "response": "SET", "note": "En el FCU: ALT con la altitud inicial autorizada, SPD y HDG en rayas (gestionados), FD encendidos y BARO con el QNH.", "sub": ["Rayas en SPD: aparecen solas tras introducir V2", "La altitud autorizada sale de la autorización ATC, no de la carta"], "why": "Con la ventana ALT bien puesta el avión no sobrepasará la autorización. Con SPD y HDG gestionados el FD sigue la SID y las velocidades del FMGS desde el despegue.", "panels": ["mcdu", "fcu", "efis_capt"] },
+        { "challenge": "CRUCE ENTRE PILOTOS", "response": "PERFORMED", "note": "El otro piloto lee del MCDU y tú compruebas en el OFP: ruta, distancia total, combustible estimado en destino, pesos y PERF TAKE OFF.", "why": "Dos personas con fuentes distintas detectan los errores de tecleo. En la simulación, hazlo tú solo leyendo en voz alta.", "panels": ["mcdu"] }
       ]
     },
     {
@@ -114,13 +114,13 @@
       "title": "COCKPIT PREPARATION",
       "phase": "cold_dark",
       "items": [
-        { "challenge": "GEAR PINS and COVERS", "response": "REMOVED" },
-        { "challenge": "FUEL QUANTITY", "response": "___ KG/LB" },
-        { "challenge": "SEAT BELTS", "response": "ON",
+        { "challenge": "GEAR PINS and COVERS", "response": "REMOVED", "why": "Los pasadores del tren y las fundas de las sondas se quitan antes del vuelo; olvidarlos impide subir el tren o deja el avión sin velocidad fiable." },
+        { "challenge": "FUEL QUANTITY", "response": "___ KG/LB", "why": "Confirma que el combustible a bordo es el del plan antes de cerrar puertas, cuando aún se puede repostar." },
+        { "challenge": "SEAT BELTS", "response": "ON", "why": "El checklist confirma lo hecho en el flujo: el pasaje ya está embarcando.",
           "checks": [ { "control": "signs.seat_belts", "expect": ["ON"] } ] },
-        { "challenge": "ADIRS", "response": "NAV",
+        { "challenge": "ADIRS", "response": "NAV", "why": "Confirma que las IRS están en NAV y alineándose; sin ellas no se puede salir.",
           "checks": [ { "control": "adirs.ir1", "expect": ["NAV"] }, { "control": "adirs.ir2", "expect": ["NAV"] }, { "control": "adirs.ir3", "expect": ["NAV"] } ] },
-        { "challenge": "BARO REF", "response": "___ SET (BOTH)", "both": true, "panels": ["efis_capt"] }
+        { "challenge": "BARO REF", "response": "___ SET (BOTH)", "why": "Los dos altímetros con el mismo QNH correcto: si discrepan, uno de los dos está mal.", "both": true, "panels": ["efis_capt"] }
       ]
     },
     {
@@ -130,12 +130,12 @@
       "phase": "before_start",
       "summary": "Con la hoja de carga (loadsheet) definitiva: pesos reales, combustible real y datos de despegue finales, antes del briefing de salida.",
       "items": [
-        {"challenge": "LOADSHEET", "response": "RECEIVED", "note": "Pesos finales: ZFW, ZFWCG o MACZFW, TOW y combustible a bordo.", "why": "Hasta ahora el MCDU tenía la estimación del OFP. La hoja de carga refleja el pasaje y la carga reales."},
-        {"challenge": "INIT B / FUEL PRED · ZFW/ZFWCG", "response": "UPDATED", "note": "Sustituye ZFW y ZFWCG por los de la hoja de carga. Comprueba que el BLOCK coincide con el combustible del ECAM.", "sub": ["TOW del MCDU = TOW de la hoja de carga (±)", "FOB del ECAM ≈ BLOCK"], "why": "Si el peso real es mayor que el previsto, las velocidades de despegue y el FLEX calculados pueden no ser válidos.", "panels": ["mcdu"]},
-        {"challenge": "PERF · TAKE OFF", "response": "FINAL", "note": "Si el TOW cambió más de lo que tolera la compañía, recalcula el despegue. Confirma la pista, las V, el FLEX y FLAPS/THS.", "sub": ["THS: compensación según el CG final", "Pon la rueda de compensación (trim) del pedestal en ese valor"], "why": "Un THS mal puesto hace que el avión rote demasiado pronto o cueste levantarlo.", "panels": ["mcdu"]},
-        {"challenge": "SEC F-PLN", "response": "UPDATED", "note": "Si se cambió la pista o la SID, actualiza también el secundario.", "optional": true, "panels": ["mcdu"]},
-        {"challenge": "BRIEFING DE SALIDA", "response": "PERFORMED", "note": "Con las páginas del MCDU en pantalla: pista y SID (F-PLN), altitud inicial (FCU), velocidades y FLEX (PERF), qué hacer con un fallo de motor y regreso.", "sub": ["Fallo antes de V1: se aborta", "Fallo después de V1: se sigue, se mantiene V2 y se sube a la altitud de aceleración con motor parado (ENG OUT ACC)", "Ruta de regreso: el ILS de la salida y el SEC F-PLN"], "why": "El briefing pone a los dos pilotos de acuerdo con el plan antes de tener prisa. Repasar el MCDU en voz alta es la última comprobación de los datos.", "panels": ["mcdu"]},
-        {"challenge": "T.O DATA", "response": "CROSS-CHECKED", "note": "Los dos pilotos leen V1, VR, V2 y FLEX del MCDU y comprueban que coinciden con el cálculo.", "why": "Es el ítem T.O SPEEDS & THRUST del checklist BEFORE START: lo que se lee ahí tiene que estar ya comprobado.", "panels": ["mcdu"]}
+        { "challenge": "LOADSHEET", "response": "RECEIVED", "note": "Pesos finales: ZFW, ZFWCG o MACZFW, TOW y combustible a bordo.", "why": "Hasta ahora el MCDU tenía la estimación del OFP. La hoja de carga refleja el pasaje y la carga reales." },
+        { "challenge": "INIT B / FUEL PRED · ZFW/ZFWCG", "response": "UPDATED", "note": "Sustituye ZFW y ZFWCG por los de la hoja de carga. Comprueba que el BLOCK coincide con el combustible del ECAM.", "sub": ["TOW del MCDU = TOW de la hoja de carga (±)", "FOB del ECAM ≈ BLOCK"], "why": "Si el peso real es mayor que el previsto, las velocidades de despegue y el FLEX calculados pueden no ser válidos.", "panels": ["mcdu"] },
+        { "challenge": "PERF · TAKE OFF", "response": "FINAL", "note": "Si el TOW cambió más de lo que tolera la compañía, recalcula el despegue. Confirma la pista, las V, el FLEX y FLAPS/THS.", "sub": ["THS: compensación según el CG final", "Pon la rueda de compensación (trim) del pedestal en ese valor"], "why": "Un THS mal puesto hace que el avión rote demasiado pronto o cueste levantarlo.", "panels": ["mcdu"] },
+        { "challenge": "SEC F-PLN", "response": "UPDATED", "note": "Si se cambió la pista o la SID, actualiza también el secundario.", "why": "El secundario solo sirve si parte del plan activo real: si no se actualiza, activarlo deshace el cambio.", "optional": true, "panels": ["mcdu"] },
+        { "challenge": "BRIEFING DE SALIDA", "response": "PERFORMED", "note": "Con las páginas del MCDU en pantalla: pista y SID (F-PLN), altitud inicial (FCU), velocidades y FLEX (PERF), qué hacer con un fallo de motor y regreso.", "sub": ["Fallo antes de V1: se aborta", "Fallo después de V1: se sigue, se mantiene V2 y se sube a la altitud de aceleración con motor parado (ENG OUT ACC)", "Ruta de regreso: el ILS de la salida y el SEC F-PLN"], "why": "El briefing pone a los dos pilotos de acuerdo con el plan antes de tener prisa. Repasar el MCDU en voz alta es la última comprobación de los datos.", "panels": ["mcdu"] },
+        { "challenge": "T.O DATA", "response": "CROSS-CHECKED", "note": "Los dos pilotos leen V1, VR, V2 y FLEX del MCDU y comprueban que coinciden con el cálculo.", "why": "Es el ítem T.O SPEEDS & THRUST del checklist BEFORE START: lo que se lee ahí tiene que estar ya comprobado.", "panels": ["mcdu"] }
       ]
     },
     {
@@ -145,16 +145,16 @@
       "phase": "before_start",
       "summary": "Con la autorización IFR y la hoja de carga.",
       "items": [
-        { "challenge": "T.O DATA (MCDU PERF)", "response": "INSERTED", "note": "Con la hoja de carga: «Cierre del MCDU con la hoja de carga».", "panels": ["mcdu"] },
-        { "challenge": "DOORS / WINDOWS", "response": "CLOSED" },
-        { "challenge": "FUEL PUMPS", "response": "ON",
+        { "challenge": "T.O DATA (MCDU PERF)", "response": "INSERTED", "why": "Con la hoja de carga cerrada, las velocidades y el FLEX deben ser los definitivos antes de arrancar.", "note": "Con la hoja de carga: «Cierre del MCDU con la hoja de carga».", "panels": ["mcdu"] },
+        { "challenge": "DOORS / WINDOWS", "response": "CLOSED", "why": "Un avión no puede moverse con una puerta abierta: el ECAM DOOR lo confirma." },
+        { "challenge": "FUEL PUMPS", "response": "ON", "why": "Las bombas deben dar presión a los motores antes de arrancar.",
           "checks": [ { "control": "fuel.l_pump1", "expect": ["ON"] }, { "control": "fuel.l_pump2", "expect": ["ON"] }, { "control": "fuel.r_pump1", "expect": ["ON"] }, { "control": "fuel.r_pump2", "expect": ["ON"] } ] },
-        { "challenge": "APU BLEED", "response": "ON",
+        { "challenge": "APU BLEED", "response": "ON", "why": "El aire del APU es el que mueve los arrancadores de los motores.",
           "checks": [ { "control": "air_cond.apu_bleed", "expect": ["ON"] } ] },
-        { "challenge": "XPDR CODE", "response": "SET", "panels": ["atc_tcas"] },
-        { "challenge": "ATC", "response": "AUTO",
+        { "challenge": "XPDR CODE", "response": "SET", "why": "El código asignado identifica tu avión en el radar del control desde que empieza a moverse.", "panels": ["atc_tcas"] },
+        { "challenge": "ATC", "response": "AUTO", "why": "En AUTO el transpondedor empieza a transmitir cuando corresponde, así el radar de superficie te ve.",
           "checks": [ { "control": "atc.mode", "expect": ["AUTO", "ON"] } ] },
-        { "challenge": "BEACON", "response": "ON", "note": "Al recibir la autorización de puesta en marcha o push.",
+        { "challenge": "BEACON", "response": "ON", "why": "La luz anticolisión avisa al personal de tierra de que los motores van a arrancar o el avión a moverse. Es la señal de «aléjate».", "note": "Al recibir la autorización de puesta en marcha o push.",
           "checks": [ { "control": "ext_lt.beacon", "expect": ["ON"] } ] }
       ]
     },
@@ -164,10 +164,10 @@
       "title": "BEFORE START",
       "phase": "before_start",
       "items": [
-        { "challenge": "PARKING BRAKE", "response": "___", "panels": ["park_brk"] },
-        { "challenge": "T.O SPEEDS & THRUST", "response": "___ (BOTH)", "both": true, "panels": ["mcdu"] },
-        { "challenge": "WINDOWS", "response": "CLOSED (BOTH)", "both": true },
-        { "challenge": "BEACON", "response": "ON",
+        { "challenge": "PARKING BRAKE", "response": "___", "why": "Hay que saber si el avión está frenado antes de que el tractor empuje o el motor arranque.", "panels": ["park_brk"] },
+        { "challenge": "T.O SPEEDS & THRUST", "response": "___ (BOTH)", "why": "Los dos pilotos leen y confirman las velocidades y el empuje de despegue: el error de un dato aquí es de los más peligrosos.", "both": true, "panels": ["mcdu"] },
+        { "challenge": "WINDOWS", "response": "CLOSED (BOTH)", "why": "Una ventana abierta no presuriza y hace mucho ruido en el despegue.", "both": true },
+        { "challenge": "BEACON", "response": "ON", "why": "Confirmación final de que el personal de tierra está avisado.",
           "checks": [ { "control": "ext_lt.beacon", "expect": ["ON"] } ] }
       ]
     },
@@ -178,17 +178,17 @@
       "phase": "start_taxi",
       "summary": "Motor 2 primero: el sistema amarillo da presión a los frenos.",
       "items": [
-        { "challenge": "ENG MODE SEL", "response": "IGN/START",
+        { "challenge": "ENG MODE SEL", "response": "IGN/START", "why": "En IGN/START el FADEC gestiona el arranque automático cuando subes el MASTER.",
           "checks": [ { "control": "eng.mode", "expect": ["IGN/START"] } ] },
-        { "challenge": "ENG MASTER 2", "response": "ON", "note": "Vigila N2, EGT y el encendido en el ECAM superior.",
+        { "challenge": "ENG MASTER 2", "response": "ON", "why": "Primero el motor 2: mueve el sistema hidráulico amarillo, que alimenta el freno de aparcamiento y la dirección de la rueda de morro.", "note": "Vigila N2, EGT y el encendido en el ECAM superior.",
           "checks": [ { "control": "eng.master2", "expect": ["ON"] } ] },
-        { "challenge": "ENG MASTER 1", "response": "ON", "note": "Cuando el motor 2 esté estabilizado.",
+        { "challenge": "ENG MASTER 1", "response": "ON", "why": "Con el motor 2 estable, el 1. Se arrancan de uno en uno para vigilar cada arranque y por si hay que abortarlo.", "note": "Cuando el motor 2 esté estabilizado.",
           "checks": [ { "control": "eng.master1", "expect": ["ON"] } ] },
-        { "challenge": "ENG MODE SEL", "response": "NORM",
+        { "challenge": "ENG MODE SEL", "response": "NORM", "why": "En NORM el encendido continuo se apaga: solo se activa cuando hace falta. Además el sangrado vuelve a los packs.",
           "checks": [ { "control": "eng.mode", "expect": ["NORM"] } ] },
-        { "challenge": "APU BLEED", "response": "OFF",
+        { "challenge": "APU BLEED", "response": "OFF", "why": "Con los motores en marcha el aire de cabina viene de ellos: el APU BLEED ya no hace falta y quitarlo protege el APU.",
           "checks": [ { "control": "air_cond.apu_bleed", "expect": ["OFF"] } ] },
-        { "challenge": "APU MASTER SW", "response": "OFF", "optional": true,
+        { "challenge": "APU MASTER SW", "response": "OFF", "why": "Si el aeropuerto no exige el APU en rodaje (o para un fallo de generador), apagarlo ahorra combustible y ruido.", "optional": true,
           "checks": [ { "control": "apu.master", "expect": ["OFF"] } ] }
       ]
     },
@@ -198,14 +198,14 @@
       "title": "Después del arranque",
       "phase": "start_taxi",
       "items": [
-        { "challenge": "GROUND SPOILERS", "response": "ARM",
+        { "challenge": "GROUND SPOILERS", "response": "ARM", "why": "Armados, los ground spoilers salen solos si se aborta el despegue: frenan y pegan el avión a la pista.",
           "checks": [ { "control": "speedbrake.lever", "expect": ["ARM"] } ] },
-        { "challenge": "RUD TRIM", "response": "ZERO", "panels": ["rud_trim"] },
-        { "challenge": "FLAPS", "response": "SET FOR T.O",
+        { "challenge": "RUD TRIM", "response": "ZERO", "why": "Con el timón compensado a cero el avión rueda recto y despega sin tendencia a guiñar.", "panels": ["rud_trim"] },
+        { "challenge": "FLAPS", "response": "SET FOR T.O", "why": "La configuración de despegue debe estar puesta antes de rodar; el T.O CONFIG la comprobará.",
           "checks": [ { "control": "flaps.lever", "expect": ["1", "2", "3"] } ] },
-        { "challenge": "PITCH TRIM", "response": "SET" },
-        { "challenge": "ECAM STATUS", "response": "CHECK", "panels": ["ecp"] },
-        { "challenge": "NOSE LT", "response": "TAXI",
+        { "challenge": "PITCH TRIM", "response": "SET", "why": "La compensación del estabilizador según el centro de gravedad hace que la rotación sea normal: ni demasiado ligera ni pesada." },
+        { "challenge": "ECAM STATUS", "response": "CHECK", "why": "Antes de rodar se revisa si hay alguna avería que limite el despegue.", "panels": ["ecp"] },
+        { "challenge": "NOSE LT", "response": "TAXI", "why": "La luz de rodaje te hace visible e ilumina la calle de rodaje.",
           "checks": [ { "control": "ext_lt.nose", "expect": ["TAXI"] } ] }
       ]
     },
@@ -215,10 +215,10 @@
       "title": "AFTER START",
       "phase": "start_taxi",
       "items": [
-        { "challenge": "ANTI ICE", "response": "___", "panels": ["anti_ice"] },
-        { "challenge": "ECAM STATUS", "response": "CHECKED", "panels": ["ecp"] },
-        { "challenge": "PITCH TRIM", "response": "___ %" },
-        { "challenge": "RUDDER TRIM", "response": "NEUTRAL", "panels": ["rud_trim"] }
+        { "challenge": "ANTI ICE", "response": "___", "why": "El antihielo de motores se decide con la temperatura y la humedad: hielo en las tomas daña los motores.", "panels": ["anti_ice"] },
+        { "challenge": "ECAM STATUS", "response": "CHECKED", "why": "Confirmación de que no hay avisos pendientes ni limitaciones.", "panels": ["ecp"] },
+        { "challenge": "PITCH TRIM", "response": "___ %", "why": "Compensación de despegue confirmada con la del cálculo de performance." },
+        { "challenge": "RUDDER TRIM", "response": "NEUTRAL", "why": "Un timón descentrado haría que el avión tirara hacia un lado al acelerar.", "panels": ["rud_trim"] }
       ]
     },
     {
@@ -227,17 +227,17 @@
       "title": "TAXI",
       "phase": "start_taxi",
       "items": [
-        { "challenge": "FLIGHT CONTROLS", "response": "CHECKED (BOTH)", "both": true, "panels": ["ecp"],
+        { "challenge": "FLIGHT CONTROLS", "response": "CHECKED (BOTH)", "why": "Se mueven los mandos de vuelo a fondo para comprobar que todas las superficies responden antes de despegar.", "both": true, "panels": ["ecp"],
           "note": "Pulsa F/CTL en el ECAM y mueve sidestick y pedales a fondo." },
-        { "challenge": "FLAP SETTING", "response": "CONF ___ (BOTH)", "both": true,
+        { "challenge": "FLAP SETTING", "response": "CONF ___ (BOTH)", "why": "Los dos pilotos confirman que los flaps están en la configuración calculada: despegar con flaps mal puestos es un accidente clásico.", "both": true,
           "checks": [ { "control": "flaps.lever", "expect": ["1", "2", "3"] } ] },
-        { "challenge": "RADAR & PRED W/S", "response": "ON & AUTO",
+        { "challenge": "RADAR & PRED W/S", "response": "ON & AUTO", "why": "El radar y el aviso predictivo de cizalladura protegen en la fase más vulnerable: despegue y ascenso inicial.",
           "checks": [ { "control": "wxr.sys", "expect": ["1", "2"] }, { "control": "wxr.pws", "expect": ["AUTO"] } ] },
-        { "challenge": "ENG MODE SEL", "response": "___",
+        { "challenge": "ENG MODE SEL", "response": "___", "why": "Si hay lluvia fuerte o turbulencia, el encendido continuo evita un apagado de motor.",
           "checks": [ { "control": "eng.mode", "expect": ["NORM", "IGN/START"] } ] },
-        { "challenge": "ECAM MEMO", "response": "TO NO BLUE", "panels": ["ecp"],
+        { "challenge": "ECAM MEMO", "response": "TO NO BLUE", "why": "El memo de despegue en el ECAM resume la configuración; «no blue» significa que no queda nada por hacer.", "panels": ["ecp"],
           "sub": ["AUTO BRK MAX", "SIGNS ON", "CABIN READY", "SPLRS ARM", "FLAPS TO", "TO CONFIG NORM"] },
-        { "challenge": "CABIN", "response": "READY" }
+        { "challenge": "CABIN", "response": "READY", "why": "Que la cabina esté lista evita despegar con carros o pasajeros de pie." }
       ]
     },
     {
@@ -247,17 +247,17 @@
       "phase": "takeoff_cruise",
       "summary": "Al entrar en pista.",
       "items": [
-        { "challenge": "STROBE", "response": "ON",
+        { "challenge": "STROBE", "response": "ON", "why": "Las luces de destellos son la señal convenida de «estoy en pista»: hacen visible el avión a los demás.",
           "checks": [ { "control": "ext_lt.strobe", "expect": ["ON"] } ] },
-        { "challenge": "LAND LT", "response": "ON",
+        { "challenge": "LAND LT", "response": "ON", "why": "Hacen visible el avión de frente y ayudan a ver la pista.",
           "checks": [ { "control": "ext_lt.land_l", "expect": ["ON"] }, { "control": "ext_lt.land_r", "expect": ["ON"] } ] },
-        { "challenge": "NOSE LT", "response": "T.O",
+        { "challenge": "NOSE LT", "response": "T.O", "why": "La luz de despegue es más potente que la de rodaje.",
           "checks": [ { "control": "ext_lt.nose", "expect": ["T.O"] } ] },
-        { "challenge": "RWY TURN OFF", "response": "ON",
+        { "challenge": "RWY TURN OFF", "response": "ON", "why": "Iluminan los bordes de la pista y te hacen visible de lado.",
           "checks": [ { "control": "ext_lt.rwy_turn_off", "expect": ["ON"] } ] },
-        { "challenge": "TCAS", "response": "TA/RA",
+        { "challenge": "TCAS", "response": "TA/RA", "why": "En pista el TCAS debe estar listo para dar órdenes de evitación desde que te levantas.",
           "checks": [ { "control": "tcas.mode", "expect": ["TA/RA"] } ] },
-        { "challenge": "PACKS", "response": "AS RQRD", "panels": ["air_cond"] }
+        { "challenge": "PACKS", "response": "AS RQRD", "why": "Algunos despegues se hacen con packs OFF para tener más empuje disponible.", "panels": ["air_cond"] }
       ]
     },
     {
@@ -266,10 +266,10 @@
       "title": "LINE-UP",
       "phase": "takeoff_cruise",
       "items": [
-        { "challenge": "T.O RWY", "response": "___ (BOTH)", "both": true },
-        { "challenge": "TCAS", "response": "___",
+        { "challenge": "T.O RWY", "response": "___ (BOTH)", "why": "Los dos pilotos confirman la pista: despegar desde la pista equivocada o una intersección no prevista ha causado accidentes.", "both": true },
+        { "challenge": "TCAS", "response": "___", "why": "Confirmación de que el TCAS está en TA/RA.",
           "checks": [ { "control": "tcas.mode", "expect": ["TA", "TA/RA"] } ] },
-        { "challenge": "PACKS 1 & 2", "response": "___", "panels": ["air_cond"] }
+        { "challenge": "PACKS 1 & 2", "response": "___", "why": "Confirmación de la configuración de packs calculada.", "panels": ["air_cond"] }
       ]
     },
     {
@@ -279,16 +279,16 @@
       "phase": "takeoff_cruise",
       "summary": "Tren arriba con régimen positivo y flaps según el esquema de velocidades.",
       "items": [
-        { "challenge": "LDG GEAR", "response": "UP" },
-        { "challenge": "FLAPS", "response": "0", "note": "A la velocidad S.",
+        { "challenge": "LDG GEAR", "response": "UP", "why": "El tren abajo genera mucha resistencia: se sube con ascenso positivo confirmado." },
+        { "challenge": "FLAPS", "response": "0", "why": "Los flaps se recogen por pasos según la velocidad (F y S en el PFD) hasta configuración limpia.", "note": "A la velocidad S.",
           "checks": [ { "control": "flaps.lever", "expect": ["0"] } ] },
-        { "challenge": "GROUND SPOILERS", "response": "DISARM",
+        { "challenge": "GROUND SPOILERS", "response": "DISARM", "why": "En el aire los ground spoilers ya no tienen función: desarmarlos evita una salida indeseada.",
           "checks": [ { "control": "speedbrake.lever", "expect": ["RET"] } ] },
-        { "challenge": "NOSE LT", "response": "OFF",
+        { "challenge": "NOSE LT", "response": "OFF", "why": "Las luces de morro no hacen falta en vuelo (además se apagan con el tren arriba).",
           "checks": [ { "control": "ext_lt.nose", "expect": ["OFF"] } ] },
-        { "challenge": "RWY TURN OFF", "response": "OFF",
+        { "challenge": "RWY TURN OFF", "response": "OFF", "why": "No se usan en vuelo.",
           "checks": [ { "control": "ext_lt.rwy_turn_off", "expect": ["OFF"] } ] },
-        { "challenge": "APU", "response": "OFF",
+        { "challenge": "APU", "response": "OFF", "why": "Si el APU se dejó en marcha para el despegue, ya no hace falta.",
           "checks": [ { "control": "apu.master", "expect": ["OFF"] } ] }
       ]
     },
@@ -298,11 +298,11 @@
       "title": "Ascenso (FL100)",
       "phase": "takeoff_cruise",
       "items": [
-        { "challenge": "LAND LT", "response": "RETRACT",
+        { "challenge": "LAND LT", "response": "RETRACT", "why": "Por encima de FL100 la regla de velocidad desaparece y las luces de aterrizaje extendidas solo añaden resistencia.",
           "checks": [ { "control": "ext_lt.land_l", "expect": ["RETRACT"] }, { "control": "ext_lt.land_r", "expect": ["RETRACT"] } ] },
-        { "challenge": "SEAT BELTS", "response": "AS RQRD", "optional": true,
+        { "challenge": "SEAT BELTS", "response": "AS RQRD", "why": "Si no hay turbulencia, se apaga el cartel para que el pasaje pueda moverse.", "optional": true,
           "checks": [ { "control": "signs.seat_belts", "expect": ["OFF"] } ] },
-        { "challenge": "BARO REF", "response": "STD", "note": "Al cruzar la altitud de transición.", "panels": ["efis_capt"] }
+        { "challenge": "BARO REF", "response": "STD", "why": "Por encima de la altitud de transición todos los aviones vuelan con 1013 hPa: así se separan entre sí por niveles de vuelo.", "note": "Al cruzar la altitud de transición.", "panels": ["efis_capt"] }
       ]
     },
     {
@@ -312,18 +312,18 @@
       "phase": "approach",
       "summary": "En crucero, unos 15 minutos o unas 100 NM antes del punto de descenso (TOD), con el ATIS, las cartas y el combustible a la vista.",
       "items": [
-        {"challenge": "ATIS / METEO", "response": "OBTAINED", "note": "Pista en servicio, QNH, viento, temperatura, nivel de transición y meteorología del alterno.", "why": "Todo lo que sigue depende de la pista y del tiempo en destino. Sin el ATIS se prepara una aproximación que luego hay que rehacer."},
-        {"challenge": "F-PLN · ARRIVAL", "response": "INSERT", "note": "F-PLN → LSK izquierda sobre el destino → ARRIVAL.", "sub": ["APPR: la aproximación, p. ej. ILS24R", "VIA: transición a la aproximación, si existe", "STAR: la llegada asignada", "TRANS: transición de la STAR", "TMPY INSERT"], "why": "Al cargar la llegada el FMGS recalcula la distancia hasta la pista y por tanto el punto de descenso y el combustible.", "panels": ["mcdu"]},
-        {"challenge": "F-PLN · REVISIÓN", "response": "CHECKED", "note": "Recorre la llegada con el ND en PLAN: discontinuidades, restricciones de altitud y velocidad contra la carta, y frustrada tras la pista.", "sub": ["Discontinuidad entre la ruta y la STAR: bórrala si van seguidas", "Restricciones en magenta: coinciden con la carta", "MISSED APPROACH: presente tras el aterrizaje"], "why": "En el descenso gestionado el avión respetará esas restricciones. Si la frustrada no está cargada, el avión no sabrá qué hacer al motor y al aire.", "panels": ["mcdu", "efis_capt"]},
-        {"challenge": "RAD NAV · ILS", "response": "CHECKED", "note": "Comprueba que el ILS de la pista está sintonizado: frecuencia, identificador y curso de la carta.", "why": "El ILS lo elige el FMGS a partir de la aproximación. Si la carta dice otro curso, el avión interceptará mal el localizador.", "panels": ["mcdu"]},
-        {"challenge": "PERF · APPR", "response": "INSERT", "note": "PERF → página APPR.", "sub": ["QNH, TEMP y MAG WIND del ATIS", "TRANS FL: nivel de transición", "VAPP: la calcula sola (VLS + corrección de viento)", "MDA o DH: mínimos de la carta (BARO o RADIO)", "LDG CONF: FULL, o 3 con GPWS LDG FLAP 3 ON"], "why": "Con viento y QNH el FMGS calcula la VAPP y el perfil de desaceleración. Los mínimos generan el aviso «MINIMUM» en el PFD.", "panels": ["mcdu"]},
-        {"challenge": "PERF · GO AROUND", "response": "CHECKED", "note": "Altitudes de reducción de empuje y de aceleración en la frustrada.", "why": "Tras motor y al aire el FD sigue estos valores, igual que en el despegue.", "panels": ["mcdu"]},
-        {"challenge": "FUEL PRED", "response": "CHECKED", "note": "Combustible estimado en destino y en el alterno, contra la reserva final y el mínimo de la compañía.", "why": "Es el último momento cómodo para decidir si sobra combustible para esperas o hay que pensar ya en el alterno.", "panels": ["mcdu"]},
-        {"challenge": "SEC F-PLN", "response": "PREPARED", "note": "Copia el activo y prepara la alternativa: otra pista con el viento, una aproximación distinta o el alterno.", "why": "Con un cambio de pista en el descenso se activa el secundario en lugar de reprogramar a baja altura y con mucha carga de trabajo.", "optional": true, "panels": ["mcdu"]},
-        {"challenge": "EFIS / ECAM", "response": "SET", "note": "LS encendido en un ILS, modo y escala del ND, y ECAM STATUS revisado por si hay limitaciones de aterrizaje.", "panels": ["mcdu", "efis_capt", "ecp"]},
-        {"challenge": "BRIEFING DE APROXIMACIÓN", "response": "PERFORMED", "note": "Meteorología, llegada y aproximación, mínimos, frustrada, configuración de aterrizaje y autobrake, y rodaje previsto.", "why": "Igual que en la salida: los dos pilotos llegan a la parte más cargada del vuelo con el mismo plan en la cabeza.", "panels": ["mcdu"]},
-        {"challenge": "DESCENSO", "response": "INITIATED", "note": "En el TOD, con la autorización: ALT en el FCU a la altitud autorizada y PUSH para descenso gestionado (DES).", "sub": ["Regla práctica: altitud en miles × 3 = millas necesarias", "Si vas alto, aerofrenos; si vas bajo, V/S reducida"], "why": "En DES el avión sigue el perfil calculado respetando las restricciones de la STAR.", "panels": ["mcdu", "fcu"]},
-        {"challenge": "ACTIVATE APPR PHASE", "response": "AS RQRD", "note": "En PERF APPR, ACTIVATE APPR PHASE (LSK 6L, dos pulsaciones) cuando el control te da vectores o vas a frenar antes del punto DECEL.", "why": "En fase de aproximación las velocidades gestionadas bajan a la de maniobra de cada configuración (S, F, VAPP). Si no se activa, el avión mantiene la velocidad de descenso.", "optional": true, "panels": ["mcdu"]}
+        { "challenge": "ATIS / METEO", "response": "OBTAINED", "note": "Pista en servicio, QNH, viento, temperatura, nivel de transición y meteorología del alterno.", "why": "Todo lo que sigue depende de la pista y del tiempo en destino. Sin el ATIS se prepara una aproximación que luego hay que rehacer." },
+        { "challenge": "F-PLN · ARRIVAL", "response": "INSERT", "note": "F-PLN → LSK izquierda sobre el destino → ARRIVAL.", "sub": ["APPR: la aproximación, p. ej. ILS24R", "VIA: transición a la aproximación, si existe", "STAR: la llegada asignada", "TRANS: transición de la STAR", "TMPY INSERT"], "why": "Al cargar la llegada el FMGS recalcula la distancia hasta la pista y por tanto el punto de descenso y el combustible.", "panels": ["mcdu"] },
+        { "challenge": "F-PLN · REVISIÓN", "response": "CHECKED", "note": "Recorre la llegada con el ND en PLAN: discontinuidades, restricciones de altitud y velocidad contra la carta, y frustrada tras la pista.", "sub": ["Discontinuidad entre la ruta y la STAR: bórrala si van seguidas", "Restricciones en magenta: coinciden con la carta", "MISSED APPROACH: presente tras el aterrizaje"], "why": "En el descenso gestionado el avión respetará esas restricciones. Si la frustrada no está cargada, el avión no sabrá qué hacer al motor y al aire.", "panels": ["mcdu", "efis_capt"] },
+        { "challenge": "RAD NAV · ILS", "response": "CHECKED", "note": "Comprueba que el ILS de la pista está sintonizado: frecuencia, identificador y curso de la carta.", "why": "El ILS lo elige el FMGS a partir de la aproximación. Si la carta dice otro curso, el avión interceptará mal el localizador.", "panels": ["mcdu"] },
+        { "challenge": "PERF · APPR", "response": "INSERT", "note": "PERF → página APPR.", "sub": ["QNH, TEMP y MAG WIND del ATIS", "TRANS FL: nivel de transición", "VAPP: la calcula sola (VLS + corrección de viento)", "MDA o DH: mínimos de la carta (BARO o RADIO)", "LDG CONF: FULL, o 3 con GPWS LDG FLAP 3 ON"], "why": "Con viento y QNH el FMGS calcula la VAPP y el perfil de desaceleración. Los mínimos generan el aviso «MINIMUM» en el PFD.", "panels": ["mcdu"] },
+        { "challenge": "PERF · GO AROUND", "response": "CHECKED", "note": "Altitudes de reducción de empuje y de aceleración en la frustrada.", "why": "Tras motor y al aire el FD sigue estos valores, igual que en el despegue.", "panels": ["mcdu"] },
+        { "challenge": "FUEL PRED", "response": "CHECKED", "note": "Combustible estimado en destino y en el alterno, contra la reserva final y el mínimo de la compañía.", "why": "Es el último momento cómodo para decidir si sobra combustible para esperas o hay que pensar ya en el alterno.", "panels": ["mcdu"] },
+        { "challenge": "SEC F-PLN", "response": "PREPARED", "note": "Copia el activo y prepara la alternativa: otra pista con el viento, una aproximación distinta o el alterno.", "why": "Con un cambio de pista en el descenso se activa el secundario en lugar de reprogramar a baja altura y con mucha carga de trabajo.", "optional": true, "panels": ["mcdu"] },
+        { "challenge": "EFIS / ECAM", "response": "SET", "note": "LS encendido en un ILS, modo y escala del ND, y ECAM STATUS revisado por si hay limitaciones de aterrizaje.", "why": "Con LS se ve la desviación del ILS en el PFD desde la interceptación. Una avería en STATUS puede cambiar la configuración o la distancia de aterrizaje.", "panels": ["mcdu", "efis_capt", "ecp"] },
+        { "challenge": "BRIEFING DE APROXIMACIÓN", "response": "PERFORMED", "note": "Meteorología, llegada y aproximación, mínimos, frustrada, configuración de aterrizaje y autobrake, y rodaje previsto.", "why": "Igual que en la salida: los dos pilotos llegan a la parte más cargada del vuelo con el mismo plan en la cabeza.", "panels": ["mcdu"] },
+        { "challenge": "DESCENSO", "response": "INITIATED", "note": "En el TOD, con la autorización: ALT en el FCU a la altitud autorizada y PUSH para descenso gestionado (DES).", "sub": ["Regla práctica: altitud en miles × 3 = millas necesarias", "Si vas alto, aerofrenos; si vas bajo, V/S reducida"], "why": "En DES el avión sigue el perfil calculado respetando las restricciones de la STAR.", "panels": ["mcdu", "fcu"] },
+        { "challenge": "ACTIVATE APPR PHASE", "response": "AS RQRD", "note": "En PERF APPR, ACTIVATE APPR PHASE (LSK 6L, dos pulsaciones) cuando el control te da vectores o vas a frenar antes del punto DECEL.", "why": "En fase de aproximación las velocidades gestionadas bajan a la de maniobra de cada configuración (S, F, VAPP). Si no se activa, el avión mantiene la velocidad de descenso.", "optional": true, "panels": ["mcdu"] }
       ]
     },
     {
@@ -333,12 +333,12 @@
       "phase": "approach",
       "summary": "Prepara la aproximación antes del punto de descenso.",
       "items": [
-        { "challenge": "MCDU APPR", "response": "PREPARED", "note": "Paso a paso en «Preparación de la aproximación en el MCDU».", "panels": ["mcdu"] },
-        { "challenge": "AUTO BRAKE", "response": "AS RQRD" },
-        { "challenge": "BARO REF", "response": "SET", "note": "Al cruzar el nivel de transición.", "panels": ["efis_capt"] },
-        { "challenge": "LAND LT", "response": "ON", "note": "Por debajo de FL100.",
+        { "challenge": "MCDU APPR", "response": "PREPARED", "why": "La aproximación se prepara con tiempo, en crucero, cuando la carga de trabajo es baja.", "note": "Paso a paso en «Preparación de la aproximación en el MCDU».", "panels": ["mcdu"] },
+        { "challenge": "AUTO BRAKE", "response": "AS RQRD", "why": "El autobrake frena solo tras el aterrizaje con la intensidad adecuada a la pista." },
+        { "challenge": "BARO REF", "response": "SET", "why": "Por debajo del nivel de transición el altímetro vuelve al QNH: marca la altitud real sobre el mar, la de las cartas.", "note": "Al cruzar el nivel de transición.", "panels": ["efis_capt"] },
+        { "challenge": "LAND LT", "response": "ON", "why": "Por debajo de FL100 hay más tráfico: las luces te hacen visible.", "note": "Por debajo de FL100.",
           "checks": [ { "control": "ext_lt.land_l", "expect": ["ON"] }, { "control": "ext_lt.land_r", "expect": ["ON"] } ] },
-        { "challenge": "SEAT BELTS", "response": "ON",
+        { "challenge": "SEAT BELTS", "response": "ON", "why": "El pasaje debe estar sentado antes de la turbulencia y de la aproximación.",
           "checks": [ { "control": "signs.seat_belts", "expect": ["ON"] } ] }
       ]
     },
@@ -348,12 +348,12 @@
       "title": "APPROACH",
       "phase": "approach",
       "items": [
-        { "challenge": "BARO REF", "response": "___ SET (BOTH)", "both": true, "panels": ["efis_capt"] },
-        { "challenge": "SEAT BELTS", "response": "ON",
+        { "challenge": "BARO REF", "response": "___ SET (BOTH)", "why": "Los dos altímetros con el QNH de destino; un error aquí desplaza toda la aproximación.", "both": true, "panels": ["efis_capt"] },
+        { "challenge": "SEAT BELTS", "response": "ON", "why": "Pasaje sentado para la aproximación.",
           "checks": [ { "control": "signs.seat_belts", "expect": ["ON"] } ] },
-        { "challenge": "MINIMUM", "response": "___", "panels": ["mcdu"] },
-        { "challenge": "AUTO BRAKE", "response": "___" },
-        { "challenge": "ENG MODE SEL", "response": "AS RQRD",
+        { "challenge": "MINIMUM", "response": "___", "why": "Los mínimos marcan dónde decidir aterrizar o frustrar: deben estar puestos y confirmados.", "panels": ["mcdu"] },
+        { "challenge": "AUTO BRAKE", "response": "___", "why": "El nivel de autobrake depende de la longitud y el estado de la pista." },
+        { "challenge": "ENG MODE SEL", "response": "AS RQRD", "why": "Encendido continuo si hay lluvia fuerte o turbulencia.",
           "checks": [ { "control": "eng.mode", "expect": ["NORM", "IGN/START"] } ] }
       ]
     },
@@ -363,9 +363,9 @@
       "title": "LANDING",
       "phase": "approach",
       "items": [
-        { "challenge": "ECAM MEMO", "response": "LDG NO BLUE", "panels": ["ecp"],
+        { "challenge": "ECAM MEMO", "response": "LDG NO BLUE", "why": "El memo de aterrizaje del ECAM resume tren, spoilers, flaps y cabina; «no blue» significa que todo está listo.", "panels": ["ecp"],
           "sub": ["LDG GEAR DN", "SIGNS ON", "CABIN READY", "SPLRS ARM", "FLAPS SET"] },
-        { "challenge": "CABIN", "response": "READY" }
+        { "challenge": "CABIN", "response": "READY", "why": "La tripulación de cabina confirma que todo está asegurado para el aterrizaje." }
       ]
     },
     {
@@ -375,21 +375,21 @@
       "phase": "approach",
       "summary": "Fuera de la pista activa.",
       "items": [
-        { "challenge": "GROUND SPOILERS", "response": "DISARM",
+        { "challenge": "GROUND SPOILERS", "response": "DISARM", "why": "Recoger los spoilers tras dejar la pista libera a los frenos del trabajo y es lo primero del flujo.",
           "checks": [ { "control": "speedbrake.lever", "expect": ["RET"] } ] },
-        { "challenge": "FLAPS", "response": "0",
+        { "challenge": "FLAPS", "response": "0", "why": "Flaps arriba para rodar: evitan daños por piedras o nieve.",
           "checks": [ { "control": "flaps.lever", "expect": ["0"] } ] },
-        { "challenge": "STROBE", "response": "AUTO",
+        { "challenge": "STROBE", "response": "AUTO", "why": "Las luces de destellos son para la pista; en rodaje deslumbran a otros.",
           "checks": [ { "control": "ext_lt.strobe", "expect": ["AUTO"] } ] },
-        { "challenge": "LAND LT", "response": "RETRACT",
+        { "challenge": "LAND LT", "response": "RETRACT", "why": "Ya no hacen falta y recogidas no se dañan.",
           "checks": [ { "control": "ext_lt.land_l", "expect": ["RETRACT"] }, { "control": "ext_lt.land_r", "expect": ["RETRACT"] } ] },
-        { "challenge": "NOSE LT", "response": "TAXI",
+        { "challenge": "NOSE LT", "response": "TAXI", "why": "Luz de rodaje para la calle de rodaje.",
           "checks": [ { "control": "ext_lt.nose", "expect": ["TAXI"] } ] },
-        { "challenge": "TCAS", "response": "STBY",
+        { "challenge": "TCAS", "response": "STBY", "why": "En tierra el TCAS no hace falta y no satura a los demás.",
           "checks": [ { "control": "tcas.mode", "expect": ["STBY"] } ] },
-        { "challenge": "ENG MODE SEL", "response": "NORM",
+        { "challenge": "ENG MODE SEL", "response": "NORM", "why": "Fin del encendido continuo.",
           "checks": [ { "control": "eng.mode", "expect": ["NORM"] } ] },
-        { "challenge": "APU", "response": "START", "optional": true,
+        { "challenge": "APU", "response": "START", "why": "El APU se arranca antes de llegar si no hay GPU, para apagar los motores en el aparcamiento.", "optional": true,
           "checks": [ { "control": "apu.master", "expect": ["ON"] } ] }
       ]
     },
@@ -399,7 +399,7 @@
       "title": "AFTER LANDING",
       "phase": "approach",
       "items": [
-        { "challenge": "RADAR & PRED W/S", "response": "OFF",
+        { "challenge": "RADAR & PRED W/S", "response": "OFF", "why": "El radar no debe emitir con personal de tierra cerca.",
           "checks": [ { "control": "wxr.sys", "expect": ["OFF"] }, { "control": "wxr.pws", "expect": ["OFF"] } ] }
       ]
     },
@@ -410,23 +410,23 @@
       "phase": "shutdown",
       "summary": "En el puesto de estacionamiento.",
       "items": [
-        { "challenge": "PARKING BRAKE", "response": "ON",
+        { "challenge": "PARKING BRAKE", "response": "ON", "why": "Freno antes de parar motores: el avión no debe moverse con el personal de tierra acercándose.",
           "checks": [ { "control": "park.brake", "expect": ["ON"] } ] },
-        { "challenge": "APU BLEED", "response": "ON", "optional": true,
+        { "challenge": "APU BLEED", "response": "ON", "why": "Con el APU disponible, la cabina sigue climatizada tras parar los motores.", "optional": true,
           "checks": [ { "control": "air_cond.apu_bleed", "expect": ["ON"] } ] },
-        { "challenge": "ENG MASTER 1 + 2", "response": "OFF",
+        { "challenge": "ENG MASTER 1 + 2", "response": "OFF", "why": "Corta el combustible y para los motores.",
           "checks": [ { "control": "eng.master1", "expect": ["OFF"] }, { "control": "eng.master2", "expect": ["OFF"] } ] },
-        { "challenge": "SEAT BELTS", "response": "OFF",
+        { "challenge": "SEAT BELTS", "response": "OFF", "why": "El pasaje puede levantarse con el avión parado y los motores apagados.",
           "checks": [ { "control": "signs.seat_belts", "expect": ["OFF"] } ] },
-        { "challenge": "BEACON", "response": "OFF", "note": "Con los motores parados.",
+        { "challenge": "BEACON", "response": "OFF", "why": "La luz anticolisión se apaga cuando los motores están parados: es la señal para que el personal de tierra se acerque.", "note": "Con los motores parados.",
           "checks": [ { "control": "ext_lt.beacon", "expect": ["OFF"] } ] },
-        { "challenge": "NOSE LT", "response": "OFF",
+        { "challenge": "NOSE LT", "response": "OFF", "why": "Sin rodar no hace falta, y deslumbraría al personal de tierra.",
           "checks": [ { "control": "ext_lt.nose", "expect": ["OFF"] } ] },
-        { "challenge": "WING LT", "response": "OFF",
+        { "challenge": "WING LT", "response": "OFF", "why": "Solo es útil en vuelo o para inspeccionar hielo.",
           "checks": [ { "control": "ext_lt.wing", "expect": ["OFF"] } ] },
-        { "challenge": "FUEL PUMPS", "response": "OFF",
+        { "challenge": "FUEL PUMPS", "response": "OFF", "why": "Sin motores en marcha las bombas no hacen falta.",
           "checks": [ { "control": "fuel.l_pump1", "expect": ["OFF"] }, { "control": "fuel.l_pump2", "expect": ["OFF"] }, { "control": "fuel.ctr_pump1", "expect": ["OFF"] }, { "control": "fuel.ctr_pump2", "expect": ["OFF"] }, { "control": "fuel.r_pump1", "expect": ["OFF"] }, { "control": "fuel.r_pump2", "expect": ["OFF"] } ] },
-        { "challenge": "ATC", "response": "STBY",
+        { "challenge": "ATC", "response": "STBY", "why": "En el aparcamiento el transpondedor no debe transmitir.",
           "checks": [ { "control": "atc.mode", "expect": ["STBY"] } ] }
       ]
     },
@@ -436,15 +436,15 @@
       "title": "PARKING",
       "phase": "shutdown",
       "items": [
-        { "challenge": "PARK BRK or CHOCKS", "response": "SET",
+        { "challenge": "PARK BRK or CHOCKS", "response": "SET", "why": "Confirmación de que el avión está inmovilizado.",
           "checks": [ { "control": "park.brake", "expect": ["ON"] } ] },
-        { "challenge": "ENGINES", "response": "OFF",
+        { "challenge": "ENGINES", "response": "OFF", "why": "Confirmación de que los motores están parados.",
           "checks": [ { "control": "eng.master1", "expect": ["OFF"] }, { "control": "eng.master2", "expect": ["OFF"] } ] },
-        { "challenge": "WINGS LIGHT", "response": "OFF",
+        { "challenge": "WINGS LIGHT", "response": "OFF", "why": "Confirmación de luces de ala apagadas.",
           "checks": [ { "control": "ext_lt.wing", "expect": ["OFF"] } ] },
-        { "challenge": "FUEL PUMPS", "response": "OFF",
+        { "challenge": "FUEL PUMPS", "response": "OFF", "why": "Confirmación de bombas apagadas.",
           "checks": [ { "control": "fuel.l_pump1", "expect": ["OFF"] }, { "control": "fuel.l_pump2", "expect": ["OFF"] }, { "control": "fuel.ctr_pump1", "expect": ["OFF"] }, { "control": "fuel.ctr_pump2", "expect": ["OFF"] }, { "control": "fuel.r_pump1", "expect": ["OFF"] }, { "control": "fuel.r_pump2", "expect": ["OFF"] } ] },
-        { "challenge": "YELLOW ELEC PUMP", "response": "OFF", "panels": ["hyd"] }
+        { "challenge": "YELLOW ELEC PUMP", "response": "OFF", "why": "Si se usó la bomba amarilla, se apaga para no gastar baterías ni recalentarla.", "panels": ["hyd"] }
       ]
     },
     {
@@ -454,23 +454,23 @@
       "phase": "shutdown",
       "summary": "Antes de abandonar el avión.",
       "items": [
-        { "challenge": "ADIRS 1, 2, 3", "response": "OFF",
+        { "challenge": "ADIRS 1, 2, 3", "response": "OFF", "why": "Las IRS se apagan al final para no consumir baterías y para que el siguiente vuelo empiece con una alineación limpia.",
           "checks": [ { "control": "adirs.ir1", "expect": ["OFF"] }, { "control": "adirs.ir2", "expect": ["OFF"] }, { "control": "adirs.ir3", "expect": ["OFF"] } ] },
-        { "challenge": "CREW SUPPLY", "response": "OFF",
+        { "challenge": "CREW SUPPLY", "response": "OFF", "why": "Cerrar el oxígeno evita fugas mientras el avión está parado.",
           "checks": [ { "control": "oxy.crew_supply", "expect": ["OFF"] } ] },
-        { "challenge": "EMER EXIT LT", "response": "OFF",
+        { "challenge": "EMER EXIT LT", "response": "OFF", "why": "Así el alumbrado de emergencia no descarga sus baterías.",
           "checks": [ { "control": "signs.emer_exit_lt", "expect": ["OFF"] } ] },
-        { "challenge": "NO SMOKING", "response": "OFF",
+        { "challenge": "NO SMOKING", "response": "OFF", "why": "Sin pasaje no hace falta.",
           "checks": [ { "control": "signs.no_smoking", "expect": ["OFF"] } ] },
-        { "challenge": "APU BLEED", "response": "OFF",
+        { "challenge": "APU BLEED", "response": "OFF", "why": "Sin APU no hay aire que suministrar.",
           "checks": [ { "control": "air_cond.apu_bleed", "expect": ["OFF"] } ] },
-        { "challenge": "APU MASTER SW", "response": "OFF",
+        { "challenge": "APU MASTER SW", "response": "OFF", "why": "Apaga el APU. Espera a que la toma de aire se cierre antes de quitar las baterías.",
           "checks": [ { "control": "apu.master", "expect": ["OFF"] } ] },
-        { "challenge": "NAV & LOGO LT", "response": "OFF",
+        { "challenge": "NAV & LOGO LT", "response": "OFF", "why": "Última luz encendida: se apaga cuando el avión queda sin corriente.",
           "checks": [ { "control": "ext_lt.nav_logo", "expect": ["OFF"] } ] },
-        { "challenge": "EXT PWR", "response": "OFF", "optional": true,
+        { "challenge": "EXT PWR", "response": "OFF", "why": "Si se usó la GPU, se desconecta antes de apagar el avión.", "optional": true,
           "checks": [ { "control": "elec.ext_pwr", "expect": ["OFF"] } ] },
-        { "challenge": "BAT 1 + 2", "response": "OFF", "note": "Último paso: espera a que el APU termine de pararse.",
+        { "challenge": "BAT 1 + 2", "response": "OFF", "why": "Las baterías se quitan las últimas: el avión queda frío y oscuro, listo para el siguiente vuelo.", "note": "Último paso: espera a que el APU termine de pararse.",
           "checks": [ { "control": "elec.bat1", "expect": ["OFF"] }, { "control": "elec.bat2", "expect": ["OFF"] } ] }
       ]
     },
@@ -480,11 +480,11 @@
       "title": "SECURING THE AIRCRAFT",
       "phase": "shutdown",
       "items": [
-        { "challenge": "OXYGEN", "response": "OFF",
+        { "challenge": "OXYGEN", "response": "OFF", "why": "Confirmación del oxígeno cerrado.",
           "checks": [ { "control": "oxy.crew_supply", "expect": ["OFF"] } ] },
-        { "challenge": "EMER EXIT LT", "response": "OFF",
+        { "challenge": "EMER EXIT LT", "response": "OFF", "why": "Confirmación del alumbrado de emergencia apagado.",
           "checks": [ { "control": "signs.emer_exit_lt", "expect": ["OFF"] } ] },
-        { "challenge": "BATTERIES", "response": "OFF",
+        { "challenge": "BATTERIES", "response": "OFF", "why": "Confirmación final: avión sin corriente.",
           "checks": [ { "control": "elec.bat1", "expect": ["OFF"] }, { "control": "elec.bat2", "expect": ["OFF"] } ] }
       ]
     }

@@ -120,7 +120,10 @@ Adelantado desde la fase 2 porque es el panel que más se toca en vuelo y reutil
 - [x] Campo `why` en los ítems de procedimiento, visible en el ítem actual y con «¿Por qué?» en los demás
 - [x] Procedimientos «Preparación del MCDU (FMGS)», «Cierre del MCDU con la hoja de carga» y «Preparación de la aproximación en el MCDU»
 - [ ] Revisar las explicaciones con un piloto de A320 y ajustar al SOP de referencia
-- [ ] Ejercicios guiados con nota (cronómetro, errores y orden) sobre los procedimientos
+- [x] «Porqué» en los 170 ítems de procedimiento (F2)
+- [x] Ejercicios con nota (F3): 8 ejercicios en `mapping/exercises/`, modos guiado y examen, cronómetro, orden, pasos deshechos, mandos que no tocan y pistas; tres estrellas e historial por ejercicio. Motor `ExerciseTracker` en XPlaneKit con tests
+- [ ] Probar los ejercicios en el simulador real: mandos sin verificar pueden no confirmar pasos (se pueden marcar a mano, como pista)
+- [ ] Estado inicial por ejercicio en modo demo (hoy cada ejercicio parte del estado en que esté el avión)
 - [ ] Glosario de siglas buscable
 
  (2 a 3 meses) — en curso

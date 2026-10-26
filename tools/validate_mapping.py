@@ -6,6 +6,7 @@ mapping/<group>/*.json     one subpanel per file (toggle2 | toggle3 | korry | ro
 mapping/fcu/*.json         the Flight Control Unit (selectors + buttons), its own schema
 mapping/procedures/*.json  flows and checklists; sensed items must name real controls and positions
 mapping/guide/*.json       learn-mode explanations; must name real controls, positions and panels
+mapping/exercises/*.json   timed exercises over the procedures
 mapping/reference/*.txt    xp.py dump of ToLiss; every AirbusFBW/ and toliss_airbus/ name must appear there
 """
 import glob
@@ -342,6 +343,8 @@ def validate_procedures(root, controls, panel_ids):
                 count += 1
                 if not item.get("challenge") or not item.get("response"):
                     errors.append(f"{at}: faltan 'challenge' o 'response'")
+                if not item.get("why"):
+                    print(f"AVISO: {at}: sin 'why'")
                 for panel in item.get("panels", []):
                     if panel not in panel_ids:
                         errors.append(f"{at}: el panel '{panel}' no existe")
@@ -414,6 +417,40 @@ def validate_guide(root, controls, panel_ids):
     return errors
 
 
+def validate_exercises(root):
+    """Exercises: unique ids, existing procedures, a positive target time."""
+    errors, seen = [], set()
+    procedures = {}
+    for path in glob.glob(os.path.join(root, "procedures", "*.json")):
+        with open(path, encoding="utf-8") as handle:
+            for procedure in json.load(handle).get("procedures", []):
+                procedures[procedure.get("id")] = procedure
+    paths = sorted(glob.glob(os.path.join(root, "exercises", "*.json")))
+    for path in paths:
+        name = os.path.relpath(path)
+        with open(path, encoding="utf-8") as handle:
+            book = json.load(handle)
+        for exercise in book.get("exercises", []):
+            eid = exercise.get("id")
+            where = f"{name} · {eid}"
+            if not eid or eid in seen:
+                errors.append(f"{where}: id vacío o repetido")
+            seen.add(eid)
+            if not exercise.get("title"):
+                errors.append(f"{where}: falta 'title'")
+            if not isinstance(exercise.get("targetSeconds"), int) or exercise["targetSeconds"] <= 0:
+                errors.append(f"{where}: 'targetSeconds' debe ser un entero positivo")
+            ids = exercise.get("procedures") or []
+            if not ids:
+                errors.append(f"{where}: sin 'procedures'")
+            for pid in ids:
+                if pid not in procedures:
+                    errors.append(f"{where}: el procedimiento '{pid}' no existe")
+    if paths:
+        print(f"\nEjercicios: {len(seen)}.")
+    return errors
+
+
 def load_reference(root):
     """Names from mapping/reference/*.txt (xp.py dump), or None when no dump exists yet."""
     def read(name):
@@ -438,7 +475,8 @@ def main():
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "mapping")
     files = sorted(f for f in glob.glob(os.path.join(root, "**", "*.json"), recursive=True)
                    if os.path.basename(f) != "layout.json" and os.sep + "reference" + os.sep not in f
-                   and os.sep + "procedures" + os.sep not in f and os.sep + "guide" + os.sep not in f)
+                   and os.sep + "procedures" + os.sep not in f and os.sep + "guide" + os.sep not in f
+                   and os.sep + "exercises" + os.sep not in f)
     if not files:
         sys.exit("No hay archivos de mapeo.")
     ref_datarefs, ref_commands = load_reference(root)
@@ -477,6 +515,10 @@ def main():
         failed = True
 
     for error in validate_procedures(root, controls, panel_ids | BUILTIN_PANELS | {"fcu"}):
+        print(f"ERROR: {error}")
+        failed = True
+
+    for error in validate_exercises(root):
         print(f"ERROR: {error}")
         failed = True
 
