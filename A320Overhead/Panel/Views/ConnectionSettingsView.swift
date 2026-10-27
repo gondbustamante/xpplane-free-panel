@@ -1,4 +1,5 @@
 import SwiftUI
+import XPlaneKit
 
 struct ConnectionSettingsView: View {
     @Environment(PanelModel.self) private var model
