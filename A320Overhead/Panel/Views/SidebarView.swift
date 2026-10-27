@@ -73,6 +73,8 @@ struct SidebarView: View {
     @State private var editMode: EditMode = .inactive
     @State private var showOrganizer = false
     @State private var confirmResetChecklists = false
+    @State private var confirmDeleteResults = false
+    @State private var phaseToReset: ProcedureStyle.PhaseGroup?
 
     @AppStorage("sidebar.order") private var orderRaw = ""
     @AppStorage("sidebar.hidden") private var hiddenRaw = ""
@@ -149,9 +151,13 @@ struct SidebarView: View {
                         Button("Personalizar barra lateral…", systemImage: "sidebar.left") { showOrganizer = true }
                         Divider()
                         Button("Nuevo panel", systemImage: "plus") { editing = EditorTarget(panel: nil) }
-                        Button("Reiniciar checklists…", systemImage: "arrow.counterclockwise", role: .destructive) {
+                        Button("Reiniciar procedimientos…", systemImage: "arrow.counterclockwise", role: .destructive) {
                             confirmResetChecklists = true
                         }
+                        Button("Borrar resultados de ejercicios…", systemImage: "trash", role: .destructive) {
+                            confirmDeleteResults = true
+                        }
+                        .disabled(model.exerciseResults.isEmpty)
                     } label: {
                         Label("Opciones", systemImage: "ellipsis.circle")
                     }
@@ -164,10 +170,32 @@ struct SidebarView: View {
         .sheet(isPresented: $showOrganizer) {
             SidebarOrganizer()
         }
-        .confirmationDialog("¿Reiniciar todas las checklists?", isPresented: $confirmResetChecklists, titleVisibility: .visible) {
-            Button("Reiniciar todo", role: .destructive) { model.resetAllTicks() }
+        .confirmationDialog("¿Reiniciar todos los procedimientos?", isPresented: $confirmResetChecklists, titleVisibility: .visible) {
+            if model.canResetAircraft {
+                Button("Reiniciar todo y avión en Cold & Dark", role: .destructive) {
+                    model.resetProcedures(model.procedures, aircraft: true)
+                }
+            }
+            Button("Desmarcar todo lo marcado a mano", role: .destructive) { model.resetAllTicks() }
         } message: {
-            Text("Se desmarcan los ítems marcados a mano en todos los procedimientos.")
+            Text("Los ítems detectados siguen a los mandos; en el modo demo puedes volver también el avión a Cold & Dark.")
+        }
+        .confirmationDialog("¿Reiniciar \(phaseToReset?.title ?? "la fase")?",
+                            isPresented: Binding(get: { phaseToReset != nil }, set: { if !$0 { phaseToReset = nil } }),
+                            titleVisibility: .visible, presenting: phaseToReset) { group in
+            if model.canResetAircraft {
+                Button("Reiniciar y avión en Cold & Dark", role: .destructive) {
+                    model.resetProcedures(group.procedures, aircraft: true)
+                }
+            }
+            Button("Desmarcar lo marcado a mano", role: .destructive) { model.resetTicks(ofPhase: group.id) }
+        } message: { group in
+            Text("\(group.procedures.count) procedimientos de esta fase.")
+        }
+        .confirmationDialog("¿Borrar todos los resultados de ejercicios?", isPresented: $confirmDeleteResults, titleVisibility: .visible) {
+            Button("Borrar resultados", role: .destructive) { model.deleteResults(of: nil) }
+        } message: {
+            Text("Se pierden las estrellas y el historial de todos los ejercicios.")
         }
     }
 
@@ -266,6 +294,9 @@ struct SidebarView: View {
                 SidebarRow(title: group.title, icon: group.icon,
                            detail: complete == group.procedures.count ? nil : "\(complete)/\(group.procedures.count)",
                            done: complete == group.procedures.count)
+                    .contextMenu {
+                        Button("Reiniciar fase…", systemImage: "arrow.counterclockwise") { phaseToReset = group }
+                    }
             }
         }
     }

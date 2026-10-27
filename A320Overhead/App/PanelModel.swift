@@ -670,6 +670,33 @@ final class PanelModel {
         manualChecks = manualChecks.filter { !$0.hasPrefix("\(procedure.id)#") }
     }
 
+    /// Every procedure of a flight phase.
+    func resetTicks(ofPhase phase: String) {
+        for procedure in procedures where (procedure.phase ?? "other") == phase {
+            resetTicks(of: procedure)
+        }
+    }
+
+    /// The demo can also put the switches back, so sensed items start again too.
+    var canResetAircraft: Bool { client is DemoSimulator && status == .connected }
+
+    /// Demo: back to cold and dark. The new values are applied before returning, so whatever
+    /// runs next (a checklist, an exercise) reads the reset aircraft.
+    func resetDemoAircraft() async {
+        guard let demo = client as? DemoSimulator else { return }
+        let updates = await demo.resetAircraft()
+        for update in updates { apply(update) }
+        // Let updates already queued before the reset go through the listener first.
+        try? await Task.sleep(for: .milliseconds(300))
+        for update in updates { apply(update) }
+    }
+
+    /// Clears hand ticks and, in the demo, also the aircraft.
+    func resetProcedures(_ list: [Procedure], aircraft: Bool) {
+        list.forEach(resetTicks(of:))
+        if aircraft { Task { await resetDemoAircraft() } }
+    }
+
     func resetAllTicks() {
         manualChecks = []
     }
@@ -814,10 +841,34 @@ final class PanelModel {
         exerciseRun = nil
     }
 
-    func repeatExercise() {
+    /// Starts again the current or just finished exercise; in the demo, optionally from cold
+    /// and dark.
+    func repeatExercise(fromColdAndDark: Bool = false) {
         guard let run = exerciseRun else { return }
         exerciseRun = nil
-        startExercise(run.tracker.definition.id, mode: run.tracker.mode)
+        beginExercise(run.tracker.definition.id, mode: run.tracker.mode, fromColdAndDark: fromColdAndDark)
+    }
+
+    /// `startExercise`, after resetting the demo aircraft when asked.
+    func beginExercise(_ id: String, mode: ExerciseMode, fromColdAndDark: Bool) {
+        guard fromColdAndDark, canResetAircraft else {
+            startExercise(id, mode: mode)
+            return
+        }
+        exerciseBriefingID = nil
+        Task {
+            await resetDemoAircraft()
+            startExercise(id, mode: mode)
+        }
+    }
+
+    /// Deletes the stored results of one exercise, or of all with nil.
+    func deleteResults(of id: String?) {
+        if let id {
+            exerciseResults[id] = nil
+        } else {
+            exerciseResults = [:]
+        }
     }
 
     /// Exam mode: shows the next step and points at its control, at the price of a hint.

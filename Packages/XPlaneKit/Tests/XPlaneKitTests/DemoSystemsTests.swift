@@ -153,6 +153,25 @@ final class DemoSystemsTests: XCTestCase {
         XCTAssertEqual(source, "GEN 2")
     }
 
+    func testResetAircraftReturnsToColdAndDark() async throws {
+        let demo = try await demo(.instant)
+        _ = try await demo.subscribe(datarefs: ["AirbusFBW/BatOHPArray", "AirbusFBW/APUAvail"])
+        try await demo.fire(command: "Bat1On")
+        try await demo.fire(command: "MasterOn")
+        try await demo.fire(command: "StartOn")
+        let avail = await number(demo, "AirbusFBW/APUAvail")
+        XCTAssertEqual(avail, 1)
+
+        let updates = await demo.resetAircraft()
+        let battery = await number(demo, "AirbusFBW/BatOHPArray", 0)
+        let apu = await number(demo, "AirbusFBW/APUAvail")
+        XCTAssertEqual(battery, 0)
+        XCTAssertEqual(apu, 0)
+        XCTAssertEqual(Set(updates.map(\.name)), ["AirbusFBW/BatOHPArray", "AirbusFBW/APUAvail", DemoSystemsStatus.dataref])
+        let status = await demo.systemsStatus()
+        XCTAssertEqual(status.power, DemoSystemsStatus.Power.none)
+    }
+
     func testStatusRoundTrip() {
         let status = DemoSystemsStatus(power: .battery, acSource: nil, lines: [.init("SOLO BATERÍAS", "amber")])
         XCTAssertEqual(DemoSystemsStatus.decode(status.encoded), status)

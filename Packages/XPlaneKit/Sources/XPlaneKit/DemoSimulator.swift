@@ -117,6 +117,39 @@ public actor DemoSimulator: SimulatorConnection {
         publishStatus()
     }
 
+    /// Puts the aircraft back to cold and dark (the state of a fresh connection) keeping the
+    /// subscriptions and the timing. Returns the new value of every subscribed dataref, and the
+    /// systems summary, so the panel can apply them at once; they are also published.
+    @discardableResult
+    public func resetAircraft() -> [DatarefUpdate] {
+        let timing = aircraft.timing
+        aircraft = DemoAircraft()
+        aircraft.timing = timing
+        lastPower = nil
+        lastStatus = nil
+        reset()
+        for name in subscribed where values[name] == nil {
+            values[name] = .number(0)
+        }
+        if simulatesSystems {
+            runSystems(dt: 0)
+            syncLamps()
+        }
+        lastTick = Date()
+        var updates = subscribed.sorted().compactMap { name in
+            values[name].map { DatarefUpdate(name: name, value: $0) }
+        }
+        if simulatesSystems {
+            let status = aircraft.status(switches())
+            lastStatus = status
+            updates.append(DatarefUpdate(name: DemoSystemsStatus.dataref, value: status.encoded))
+        }
+        for update in updates {
+            updatesContinuation.yield(update)
+        }
+        return updates
+    }
+
     /// Summary of the systems, for tests.
     public func systemsStatus() -> DemoSystemsStatus {
         aircraft.status(switches())

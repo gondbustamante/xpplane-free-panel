@@ -66,9 +66,16 @@ private struct ChecklistRunner: View {
         .sensoryFeedback(.success, trigger: complete) { _, now in now }
         .sensoryFeedback(.selection, trigger: progress.done)
         .confirmationDialog("¿Reiniciar \(procedure.title)?", isPresented: $confirmReset, titleVisibility: .visible) {
-            Button("Reiniciar", role: .destructive) { model.resetTicks(of: procedure) }
+            if model.canResetAircraft {
+                Button("Reiniciar y avión en Cold & Dark", role: .destructive) {
+                    model.resetProcedures([procedure], aircraft: true)
+                }
+            }
+            Button("Desmarcar los ítems marcados a mano", role: .destructive) { model.resetTicks(of: procedure) }
         } message: {
-            Text("Se desmarcan los ítems marcados a mano. Los detectados siguen al simulador.")
+            Text(model.canResetAircraft
+                 ? "Los ítems detectados siguen a los mandos: para empezarlos de nuevo, vuelve el avión de la demo a Cold & Dark."
+                 : "Se desmarcan los ítems marcados a mano. Los detectados siguen a los mandos del simulador.")
         }
     }
 

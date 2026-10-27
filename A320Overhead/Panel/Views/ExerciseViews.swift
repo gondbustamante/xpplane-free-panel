@@ -36,6 +36,13 @@ struct ExerciseList: View {
                 }
             }
             .buttonStyle(.plain)
+            .contextMenu {
+                if model.exerciseResults[exercise.id] != nil {
+                    Button("Borrar resultados", systemImage: "trash", role: .destructive) {
+                        model.deleteResults(of: exercise.id)
+                    }
+                }
+            }
         }
     }
 }
@@ -63,6 +70,8 @@ struct ExerciseBriefingSheet: View {
     @Environment(PanelModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @State private var mode: ExerciseMode = .guided
+    @State private var fromColdAndDark = false
+    @State private var confirmDelete = false
 
     private var steps: [ExerciseStep] { model.exerciseSteps(exercise, mode: mode) }
     private var examAvailable: Bool { !model.exerciseSteps(exercise, mode: .exam).isEmpty }
@@ -110,7 +119,7 @@ struct ExerciseBriefingSheet: View {
                         .foregroundStyle(.secondary)
                 }
                 if let results = model.exerciseResults[exercise.id], !results.isEmpty {
-                    Section("Tus resultados") {
+                    Section {
                         ForEach(Array(results.prefix(5).enumerated()), id: \.offset) { _, result in
                             HStack {
                                 StarsView(stars: result.stars, size: 11)
@@ -128,12 +137,19 @@ struct ExerciseBriefingSheet: View {
                                     .foregroundStyle(.secondary)
                             }
                         }
+                        Button("Borrar mis resultados", role: .destructive) { confirmDelete = true }
+                    } header: {
+                        Text("Tus resultados")
                     }
                 }
                 Section {
                     if model.status == .connected {
+                        if model.canResetAircraft {
+                            Toggle("Empezar con el avión en Cold & Dark", isOn: $fromColdAndDark)
+                        }
                         Button {
-                            model.startExercise(exercise.id, mode: examAvailable ? mode : .guided)
+                            model.beginExercise(exercise.id, mode: examAvailable ? mode : .guided,
+                                                fromColdAndDark: fromColdAndDark)
                             dismiss()
                         } label: {
                             Label("Empezar", systemImage: "play.fill")
@@ -162,6 +178,13 @@ struct ExerciseBriefingSheet: View {
                     Button("Cerrar") { dismiss() }
                 }
             }
+            .confirmationDialog("¿Borrar los resultados de \(exercise.title)?", isPresented: $confirmDelete, titleVisibility: .visible) {
+                Button("Borrar", role: .destructive) { model.deleteResults(of: exercise.id) }
+            }
+            .onAppear {
+                // Exercises that start cold and dark default to resetting the demo aircraft.
+                fromColdAndDark = exercise.start?.hasPrefix("Cold & Dark") ?? false
+            }
         }
         .preferredColorScheme(.dark)
     }
@@ -171,6 +194,7 @@ struct ExerciseBriefingSheet: View {
 struct ExerciseBar: View {
     @Environment(PanelModel.self) private var model
     @State private var confirmAbandon = false
+    @State private var confirmRestart = false
 
     var body: some View {
         if let run = model.exerciseRun, run.isRunning {
@@ -207,6 +231,9 @@ struct ExerciseBar: View {
                             .buttonStyle(.bordered)
                             .controlSize(.small)
                     }
+                    Button("Reiniciar") { confirmRestart = true }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
                     Button("Abandonar", role: .destructive) { confirmAbandon = true }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
@@ -236,6 +263,14 @@ struct ExerciseBar: View {
                 Button("Abandonar", role: .destructive) { model.abandonExercise() }
             } message: {
                 Text("No se guarda resultado.")
+            }
+            .confirmationDialog("¿Reiniciar el ejercicio?", isPresented: $confirmRestart, titleVisibility: .visible) {
+                if model.canResetAircraft {
+                    Button("Reiniciar con el avión en Cold & Dark") { model.repeatExercise(fromColdAndDark: true) }
+                }
+                Button("Reiniciar desde el estado actual") { model.repeatExercise() }
+            } message: {
+                Text("El cronómetro vuelve a cero y este intento no se guarda.")
             }
         }
     }
@@ -298,7 +333,16 @@ struct ExerciseResultSheet: View {
                         Button("Cerrar") { model.closeExerciseResult() }
                     }
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Repetir") { model.repeatExercise() }
+                        if model.canResetAircraft {
+                            Menu("Repetir") {
+                                Button("Repetir con el avión en Cold & Dark") { model.repeatExercise(fromColdAndDark: true) }
+                                Button("Repetir desde el estado actual") { model.repeatExercise() }
+                            } primaryAction: {
+                                model.repeatExercise()
+                            }
+                        } else {
+                            Button("Repetir") { model.repeatExercise() }
+                        }
                     }
                 }
             }

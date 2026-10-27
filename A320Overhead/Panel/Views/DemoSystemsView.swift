@@ -53,6 +53,12 @@ struct DemoSystemsStrip: View {
                             Text(timing.title).tag(timing)
                         }
                     }
+                    Divider()
+                    Button("Avión en Cold & Dark", systemImage: "arrow.counterclockwise", role: .destructive) {
+                        // A reset under an exercise would read as steps undone.
+                        if model.isExerciseRunning { model.abandonExercise() }
+                        Task { await model.resetDemoAircraft() }
+                    }
                 } label: {
                     Label(model.demoTiming.title, systemImage: model.demoTiming == .instant ? "bolt.fill" : "timer")
                         .font(.caption)

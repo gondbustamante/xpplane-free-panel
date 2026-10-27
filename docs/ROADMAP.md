@@ -132,6 +132,7 @@ Adelantado desde la fase 2 porque es el panel que más se toca en vuelo y reutil
 - [x] Tiempos Realista / Rápido (×0,2) / Instantáneo, en Conexión y en la franja de sistemas; cambiarlo acaba al nuevo ritmo lo que está en curso
 - [x] Franja de estado tipo memo ECAM en modo demo: energía, APU, IRS, motores y avisos («APU START ignorado…»)
 - [ ] Combustible (bombas y presión), hidráulico con PTU y frenos, y apagado de motores con su caída de N2
+- [x] Reiniciar: procedimiento, fase o todos (solo marcas a mano, o también el avión de la demo a Cold & Dark), ejercicio en curso o al acabar (desde el estado actual o desde Cold & Dark), y borrar resultados de un ejercicio o de todos
 - [ ] Glosario de siglas buscable
 
  (2 a 3 meses) — en curso
