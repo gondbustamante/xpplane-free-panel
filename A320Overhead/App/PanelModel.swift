@@ -157,6 +157,21 @@ final class PanelModel {
     var showVerificationBadges: Bool {
         didSet { UserDefaults.standard.set(showVerificationBadges, forKey: Keys.badges) }
     }
+    /// How long the demo's systems take (APU, ADIRS, engine start): real time, a fifth, or instant.
+    var demoTiming: DemoTiming {
+        didSet {
+            UserDefaults.standard.set(demoTiming.rawValue, forKey: Keys.demoTiming)
+            if let demo = client as? DemoSimulator {
+                let timing = demoTiming
+                Task { await demo.setTiming(timing) }
+            }
+        }
+    }
+    /// What the demo reports about its systems (power, APU, IRS, engines); nil outside the demo.
+    private(set) var demoSystems: DemoSystemsStatus?
+    /// The demo's power level alone: lamps and windows read this, so they only redraw when the
+    /// power changes, not on every progress tick of the summary.
+    private(set) var demoPower: DemoSystemsStatus.Power?
     /// Learn mode: touching a control explains it instead of moving it.
     var learnMode: Bool {
         didSet { UserDefaults.standard.set(learnMode, forKey: Keys.learnMode) }
@@ -311,6 +326,7 @@ final class PanelModel {
         static let host = "xp.host"
         static let port = "xp.port"
         static let demoMode = "xp.demoMode"
+        static let demoTiming = "xp.demoTiming"
         // v2: badges are off by default since the overhead aims at realism; mapping work turns them on.
         static let badges = "ui.verificationBadges.v2"
         static let learnMode = "ui.learnMode"
@@ -336,6 +352,7 @@ final class PanelModel {
         let storedPort = defaults.integer(forKey: Keys.port)
         port = storedPort == 0 ? 8087 : storedPort   // 8087 = xp_relay.py default
         demoMode = defaults.bool(forKey: Keys.demoMode)
+        demoTiming = DemoTiming(rawValue: defaults.string(forKey: Keys.demoTiming) ?? "") ?? .realistic
         showVerificationBadges = defaults.object(forKey: Keys.badges) as? Bool ?? false
         learnMode = defaults.bool(forKey: Keys.learnMode)
         if let data = defaults.data(forKey: Keys.exerciseResults),
@@ -1108,8 +1125,10 @@ final class PanelModel {
         lastError = nil
 
         // A fresh demo per connection: its update stream ends with the listeners that read it.
+        demoSystems = nil
+        demoPower = nil
         let client: any SimulatorConnection = demoMode
-            ? DemoSimulator(subpanels: subpanels, fcu: fcu)
+            ? DemoSimulator(subpanels: subpanels, fcu: fcu, systems: true, timing: demoTiming)
             : XPlaneClient(host: host.trimmingCharacters(in: .whitespacesAndNewlines), port: port)
         self.client = client
         listen(to: client)
@@ -1135,6 +1154,8 @@ final class PanelModel {
             await client.disconnect()
         }
         client = nil
+        demoSystems = nil
+        demoPower = nil
         status = .disconnected
     }
 
@@ -1177,6 +1198,11 @@ final class PanelModel {
     }
 
     private func apply(_ update: DatarefUpdate) {
+        if update.name == DemoSystemsStatus.dataref {
+            demoSystems = DemoSystemsStatus.decode(update.value)
+            if demoPower != demoSystems?.power { demoPower = demoSystems?.power }
+            return
+        }
         if Self.backlightSources.contains(update.name) {
             applyBacklight(update)
         }
@@ -1279,8 +1305,23 @@ final class PanelModel {
     }
 
     func isLit(_ lamp: Lamp?) -> Bool {
-        guard let lamp, let key = lamp.key else { return false }
+        guard let lamp, let key = lamp.key, !isDemoDark else { return false }
         return lamp.isLit(lampValues[key])
+    }
+
+    /// The demo aircraft has no power at all: every annunciator is dark.
+    var isDemoDark: Bool {
+        guard let power = demoPower else { return false }
+        return power == .none
+    }
+
+    /// Demo without the power a read-out needs: RMP 1 runs on the batteries, the other windows
+    /// on AC; battery voltmeters always read.
+    private func isDemoUnpowered(_ control: ControlDefinition) -> Bool {
+        guard let power = demoPower else { return false }
+        if (control.format ?? "").hasSuffix("V") { return false }
+        let needed: DemoSystemsStatus.Power = control.id.hasPrefix("rmp1.") ? .battery : .ac
+        return power < needed
     }
 
     /// Dual knob: one click of the outer (`small` false) or inner ring, `delta` > 0 clockwise.
@@ -1324,6 +1365,7 @@ final class PanelModel {
     /// Display: formatted raw value. Without a format it is a legend window that shows the last
     /// position name when the value is on (ADIRS "ON BAT"). Dashes when unknown.
     func displayText(of control: ControlDefinition) -> String {
+        if isDemoUnpowered(control) { return "" }
         if control.format == "baro", let baro = control.baro {
             let inHg = control.state.flatMap { rawValues[$0.dataref]?.element(at: $0.index)?.doubleValue }
             return BaroBinding.text(inHg: inHg, std: rawValues[baro.std]?.doubleValue,
@@ -1821,8 +1863,9 @@ final class PanelModel {
         }
     }
 
+    /// An unpowered FCU shows no lights either.
     func isLit(_ button: FCUButtonDefinition) -> Bool {
-        isOn(button.lit)
+        isFCUPowered && isOn(button.lit)
     }
 
     /// Toggle buttons: index of the position currently shown.

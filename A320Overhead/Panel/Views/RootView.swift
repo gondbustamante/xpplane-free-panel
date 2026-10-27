@@ -39,6 +39,9 @@ struct RootView: View {
                 ConnectionBar(showSettings: $showSettings, showDiagnostics: $showDiagnostics)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
+                if model.demoMode, model.demoSystems != nil {
+                    DemoSystemsStrip()
+                }
                 if model.learnMode {
                     LearnModeBanner()
                 }

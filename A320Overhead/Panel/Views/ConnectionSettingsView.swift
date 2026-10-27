@@ -13,7 +13,19 @@ struct ConnectionSettingsView: View {
                 Section {
                     Toggle("Modo demo", isOn: $model.demoMode)
                 } footer: {
-                    Text("Simula el avión en el iPad, sin X-Plane ni red: los interruptores, el FCU, las radios y el MCDU responden como si hubiera simulador. Empieza siempre desde cero al conectar.")
+                    Text("Simula el avión en el iPad, sin X-Plane ni red: los interruptores, el FCU, las radios y el MCDU responden como si hubiera simulador. Empieza siempre en Cold & Dark al conectar.")
+                }
+                Section {
+                    Picker("Tiempos", selection: $model.demoTiming) {
+                        ForEach(DemoTiming.allCases) { timing in
+                            Text(timing.title).tag(timing)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                } header: {
+                    Text("Sistemas del modo demo")
+                } footer: {
+                    Text(model.demoTiming.explanation)
                 }
                 Section("X-Plane") {
                     TextField("IP del PC con X-Plane", text: $host)

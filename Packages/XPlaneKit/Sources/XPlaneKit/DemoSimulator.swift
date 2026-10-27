@@ -16,6 +16,10 @@ import Foundation
 /// - The MCDU shows a few static pages, the keyboard writes in the scratchpad and the line keys
 ///   drop the scratchpad on the line.
 ///
+/// With `systems` on, `DemoAircraft` adds what depends on what and what takes time (power,
+/// APU, ADIRS alignment, engine start), steps it twice a second and publishes a summary on
+/// `DemoSystemsStatus.dataref`; the aircraft then starts cold and dark.
+///
 /// State starts again from cold on every `DemoSimulator`: the panel creates one per connection.
 public actor DemoSimulator: SimulatorConnection {
     public nonisolated let updates: AsyncStream<DatarefUpdate>
@@ -36,6 +40,13 @@ public actor DemoSimulator: SimulatorConnection {
     /// lamps can follow the presses.
     private var virtualPositions: [String: Int] = [:]
     private var mcdu: [Int: MCDUState] = [:]
+    private let simulatesSystems: Bool
+    private let controlsByID: [String: ControlDefinition]
+    private var aircraft = DemoAircraft()
+    private var lastStatus: DemoSystemsStatus?
+    private var lastPower: DemoSystemsStatus.Power?
+    private var ticker: Task<Void, Never>?
+    private var lastTick = Date()
 
     /// Integral lighting the panel reads in "según el avión" mode; lit so the demo is not dark.
     static let backlightLevels: [String: XPValue] = [
@@ -50,13 +61,20 @@ public actor DemoSimulator: SimulatorConnection {
         let panel: String
     }
 
-    public init(subpanels: [SubpanelDefinition], fcu: FCUDefinition?) {
+    /// `systems` turns on the systems model; `timing` scales how long its processes take.
+    public init(subpanels: [SubpanelDefinition], fcu: FCUDefinition?, systems: Bool = false,
+                timing: DemoTiming = .realistic) {
         let placed = subpanels.flatMap { panel in
             panel.controls.map { PlacedControl(control: $0, panel: panel.id) }
         }
         self.controls = placed
         self.fcu = fcu
         self.stateKeys = Set(placed.compactMap { $0.control.state?.key })
+        self.simulatesSystems = systems
+        self.controlsByID = Dictionary(placed.map { ($0.control.id, $0.control) }, uniquingKeysWith: { first, _ in first })
+        var aircraft = DemoAircraft()
+        aircraft.timing = timing
+        self.aircraft = aircraft
 
         let (updates, updatesContinuation) = AsyncStream.makeStream(of: DatarefUpdate.self, bufferingPolicy: .bufferingNewest(1024))
         self.updates = updates
@@ -72,12 +90,45 @@ public actor DemoSimulator: SimulatorConnection {
         if !seeded { reset() }
         connected = true
         stateContinuation.yield(.connected)
+        if simulatesSystems {
+            runSystems(dt: 0)
+            syncLamps()
+            publishStatus()
+            startTicker()
+        }
     }
 
     public func disconnect() async {
         connected = false
+        ticker?.cancel()
+        ticker = nil
         subscribed.removeAll()
         stateContinuation.yield(.disconnected)
+    }
+
+    /// Changes how long the systems take; a process under way finishes at the new pace.
+    public func setTiming(_ timing: DemoTiming) {
+        aircraft.timing = timing
+        guard connected, simulatesSystems else { return }
+        let before = values
+        runSystems(dt: 0)
+        syncLamps()
+        publishChanges(since: before)
+        publishStatus()
+    }
+
+    /// Summary of the systems, for tests.
+    public func systemsStatus() -> DemoSystemsStatus {
+        aircraft.status(switches())
+    }
+
+    /// Lets `seconds` pass at once, for tests.
+    public func advance(by seconds: Double) {
+        let before = values
+        runSystems(dt: seconds)
+        syncLamps()
+        publishChanges(since: before)
+        publishStatus()
     }
 
     /// Every name is known: datarefs outside the mapping start at zero, as a fresh one would.
@@ -102,8 +153,10 @@ public actor DemoSimulator: SimulatorConnection {
         let before = values
         store(key, value)
         mirrorWrite(to: key, value)
+        runSystems(dt: 0)
         syncLamps()
         publishChanges(since: before)
+        publishStatus()
     }
 
     public func fire(command name: String, duration: Double) async throws {
@@ -114,9 +167,11 @@ public actor DemoSimulator: SimulatorConnection {
         } else {
             applyControlCommand(name)
             applyFCUCommand(name)
+            runSystems(dt: 0)
             syncLamps()
         }
         publishChanges(since: before)
+        publishStatus()
     }
 
     /// Current value of a dataref element, for tests.
@@ -157,8 +212,9 @@ public actor DemoSimulator: SimulatorConnection {
 
     // MARK: Initial state
 
-    /// A parked aircraft with power: switches at the position whose raw value is 0 (or the first
-    /// one), knobs half way, batteries at 28 V, FCU managed.
+    /// A parked aircraft: switches at the position whose raw value is 0 (or the first one), knobs
+    /// half way, batteries at 28 V, FCU managed. With the systems model the batteries are off, so
+    /// it starts cold and dark, and the generators are latched ON.
     private func reset() {
         values = Self.backlightLevels
         virtualPositions = [:]
@@ -166,6 +222,12 @@ public actor DemoSimulator: SimulatorConnection {
             seed(placed.control)
         }
         if let fcu { seed(fcu) }
+        if simulatesSystems {
+            // Generators are latched ON in a parked aircraft; they wait for their engine.
+            for id in ["elec.gen1", "elec.gen2", "elec.apu_gen"] {
+                if let control = controlsByID[id] { setPosition(control, 1) }
+            }
+        }
         for unit in [1, 2] {
             mcdu[unit] = MCDUState()
             renderMCDU(unit: unit)
@@ -287,7 +349,8 @@ public actor DemoSimulator: SimulatorConnection {
             for lamp in [lamps.top, lamps.bottom].compactMap({ $0 }) {
                 // A lamp on the control's own state dataref already follows it.
                 guard let key = lamp.key, !stateKeys.contains(key) else { continue }
-                wanted[key, default: []].append((lamp, Self.shouldLight(lamp, control: control, position: current)))
+                let lit = systemsLamp(control.id, lamp.text) ?? Self.shouldLight(lamp, control: control, position: current)
+                wanted[key, default: []].append((lamp, lit))
             }
         }
         for (key, constraints) in wanted {
@@ -314,6 +377,126 @@ public actor DemoSimulator: SimulatorConnection {
         if lamp.color == "amber" || lamp.color == "red" { return false }
         if text == "OFF" { return position == 0 }
         return position > 0
+    }
+
+    // MARK: Systems
+
+    private func positionName(_ id: String) -> String? {
+        guard let control = controlsByID[id] else { return nil }
+        let index = position(of: control)
+        return control.positions.indices.contains(index) ? control.positions[index] : nil
+    }
+
+    /// Switch positions by meaning. A missing control reads as latched in a parked aircraft:
+    /// generators, bleeds, pumps and packs ON, the rest OFF.
+    private func switches() -> DemoSwitches {
+        func on(_ id: String, default value: Bool = false) -> Bool {
+            positionName(id).map { $0 == "ON" } ?? value
+        }
+        var s = DemoSwitches()
+        s.battery = on("elec.bat1") || on("elec.bat2")
+        s.gpu = on("elec.gpu")
+        s.extPower = on("elec.ext_pwr")
+        s.apuMaster = on("apu.master")
+        s.apuStart = on("apu.start")
+        s.apuBleed = on("air_cond.apu_bleed")
+        s.apuGen = on("elec.apu_gen", default: true)
+        s.generators = [on("elec.gen1", default: true), on("elec.gen2", default: true)]
+        s.irModes = ["adirs.ir1", "adirs.ir2", "adirs.ir3"].map { positionName($0) ?? "OFF" }
+        s.engineMasters = [on("eng.master1"), on("eng.master2")]
+        s.engineMode = positionName("eng.mode") ?? "NORM"
+        s.engineBleeds = [on("air_cond.eng1_bleed", default: true), on("air_cond.eng2_bleed", default: true)]
+        s.crossBleed = positionName("air_cond.x_bleed") ?? "AUTO"
+        s.enginePumps = [on("hyd.eng1_pump", default: true), on("hyd.eng2_pump", default: true)]
+        s.packs = [on("air_cond.pack1", default: true), on("air_cond.pack2", default: true)]
+        s.fireHandles = ["fire.eng1", "fire.eng2"].map { positionName($0) == "PUSHED" }
+        return s
+    }
+
+    /// Steps the systems and writes back what they decide: the APU START light, EXT PWR AVAIL,
+    /// GEN FAULT, ON BAT, battery voltage, FCU power, the integral lighting and the MCDU.
+    private func runSystems(dt: Double) {
+        guard simulatesSystems else { return }
+        var s = switches()
+        aircraft.step(dt, s)
+        if let start = controlsByID["apu.start"] {
+            setPosition(start, aircraft.apuStarterLit ? 1 : 0)
+        }
+        s = switches()
+        let power = aircraft.power(s)
+        // EXT PWR: 0 without a GPU (the button does nothing), 2 AVAIL, 1 ON.
+        if let ext = controlsByID["elec.ext_pwr"]?.state {
+            store(ext.key, .number(s.gpu ? (s.extPower ? 1 : 2) : 0))
+        }
+        // GEN 1/2: ON with FAULT (3) while their engine is stopped.
+        for (i, id) in ["elec.gen1", "elec.gen2"].enumerated() {
+            guard let state = controlsByID[id]?.state else { continue }
+            store(state.key, .number(s.generators[i] ? (aircraft.isRunning(i) ? 1 : 3) : 0))
+        }
+        if let onBat = controlsByID["adirs.on_bat"]?.state {
+            store(onBat.key, .number(aircraft.onBattery(s) ? 1 : 0))
+        }
+        for placed in controls where placed.control.kind == .display && (placed.control.format ?? "").hasSuffix("V") {
+            if let state = placed.control.state {
+                store(state.key, .number(power == .ac ? 28.0 : 25.8))
+            }
+        }
+        if let available = fcu?.available {
+            store(available.key, Self.flag(available, on: power == .ac))
+        }
+        for (name, level) in Self.backlightLevels {
+            let dark = level.arrayValue.map { XPValue.array($0.map { _ in XPValue.number(0) }) } ?? XPValue.number(0)
+            values[name] = power == .ac ? level : dark
+        }
+        if power != lastPower {
+            lastPower = power
+            for unit in [1, 2] { renderMCDU(unit: unit) }
+        }
+    }
+
+    /// Lamps the systems decide: APU AVAIL, engine pump pressure, pack without air.
+    private func systemsLamp(_ id: String, _ text: String) -> Bool? {
+        guard simulatesSystems else { return nil }
+        switch (id, text) {
+        case ("apu.start", "AVAIL"):
+            return aircraft.apuAvailable
+        case ("hyd.eng1_pump", "FAULT"), ("hyd.eng2_pump", "FAULT"):
+            let engine = id == "hyd.eng1_pump" ? 0 : 1
+            return switches().enginePumps[engine] && !aircraft.isRunning(engine)
+        case ("air_cond.pack1", "FAULT"), ("air_cond.pack2", "FAULT"):
+            let s = switches()
+            let pack = id == "air_cond.pack1" ? 0 : 1
+            return s.packs[pack] && !aircraft.bleedAvailable(s)
+        default:
+            return nil
+        }
+    }
+
+    private func publishStatus() {
+        guard simulatesSystems else { return }
+        let status = aircraft.status(switches())
+        guard status != lastStatus else { return }
+        lastStatus = status
+        updatesContinuation.yield(DatarefUpdate(name: DemoSystemsStatus.dataref, value: status.encoded))
+    }
+
+    private func startTicker() {
+        ticker?.cancel()
+        lastTick = Date()
+        ticker = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(500))
+                await self?.tick()
+            }
+        }
+    }
+
+    private func tick() {
+        guard connected else { return }
+        let now = Date()
+        let dt = now.timeIntervalSince(lastTick)
+        lastTick = now
+        advance(by: dt)
     }
 
     // MARK: RMP
@@ -575,6 +758,13 @@ public actor DemoSimulator: SimulatorConnection {
 
     private func renderMCDU(unit: Int) {
         let prefix = MCDUScreen.prefix(unit: unit)
+        guard !simulatesSystems || aircraft.power(switches()) == .ac else {
+            // Without AC the MCDU is dark.
+            for name in MCDUScreen.datarefNames(unit: unit) {
+                values[name] = Self.encodedText("")
+            }
+            return
+        }
         let state = mcdu[unit] ?? MCDUState()
         let page = Self.page(state.page)
         let blank = Array(repeating: Character(" "), count: MCDUScreen.columns)

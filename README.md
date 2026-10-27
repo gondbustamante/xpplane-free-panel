@@ -41,7 +41,7 @@ open A320Overhead.xcodeproj
 
 La firma sale de `Signing.xcconfig`, con el equipo del proyecto por defecto, así que `git pull` y `xcodegen generate` no la pierden. Para firmar con otro equipo, copia `Local.xcconfig.example` como `Local.xcconfig` y pon tu Team ID: ese archivo no se versiona. No elijas el equipo en *Signing & Capabilities*: ese cambio vive en el `.xcodeproj`, que se regenera. En Xcode elige tu iPad como destino y ejecuta. Los tests de la capa de red se ejecutan con `cd Packages/XPlaneKit && swift test`.
 
-**Sin simulador:** pulsa **Demo** en la barra superior (o activa *Modo demo* en el engranaje). La app simula el avión en el propio iPad a partir del mapeo: interruptores y pulsadores con sus leyendas, FCU, radios y MCDU responden como si hubiera X-Plane. Útil para probar la interfaz, enseñarla o desarrollar sin el PC. El estado arranca de cero en cada conexión.
+**Sin simulador:** pulsa **Demo** en la barra superior (o activa *Modo demo* en el engranaje). La app simula el avión en el propio iPad a partir del mapeo: interruptores y pulsadores con sus leyendas, FCU, radios y MCDU responden como si hubiera X-Plane. Útil para probar la interfaz, enseñarla o desarrollar sin el PC. El avión arranca en Cold & Dark en cada conexión y simula las dependencias entre sistemas: sin baterías no hay luces, sin corriente alterna no hay FCU ni MCDU, el APU tarda en abrir su toma y en estar AVAIL, las IRS tardan en alinearse y los motores necesitan IGN/START y aire de sangrado. Una franja bajo la barra superior resume el estado, como el memo del ECAM, y permite elegir tiempos *Realista*, *Rápido* o *Instantáneo* (también en el engranaje).
 
 **3. En el iPad**
 

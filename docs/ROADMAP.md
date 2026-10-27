@@ -87,7 +87,7 @@ Adelantado desde la fase 2 porque es el panel que más se toca en vuelo y reutil
 - [x] `DemoSimulator` en XPlaneKit detrás del protocolo `SimulatorConnection`, sin cambios en la capa real
 - [x] Interruptores, Korry con leyendas, palancas, ruedas, FCU, RMP y MCDU responden sin X-Plane
 - [x] Botón «Demo» en la barra y conmutador en Conexión; el estado se distingue en cian
-- [ ] Simular dependencias entre sistemas (p. ej. sin batería no hay luces), si aporta para demos
+- [x] Simular dependencias entre sistemas (F4, 2026-10-27): ver fase 1k
 
 **Aceptación:** sin red ni simulador, abrir la app, pulsar «Demo» y operar todos los paneles con respuesta visual coherente.
 
@@ -124,6 +124,14 @@ Adelantado desde la fase 2 porque es el panel que más se toca en vuelo y reutil
 - [x] Ejercicios con nota (F3): 8 ejercicios en `mapping/exercises/`, modos guiado y examen, cronómetro, orden, pasos deshechos, mandos que no tocan y pistas; tres estrellas e historial por ejercicio. Motor `ExerciseTracker` en XPlaneKit con tests
 - [ ] Probar los ejercicios en el simulador real: mandos sin verificar pueden no confirmar pasos (se pueden marcar a mano, como pista)
 - [ ] Estado inicial por ejercicio en modo demo (hoy cada ejercicio parte del estado en que esté el avión)
+
+## Fase 1k · Sistemas en el modo demo (2026-10-27)
+
+- [x] `DemoAircraft` en XPlaneKit, con tests: energía (sin baterías, todo apagado; baterías, overhead y RMP 1; AC por GPU + EXT PWR, APU GEN o generadores, el resto), APU (toma de aire, START ignorado antes de abrirse, arranque hasta AVAIL, enfriamiento), ADIRS (alineación en NAV, actitud en ATT, ON BAT) y motores (IGN/START y aire de sangrado para arrancar)
+- [x] Lámparas coherentes: EXT PWR AVAIL solo con GPU, GEN FAULT y ENG PUMP FAULT con el motor parado, PACK FAULT sin aire, APU AVAIL; FCU, MCDU, ventanas e iluminación integral apagados sin AC
+- [x] Tiempos Realista / Rápido (×0,2) / Instantáneo, en Conexión y en la franja de sistemas; cambiarlo acaba al nuevo ritmo lo que está en curso
+- [x] Franja de estado tipo memo ECAM en modo demo: energía, APU, IRS, motores y avisos («APU START ignorado…»)
+- [ ] Combustible (bombas y presión), hidráulico con PTU y frenos, y apagado de motores con su caída de N2
 - [ ] Glosario de siglas buscable
 
  (2 a 3 meses) — en curso
