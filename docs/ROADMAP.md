@@ -166,6 +166,16 @@ Componentes nuevos pendientes: pulsador con tirador de fuego, voltímetros de ba
 
 **Aceptación:** cold & dark → listo para rodar hecho íntegramente desde el iPad siguiendo el flujo normal del ToLiss.
 
+## Fase T · Turnaround y operaciones en tierra (2026-10-30)
+
+- [x] T1 · Turnaround planificado hacia atrás desde la EOBT con hitos de `mapping/turnaround/`, estado por hito (pronto, ahora, retrasado, hecho ±min), retraso previsto y barra con cuenta atrás; persiste al cerrar la app
+- [x] T2 · Panel «Tierra» (`mapping/ground/services.json`): GPU (mismo estado que GND PWR), calzos, aire HP y LP, puertas, bodegas, toboganes, pushback, deshielo y alineación rápida del ISCS; en la demo, puertas y toboganes coherentes (solo se arman con puertas cerradas)
+- [x] T3 · Embarque y repostaje progresivos que escriben NoPax y WriteFOB; el embarque espera con la puerta 1L cerrada; hoja de carga estimada (ZFW, TOW, límites)
+- [x] T4 · OUT, OFF, ON e IN automáticos (freno de aparcamiento y contacto con el suelo) o a mano, y diario de vuelos con bloque, vuelo y puntualidad
+- [ ] Confirmar en ToLiss: semántica de Chocks, GroundHPAir/LPAir, modos de puerta, NoPax y WriteFOB (¿escribe el FOB o lo pide al camión?)
+- [ ] Plantilla de llegada (desembarque, limpieza, escala corta de 25-30 min) y escala completa llegada + salida
+- [ ] Ejercicio cronometrado de turnaround completo
+
 ## Fase 3 · Pulido y distribución (continuo)
 
 - Descubrimiento automático del simulador (requiere entitlement multicast de Apple; alternativa: escaneo de la subred por el puerto del relay)

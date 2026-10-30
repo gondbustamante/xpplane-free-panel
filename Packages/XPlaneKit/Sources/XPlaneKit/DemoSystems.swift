@@ -260,6 +260,16 @@ struct DemoAircraft: Sendable {
         notice = (text, Durations.notice)
     }
 
+    /// A notice from outside the systems (ground services).
+    mutating func notify(_ text: String) {
+        say(text)
+    }
+
+    /// ISCS fast alignment: every IR finishes now (the next step resets those that are OFF).
+    mutating func alignNow() {
+        irProgress = irProgress.map { _ in 1 }
+    }
+
     // MARK: Status
 
     func status(_ s: DemoSwitches) -> DemoSystemsStatus {

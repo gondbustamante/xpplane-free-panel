@@ -45,6 +45,7 @@ struct RootView: View {
                 if model.learnMode {
                     LearnModeBanner()
                 }
+                TurnaroundBar()
                 ExerciseBar()
                 PanelCanvas()
             }
@@ -113,6 +114,15 @@ struct RootView: View {
         }
         .sheet(isPresented: resultPresented) {
             ExerciseResultSheet()
+        }
+        .sheet(isPresented: Bindable(model).showTurnaroundPlanner) {
+            TurnaroundPlannerSheet()
+        }
+        .sheet(isPresented: Bindable(model).showTurnaroundSheet) {
+            TurnaroundSheet()
+        }
+        .sheet(isPresented: Bindable(model).showFlightLog) {
+            FlightLogSheet()
         }
         .sheet(isPresented: explanationPresented) {
             if let id = model.explainingControlID {

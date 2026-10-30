@@ -172,6 +172,56 @@ final class DemoSystemsTests: XCTestCase {
         XCTAssertEqual(status.power, DemoSystemsStatus.Power.none)
     }
 
+    private let ground = """
+    {
+      "id": "ground", "title": "TIERRA",
+      "controls": [
+        { "id": "elec.gpu", "label": "GND PWR", "kind": "korry", "positions": ["OFF", "ON"],
+          "state": { "dataref": "AirbusFBW/ExtPowOHPArray", "index": 0, "values": [0, 2], "aliases": { "1": 1 } },
+          "commands": { "press": "GpuToggle" } },
+        { "id": "ground.gpu", "label": "GPU", "kind": "korry", "positions": ["OFF", "ON"],
+          "state": { "dataref": "AirbusFBW/ExtPowOHPArray", "index": 0, "values": [0, 2], "aliases": { "1": 1 } },
+          "commands": { "press": "GpuToggle" } },
+        { "id": "ground.slides", "label": "TOBOGANES", "kind": "korry", "positions": ["DISARMED", "ARMED"],
+          "state": { "dataref": "AirbusFBW/SlideArmedArray", "index": 0 },
+          "commands": { "up": "toliss_airbus/door_commands/arm_slides", "down": "toliss_airbus/door_commands/disarm_slides" } }
+      ]
+    }
+    """
+
+    private func groundDemo() async throws -> DemoSimulator {
+        let definition = try JSONDecoder().decode(SubpanelDefinition.self, from: Data(ground.utf8))
+        let demo = DemoSimulator(subpanels: [definition], fcu: nil, systems: true, timing: .instant)
+        try await demo.connect()
+        return demo
+    }
+
+    func testSharedGPUButtonTogglesOnce() async throws {
+        let demo = try await groundDemo()
+        try await demo.fire(command: "GpuToggle")
+        let connected = await number(demo, "AirbusFBW/ExtPowOHPArray", 0)
+        XCTAssertEqual(connected, 2, "AVAIL: two buttons on one command move the state once")
+        try await demo.fire(command: "GpuToggle")
+        let removed = await number(demo, "AirbusFBW/ExtPowOHPArray", 0)
+        XCTAssertEqual(removed, 0)
+    }
+
+    func testSlidesOnlyArmWithDoorsClosed() async throws {
+        let demo = try await groundDemo()
+        let onGround = await number(demo, "sim/flightmodel/failures/onground_any")
+        XCTAssertEqual(onGround, 1)
+        try await demo.fire(command: "toliss_airbus/door_commands/all_to_mode_open")
+        let door = await number(demo, "AirbusFBW/PaxDoorArray", 0)
+        XCTAssertEqual(door, 1)
+        try await demo.fire(command: "toliss_airbus/door_commands/arm_slides")
+        let refused = await number(demo, "AirbusFBW/SlideArmedArray", 0)
+        XCTAssertEqual(refused, 0)
+        try await demo.fire(command: "toliss_airbus/door_commands/all_to_mode_close")
+        try await demo.fire(command: "toliss_airbus/door_commands/arm_slides")
+        let armed = await number(demo, "AirbusFBW/SlideArmedArray", 0)
+        XCTAssertEqual(armed, 1)
+    }
+
     func testStatusRoundTrip() {
         let status = DemoSystemsStatus(power: .battery, acSource: nil, lines: [.init("SOLO BATERÍAS", "amber")])
         XCTAssertEqual(DemoSystemsStatus.decode(status.encoded), status)

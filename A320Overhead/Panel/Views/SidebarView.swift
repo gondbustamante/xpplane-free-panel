@@ -7,6 +7,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     case myPanels
     case procedures
     case exercises
+    case turnaround
     case phases
     case cockpit
     case sections
@@ -18,6 +19,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .myPanels: return "Mis paneles"
         case .procedures: return "Procedimientos"
         case .exercises: return "Ejercicios"
+        case .turnaround: return "Turnaround"
         case .phases: return "Fases de vuelo"
         case .cockpit: return "Cabina"
         case .sections: return "Secciones"
@@ -29,6 +31,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .myPanels: return "square.grid.2x2"
         case .procedures: return "checklist"
         case .exercises: return "stopwatch"
+        case .turnaround: return "clock.badge"
         case .phases: return "airplane.departure"
         case .cockpit: return "rectangle.3.group"
         case .sections: return "square.split.2x2"
@@ -207,6 +210,7 @@ struct SidebarView: View {
         case .myPanels: myPanels
         case .procedures: procedures
         case .exercises: ExerciseList()
+        case .turnaround: TurnaroundList()
         case .phases: phaseRows
         case .cockpit: cockpit
         case .sections: sectionGroups
@@ -223,6 +227,8 @@ struct SidebarView: View {
         case .exercises:
             let passed = model.exercises.filter { (model.bestResult(of: $0.id)?.stars ?? 0) > 0 }.count
             return model.exercises.isEmpty ? nil : "\(passed)/\(model.exercises.count)"
+        case .turnaround:
+            return model.flightLog.isEmpty ? nil : "\(model.flightLog.count)"
         case .phases:
             return "\(model.layout.phases.count)"
         case .cockpit:

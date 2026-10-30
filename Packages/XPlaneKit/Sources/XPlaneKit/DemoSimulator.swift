@@ -47,6 +47,12 @@ public actor DemoSimulator: SimulatorConnection {
     private var lastPower: DemoSystemsStatus.Power?
     private var ticker: Task<Void, Never>?
     private var lastTick = Date()
+    /// Datarefs the demo drives itself (doors, ground contact): lamps read them, never set them.
+    static let ownedDatarefs: Set<String> = [
+        "AirbusFBW/PaxDoorArray", "AirbusFBW/CargoDoorArray", "toliss/anim/pushback/nwgrab_ratio",
+        onGroundDataref,
+    ]
+    static let onGroundDataref = "sim/flightmodel/failures/onground_any"
 
     /// Integral lighting the panel reads in "según el avión" mode; lit so the demo is not dark.
     static let backlightLevels: [String: XPValue] = [
@@ -185,6 +191,10 @@ public actor DemoSimulator: SimulatorConnection {
         guard connected else { throw XPlaneError.notConnected }
         let before = values
         store(key, value)
+        if key.name == "AirbusFBW/WriteFOB", let kilograms = value.doubleValue {
+            // Refuelling: the tanks follow the requested fuel on board, split over the wings.
+            values["toliss_airbus/fuelTankContent_kgs"] = .array([.number(kilograms / 2), .number(0), .number(kilograms / 2)])
+        }
         mirrorWrite(to: key, value)
         runSystems(dt: 0)
         syncLamps()
@@ -200,6 +210,7 @@ public actor DemoSimulator: SimulatorConnection {
         } else {
             applyControlCommand(name)
             applyFCUCommand(name)
+            applyGroundCommand(name)
             runSystems(dt: 0)
             syncLamps()
         }
@@ -250,6 +261,9 @@ public actor DemoSimulator: SimulatorConnection {
     /// it starts cold and dark, and the generators are latched ON.
     private func reset() {
         values = Self.backlightLevels
+        values[Self.onGroundDataref] = .number(1)
+        values["AirbusFBW/PaxDoorArray"] = .array(Array(repeating: .number(0), count: 4))
+        values["AirbusFBW/CargoDoorArray"] = .array(Array(repeating: .number(0), count: 2))
         virtualPositions = [:]
         for placed in controls {
             seed(placed.control)
@@ -334,9 +348,15 @@ public actor DemoSimulator: SimulatorConnection {
     }
 
     private func applyControlCommand(_ name: String) {
+        // Two buttons can share a command and a state (GND PWR on the overhead and GPU on the
+        // ground panel): the command moves that state once, not once per button.
+        var moved = Set<DatarefKey>()
         for placed in controls {
             let control = placed.control
             guard let commands = control.commands else { continue }
+            if let key = control.state?.key, [commands.press, commands.up, commands.down].contains(name) {
+                guard moved.insert(key).inserted else { continue }
+            }
             if control.kind == .dualKnob {
                 if name == commands.up { tuneStandby(in: placed.panel, megahertz: 1) }
                 if name == commands.down { tuneStandby(in: placed.panel, megahertz: -1) }
@@ -381,7 +401,7 @@ public actor DemoSimulator: SimulatorConnection {
             let current = position(of: control)
             for lamp in [lamps.top, lamps.bottom].compactMap({ $0 }) {
                 // A lamp on the control's own state dataref already follows it.
-                guard let key = lamp.key, !stateKeys.contains(key) else { continue }
+                guard let key = lamp.key, !stateKeys.contains(key), !Self.ownedDatarefs.contains(key.name) else { continue }
                 let lit = systemsLamp(control.id, lamp.text) ?? Self.shouldLight(lamp, control: control, position: current)
                 wanted[key, default: []].append((lamp, lit))
             }
@@ -410,6 +430,31 @@ public actor DemoSimulator: SimulatorConnection {
         if lamp.color == "amber" || lamp.color == "red" { return false }
         if text == "OFF" { return position == 0 }
         return position > 0
+    }
+
+    // MARK: Ground services
+
+    private var doorsOpen: Bool {
+        (values["AirbusFBW/PaxDoorArray"]?.arrayValue ?? []).contains { ($0.doubleValue ?? 0) > 0.05 }
+    }
+
+    /// ISCS ground commands: doors open and close at once, slides arm only with every door
+    /// closed, fast alignment finishes the IRS.
+    private func applyGroundCommand(_ name: String) {
+        if name.hasSuffix("door_commands/all_to_mode_open") {
+            values["AirbusFBW/PaxDoorArray"] = .array(Array(repeating: .number(1), count: 4))
+            values["AirbusFBW/CargoDoorArray"] = .array(Array(repeating: .number(1), count: 2))
+            if let slides = controlsByID["ground.slides"] { setPosition(slides, 0) }
+        } else if name.hasSuffix("door_commands/all_to_mode_close") {
+            values["AirbusFBW/PaxDoorArray"] = .array(Array(repeating: .number(0), count: 4))
+            values["AirbusFBW/CargoDoorArray"] = .array(Array(repeating: .number(0), count: 2))
+        } else if name.hasSuffix("door_commands/arm_slides"), doorsOpen,
+                  let slides = controlsByID["ground.slides"] {
+            setPosition(slides, 0)
+            aircraft.notify("Toboganes no armados: cierra antes todas las puertas")
+        } else if name == "AirbusFBW/ADIRU_fast_align" {
+            aircraft.alignNow()
+        }
     }
 
     // MARK: Systems

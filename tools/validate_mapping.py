@@ -7,6 +7,7 @@ mapping/fcu/*.json         the Flight Control Unit (selectors + buttons), its ow
 mapping/procedures/*.json  flows and checklists; sensed items must name real controls and positions
 mapping/guide/*.json       learn-mode explanations; must name real controls, positions and panels
 mapping/exercises/*.json   timed exercises over the procedures
+mapping/turnaround/*.json  ground-time templates: milestones before off-blocks
 mapping/reference/*.txt    xp.py dump of ToLiss; every AirbusFBW/ and toliss_airbus/ name must appear there
 """
 import glob
@@ -451,6 +452,50 @@ def validate_exercises(root):
     return errors
 
 
+TURNAROUND_SERVICES = {"refuel", "boarding"}
+TURNAROUND_EVENTS = {"out"}
+
+
+def validate_turnarounds(root):
+    """Turnarounds: unique ids, existing procedures, known services and events."""
+    errors, seen = [], set()
+    procedures = set()
+    for path in glob.glob(os.path.join(root, "procedures", "*.json")):
+        with open(path, encoding="utf-8") as handle:
+            procedures |= {p.get("id") for p in json.load(handle).get("procedures", [])}
+    count = 0
+    for path in sorted(glob.glob(os.path.join(root, "turnaround", "*.json"))):
+        name = os.path.relpath(path)
+        with open(path, encoding="utf-8") as handle:
+            book = json.load(handle)
+        for template in book.get("turnarounds", []):
+            tid = template.get("id")
+            if not tid or tid in seen:
+                errors.append(f"{name} · {tid}: id vacío o repetido")
+            seen.add(tid)
+            ids = set()
+            for milestone in template.get("milestones", []):
+                count += 1
+                where = f"{name} · {tid} · {milestone.get('id')}"
+                if not milestone.get("id") or milestone["id"] in ids:
+                    errors.append(f"{where}: id vacío o repetido")
+                ids.add(milestone.get("id"))
+                if not isinstance(milestone.get("minutes"), int):
+                    errors.append(f"{where}: 'minutes' debe ser un entero (negativo antes de la salida)")
+                for pid in milestone.get("procedures", []):
+                    if pid not in procedures:
+                        errors.append(f"{where}: el procedimiento '{pid}' no existe")
+                if milestone.get("service") and milestone["service"] not in TURNAROUND_SERVICES:
+                    errors.append(f"{where}: servicio '{milestone['service']}' desconocido")
+                if milestone.get("event") and milestone["event"] not in TURNAROUND_EVENTS:
+                    errors.append(f"{where}: evento '{milestone['event']}' desconocido")
+                if not (milestone.get("procedures") or milestone.get("service") or milestone.get("event")):
+                    errors.append(f"{where}: necesita 'procedures', 'service' o 'event' para saber cuándo está hecho")
+    if seen:
+        print(f"\nTurnarounds: {len(seen)} con {count} hitos.")
+    return errors
+
+
 def load_reference(root):
     """Names from mapping/reference/*.txt (xp.py dump), or None when no dump exists yet."""
     def read(name):
@@ -476,7 +521,7 @@ def main():
     files = sorted(f for f in glob.glob(os.path.join(root, "**", "*.json"), recursive=True)
                    if os.path.basename(f) != "layout.json" and os.sep + "reference" + os.sep not in f
                    and os.sep + "procedures" + os.sep not in f and os.sep + "guide" + os.sep not in f
-                   and os.sep + "exercises" + os.sep not in f)
+                   and os.sep + "exercises" + os.sep not in f and os.sep + "turnaround" + os.sep not in f)
     if not files:
         sys.exit("No hay archivos de mapeo.")
     ref_datarefs, ref_commands = load_reference(root)
@@ -515,6 +560,10 @@ def main():
         failed = True
 
     for error in validate_procedures(root, controls, panel_ids | BUILTIN_PANELS | {"fcu"}):
+        print(f"ERROR: {error}")
+        failed = True
+
+    for error in validate_turnarounds(root):
         print(f"ERROR: {error}")
         failed = True
 

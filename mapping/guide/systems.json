@@ -359,6 +359,18 @@
         "wxr"
       ],
       "summary": "Detecta precipitación y turbulencia delante del avión y avisa de cizalladura (windshear) en despegue y aproximación."
+    },
+    {
+      "id": "ground",
+      "title": "Servicios de tierra",
+      "panels": [
+        "ground_services"
+      ],
+      "summary": "Lo que hace el personal de tierra durante la escala: corriente y aire desde tierra, calzos, puertas, embarque, repostaje y pushback. En ToLiss se gobierna desde el ISCS; aquí, desde este panel.",
+      "details": [
+        "En el avión real nada de esto se acciona desde la cabina: el piloto lo pide por interfono o radio y lo comprueba en el ECAM (páginas DOOR, ELEC, BLEED).",
+        "El turnaround de la barra lateral ordena estos servicios en el tiempo, contando hacia atrás desde la hora de salida."
+      ]
     }
   ],
   "explanations": [
@@ -2289,6 +2301,132 @@
       "title": "TILT",
       "what": "Inclinación de la antena, en grados.",
       "normal": "En modo manual: ligeramente hacia arriba en tierra y hacia abajo en crucero, para no ver el suelo."
+    },
+    {
+      "controls": [
+        "ground.gpu"
+      ],
+      "title": "GPU",
+      "what": "Conecta o retira la unidad eléctrica de tierra. Es el mismo estado que GND PWR del overhead.",
+      "positions": {
+        "OFF": "Sin GPU: EXT PWR no tiene nada que conectar.",
+        "ON": "GPU conectada: EXT PWR muestra AVAIL y se puede poner en ON."
+      },
+      "normal": "Conectada al llegar al aparcamiento y retirada antes del pushback, cuando el APU ya da corriente.",
+      "caution": "Retirar la GPU con EXT PWR en ON deja el avión sin corriente si el APU no está disponible."
+    },
+    {
+      "controls": [
+        "ground.chocks"
+      ],
+      "title": "CALZOS",
+      "what": "Calzos en las ruedas: inmovilizan el avión sin depender del freno.",
+      "positions": {
+        "OFF": "Retirados.",
+        "ON": "Puestos."
+      },
+      "normal": "Puestos al llegar al aparcamiento; entonces se puede soltar el freno de aparcamiento. Se retiran justo antes del pushback.",
+      "caution": "Con calzos y freno soltado el avión no se mueve, pero el freno de aparcamiento se vuelve a poner antes de que se retiren."
+    },
+    {
+      "controls": [
+        "ground.hp_air"
+      ],
+      "title": "AIRE HP",
+      "what": "Carro de aire de alta presión: da aire para arrancar los motores cuando el APU no está disponible.",
+      "positions": {
+        "OFF": "Desconectado.",
+        "ON": "Conectado al colector de sangrado."
+      },
+      "normal": "Solo con el APU inoperativo. Se retira tras arrancar el primer motor, que luego arranca el otro con X BLEED."
+    },
+    {
+      "controls": [
+        "ground.lp_air"
+      ],
+      "title": "AIRE LP",
+      "what": "Aire acondicionado de tierra (baja presión): climatiza la cabina sin APU ni packs.",
+      "positions": {
+        "OFF": "Desconectado.",
+        "ON": "Conectado."
+      },
+      "normal": "En escalas largas o con calor, para ahorrar combustible del APU."
+    },
+    {
+      "controls": [
+        "ground.doors_open"
+      ],
+      "title": "ABRIR PUERTAS",
+      "what": "Abre todas las puertas de pasaje y de bodega. La luz 1L indica la puerta delantera izquierda abierta, la del embarque.",
+      "normal": "Al llegar al aparcamiento, con los motores parados y BEACON apagada, y para embarcar.",
+      "caution": "Nunca con toboganes armados: se dispararían. La app los desarma primero en la demo; en ToLiss, desármalos tú."
+    },
+    {
+      "controls": [
+        "ground.doors_close"
+      ],
+      "title": "CERRAR PUERTAS",
+      "what": "Cierra todas las puertas.",
+      "normal": "Al terminar el embarque y la carga, antes de armar los toboganes y pedir el pushback."
+    },
+    {
+      "controls": [
+        "ground.doors_auto"
+      ],
+      "title": "PUERTAS AUTO",
+      "what": "Deja que ToLiss abra y cierre las puertas solo según la fase del vuelo.",
+      "normal": "Cómodo si no quieres gestionarlas a mano."
+    },
+    {
+      "controls": [
+        "ground.cargo"
+      ],
+      "title": "BODEGAS",
+      "what": "Indicador: bodega delantera (FWD) o trasera (AFT) abierta.",
+      "positions": {
+        "CLOSED": "Cerradas.",
+        "OPEN": "Abierta al menos la delantera."
+      },
+      "normal": "Cerradas antes del arranque: el ECAM DOOR las muestra en ámbar si siguen abiertas."
+    },
+    {
+      "controls": [
+        "ground.slides"
+      ],
+      "title": "TOBOGANES",
+      "what": "Arma o desarma los toboganes de evacuación de las puertas.",
+      "positions": {
+        "DISARMED": "Desarmados: la puerta se abre normal.",
+        "ARMED": "Armados: al abrir la puerta se infla el tobogán."
+      },
+      "normal": "Se arman con las puertas cerradas, antes del pushback («cabin crew, arm slides and cross-check») y se desarman al llegar, antes de abrir.",
+      "caution": "Abrir una puerta con el tobogán armado lo despliega: es un error caro y peligroso para el personal de tierra."
+    },
+    {
+      "controls": [
+        "ground.pushback"
+      ],
+      "title": "PUSHBACK",
+      "what": "Inicia el pushback automático de ToLiss: el tractor empuja el avión hacia atrás. TUG: tractor enganchado.",
+      "normal": "Con autorización de rodaje o push, freno de aparcamiento suelto, BEACON ON y puertas cerradas. Se configura la dirección en el ISCS.",
+      "caution": "Durante el push el freno de aparcamiento va suelto y no se usan los frenos salvo orden del personal de tierra."
+    },
+    {
+      "controls": [
+        "ground.deice"
+      ],
+      "title": "DESHIELO",
+      "what": "Aplica líquido descongelante al momento (ISCS).",
+      "normal": "Si hay hielo, nieve o escarcha en las alas: el avión debe despegar limpio. Después cuenta el tiempo de protección (holdover)."
+    },
+    {
+      "controls": [
+        "ground.fast_align"
+      ],
+      "title": "ALIN. RÁPIDA",
+      "what": "Termina al instante la alineación de las IRS. Es una ayuda del simulador.",
+      "normal": "Para ahorrar los 10 minutos de alineación cuando entrenas otra cosa.",
+      "caution": "No existe en el avión real: allí hay que esperar con el avión quieto."
     }
   ]
 }

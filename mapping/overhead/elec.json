@@ -795,14 +795,26 @@
           "color": "green",
           "dataref": "AirbusFBW/ExtPowOHPArray",
           "index": 0,
-          "onValue": 2
+          "onValue": 0,
+          "invert": true
         }
       },
       "verified": true,
-      "notes": "Conecta o retira la unidad de tierra (equivale al ISCS). No existe en el avión real.",
+      "notes": "Conecta o retira la unidad de tierra (equivale al ISCS). No existe en el avión real. Estado: ExtPowOHPArray[0] es 0 sin GPU.",
       "size": 16,
       "x": 369.4,
-      "y": 44.6
+      "y": 44.6,
+      "state": {
+        "dataref": "AirbusFBW/ExtPowOHPArray",
+        "index": 0,
+        "values": [
+          0,
+          2
+        ],
+        "aliases": {
+          "1": 1
+        }
+      }
     }
   ]
 }

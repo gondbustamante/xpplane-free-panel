@@ -246,6 +246,27 @@ Ejercicios cronometrados sobre los procedimientos. Cada uno encadena uno o vario
 
 El validador comprueba ids únicos, procedimientos existentes y un `targetSeconds` positivo.
 
+## Turnaround (`mapping/turnaround/*.json`)
+
+Plantillas del tiempo en tierra antes de una salida. Cada hito vence unos minutos antes de la hora de fuera calzos (EOBT) y se da por hecho solo:
+
+```json
+{ "id": "ground", "title": "Turnarounds",
+  "turnarounds": [ { "id": "departure", "title": "Salida estándar A320", "summary": "…",
+    "milestones": [
+      { "id": "cockpit_prep", "title": "Preparación de cabina", "minutes": -50, "procedures": ["cockpit_prep_flow"],
+        "note": "Qué se hace", "why": "Por qué a esa hora" },
+      { "id": "boarding", "title": "Embarque", "minutes": -35, "service": "boarding" },
+      { "id": "out", "title": "Pushback · OUT", "minutes": 0, "event": "out" }
+    ] } ] }
+```
+
+- `procedures`: hecho cuando todos están completos. `service`: `refuel` o `boarding`, hecho cuando el servicio termina. `event`: `out`, hecho al soltar el freno de aparcamiento.
+- Un hito vence en EOBT + `minutes`; pasa a «ahora» cinco minutos antes y a retrasado dos minutos después.
+- El embarque escribe `AirbusFBW/NoPax` poco a poco y se detiene con la puerta 1L cerrada (`AirbusFBW/PaxDoorArray[0]`); el repostaje escribe `AirbusFBW/WriteFOB` hasta el combustible de bloque. Los dos están por confirmar en ToLiss.
+
+Los servicios de tierra (GPU, calzos, aire, puertas, toboganes, pushback, deshielo) son un subpanel normal en `mapping/ground/services.json`, del grupo `ground`.
+
 ## Guía del modo aprender (`mapping/guide/*.json`)
 
 Explicaciones que aparecen al tocar un mando con el modo aprender activo (birrete en la barra superior). Viven aparte del mapeo para que el contenido crezca sin tocar lo que habla con el simulador.

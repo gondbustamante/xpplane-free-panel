@@ -31,6 +31,11 @@
       "icon": "rectangle.bottomhalf.inset.filled"
     },
     {
+      "id": "ground",
+      "title": "Tierra",
+      "icon": "figure.walk.departure"
+    },
+    {
       "id": "camera",
       "title": "Cámaras",
       "icon": "video"
@@ -48,7 +53,8 @@
         "ext_lt",
         "signs",
         "fuel",
-        "int_lt"
+        "int_lt",
+        "ground_services"
       ]
     },
     {
@@ -72,7 +78,8 @@
         "park_brk",
         "rmp1",
         "atc_tcas",
-        "wxr"
+        "wxr",
+        "ground_services"
       ]
     },
     {
@@ -157,7 +164,8 @@
         "elec",
         "int_lt",
         "eng_pedestal",
-        "park_brk"
+        "park_brk",
+        "ground_services"
       ]
     },
     {

@@ -1,0 +1,290 @@
+{
+  "id": "ground_services",
+  "title": "SERVICIOS DE TIERRA",
+  "group": "ground",
+  "order": 1,
+  "columns": 4,
+  "notes": "Servicios de tierra del ISCS de ToLiss. No es un panel del avión: en la realidad lo hace el personal de tierra.",
+  "controls": [
+    {
+      "id": "ground.gpu",
+      "label": "GPU",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "col": 0,
+      "row": 0,
+      "state": {
+        "dataref": "AirbusFBW/ExtPowOHPArray",
+        "index": 0,
+        "values": [
+          0,
+          2
+        ],
+        "aliases": {
+          "1": 1
+        }
+      },
+      "commands": {
+        "press": "toliss_airbus/elec_ground_power/toggle"
+      },
+      "lamps": {
+        "top": {
+          "text": "ON",
+          "color": "green",
+          "dataref": "AirbusFBW/ExtPowOHPArray",
+          "index": 0,
+          "onValue": 0,
+          "invert": true
+        }
+      },
+      "verified": true,
+      "notes": "Mismo estado que GND PWR del overhead: ExtPowOHPArray[0] es 0 sin GPU, 2 AVAIL y 1 con EXT PWR ON."
+    },
+    {
+      "id": "ground.chocks",
+      "label": "CALZOS",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "col": 1,
+      "row": 0,
+      "state": {
+        "dataref": "AirbusFBW/Chocks"
+      },
+      "lamps": {
+        "top": {
+          "text": "ON",
+          "color": "white",
+          "dataref": "AirbusFBW/Chocks"
+        }
+      },
+      "verified": false,
+      "notes": "AirbusFBW/Chocks (int, rw). Se escribe 0/1; confirmar en Diagnóstico."
+    },
+    {
+      "id": "ground.hp_air",
+      "label": "AIRE HP",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "col": 2,
+      "row": 0,
+      "state": {
+        "dataref": "AirbusFBW/GroundHPAir"
+      },
+      "lamps": {
+        "top": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/GroundHPAir"
+        }
+      },
+      "verified": false,
+      "notes": "Carro de aire de alta presión para arrancar motores sin APU. AirbusFBW/GroundHPAir (int, rw)."
+    },
+    {
+      "id": "ground.lp_air",
+      "label": "AIRE LP",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "col": 3,
+      "row": 0,
+      "state": {
+        "dataref": "AirbusFBW/GroundLPAir"
+      },
+      "lamps": {
+        "top": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/GroundLPAir"
+        }
+      },
+      "verified": false,
+      "notes": "Aire acondicionado de tierra (baja presión). AirbusFBW/GroundLPAir (int, rw)."
+    },
+    {
+      "id": "ground.doors_open",
+      "label": "ABRIR PUERTAS",
+      "kind": "korry",
+      "positions": [
+        "",
+        ""
+      ],
+      "col": 0,
+      "row": 1,
+      "commands": {
+        "press": "toliss_airbus/door_commands/all_to_mode_open"
+      },
+      "lamps": {
+        "top": {
+          "text": "1L",
+          "color": "amber",
+          "dataref": "AirbusFBW/PaxDoorArray",
+          "index": 0
+        }
+      },
+      "verified": true,
+      "notes": "Pone todas las puertas del ISCS en OPEN. La lámpara 1L sigue a PaxDoorArray[0] (fracción abierta)."
+    },
+    {
+      "id": "ground.doors_close",
+      "label": "CERRAR PUERTAS",
+      "kind": "korry",
+      "positions": [
+        "",
+        ""
+      ],
+      "col": 1,
+      "row": 1,
+      "commands": {
+        "press": "toliss_airbus/door_commands/all_to_mode_close"
+      },
+      "verified": true
+    },
+    {
+      "id": "ground.doors_auto",
+      "label": "PUERTAS AUTO",
+      "kind": "korry",
+      "positions": [
+        "",
+        ""
+      ],
+      "col": 2,
+      "row": 1,
+      "commands": {
+        "press": "toliss_airbus/door_commands/all_to_mode_auto"
+      },
+      "verified": true,
+      "notes": "AUTO: ToLiss abre y cierra las puertas según la fase (embarque, carga)."
+    },
+    {
+      "id": "ground.cargo",
+      "label": "BODEGAS",
+      "kind": "korry",
+      "positions": [
+        "CLOSED",
+        "OPEN"
+      ],
+      "col": 3,
+      "row": 1,
+      "readOnly": true,
+      "lamps": {
+        "top": {
+          "text": "FWD",
+          "color": "amber",
+          "dataref": "AirbusFBW/CargoDoorArray",
+          "index": 0
+        },
+        "bottom": {
+          "text": "AFT",
+          "color": "amber",
+          "dataref": "AirbusFBW/CargoDoorArray",
+          "index": 1
+        }
+      },
+      "verified": false,
+      "notes": "Indicador: bodegas abiertas (CargoDoorArray, fracción abierta). Índices por confirmar.",
+      "state": {
+        "dataref": "AirbusFBW/CargoDoorArray",
+        "index": 0,
+        "values": [
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "id": "ground.slides",
+      "label": "TOBOGANES",
+      "kind": "korry",
+      "positions": [
+        "DISARMED",
+        "ARMED"
+      ],
+      "col": 0,
+      "row": 2,
+      "state": {
+        "dataref": "AirbusFBW/SlideArmedArray",
+        "index": 0
+      },
+      "commands": {
+        "up": "toliss_airbus/door_commands/arm_slides",
+        "down": "toliss_airbus/door_commands/disarm_slides"
+      },
+      "lamps": {
+        "top": {
+          "text": "ARMED",
+          "color": "white",
+          "dataref": "AirbusFBW/SlideArmedArray",
+          "index": 0
+        }
+      },
+      "verified": false,
+      "notes": "ToLiss solo arma con todas las puertas cerradas. Estado leído de SlideArmedArray[0]."
+    },
+    {
+      "id": "ground.pushback",
+      "label": "PUSHBACK",
+      "kind": "korry",
+      "positions": [
+        "",
+        ""
+      ],
+      "col": 1,
+      "row": 2,
+      "commands": {
+        "press": "toliss_airbus/iscsinterface/startPushBack"
+      },
+      "lamps": {
+        "top": {
+          "text": "TUG",
+          "color": "green",
+          "dataref": "toliss/anim/pushback/nwgrab_ratio"
+        }
+      },
+      "verified": true,
+      "notes": "Inicia el pushback automático de ToLiss (se configura en el ISCS). TUG: tractor enganchado."
+    },
+    {
+      "id": "ground.deice",
+      "label": "DESHIELO",
+      "kind": "korry",
+      "positions": [
+        "",
+        ""
+      ],
+      "col": 2,
+      "row": 2,
+      "commands": {
+        "press": "toliss_airbus/iscsinterface/quickDeice"
+      },
+      "verified": true
+    },
+    {
+      "id": "ground.fast_align",
+      "label": "ALIN. RÁPIDA",
+      "kind": "korry",
+      "positions": [
+        "",
+        ""
+      ],
+      "col": 3,
+      "row": 2,
+      "commands": {
+        "press": "AirbusFBW/ADIRU_fast_align"
+      },
+      "verified": true,
+      "notes": "Opción del ISCS: termina la alineación de las IRS al momento. No existe en el avión real."
+    }
+  ]
+}

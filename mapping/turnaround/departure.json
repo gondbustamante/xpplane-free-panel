@@ -1,0 +1,97 @@
+{
+  "id": "ground",
+  "title": "Turnarounds",
+  "turnarounds": [
+    {
+      "id": "departure",
+      "title": "Salida estándar A320",
+      "summary": "Del avión en el aparcamiento al pushback, planificado hacia atrás desde la hora de salida (EOBT).",
+      "milestones": [
+        {
+          "id": "power_up",
+          "title": "Tripulación a bordo · encendido",
+          "minutes": -60,
+          "procedures": [
+            "power_up"
+          ],
+          "note": "Llegada al avión, revisión exterior y encendido: baterías, GPU o APU.",
+          "why": "Una hora antes es lo habitual en un primer vuelo del día: da margen para alinear las IRS, preparar el MCDU y resolver cualquier avería antes de que el pasaje esté a bordo."
+        },
+        {
+          "id": "cockpit_prep",
+          "title": "Preparación de cabina",
+          "minutes": -50,
+          "procedures": [
+            "cockpit_prep_flow"
+          ],
+          "note": "Barrido del overhead y del pedestal.",
+          "why": "Las IRS necesitan unos 10 minutos para alinearse: cuanto antes se ponen en NAV, antes deja de ser un cuello de botella."
+        },
+        {
+          "id": "refuel",
+          "title": "Repostaje",
+          "minutes": -45,
+          "service": "refuel",
+          "note": "El camión carga hasta el combustible de bloque del plan.",
+          "why": "Se reposta antes o al principio del embarque. Con pasajeros a bordo se puede, pero con precauciones (salidas despejadas, SEAT BELTS apagado, aviso a cabina)."
+        },
+        {
+          "id": "fmgs_prep",
+          "title": "Preparación del MCDU",
+          "minutes": -40,
+          "procedures": [
+            "fmgs_prep"
+          ],
+          "note": "DATA, INIT, F-PLN, SEC F-PLN, RAD NAV, INIT B, PERF.",
+          "why": "Es lo que más tiempo de cabeza pide; hacerlo antes del embarque evita interrupciones cuando la cabina está llena."
+        },
+        {
+          "id": "boarding",
+          "title": "Embarque",
+          "minutes": -35,
+          "service": "boarding",
+          "note": "Con la puerta 1L abierta. Si la cierras, el embarque se detiene.",
+          "why": "Un A320 completo embarca en 20-25 minutos. Empezarlo tarde es la causa más habitual de retraso en la salida."
+        },
+        {
+          "id": "cockpit_prep_cl",
+          "title": "Checklist COCKPIT PREPARATION",
+          "minutes": -25,
+          "procedures": [
+            "cockpit_prep_cl"
+          ],
+          "why": "Confirma la preparación antes de que lleguen la hoja de carga y la autorización, cuando la carga de trabajo sube."
+        },
+        {
+          "id": "loadsheet",
+          "title": "Hoja de carga · cierre del MCDU",
+          "minutes": -12,
+          "procedures": [
+            "fmgs_final"
+          ],
+          "note": "Pesos finales, velocidades y briefing de salida.",
+          "why": "La hoja de carga llega cuando termina el embarque; con ella se confirman las velocidades de despegue. Sin ella el avión no puede salir."
+        },
+        {
+          "id": "before_start",
+          "title": "Puertas cerradas · antes del arranque",
+          "minutes": -5,
+          "procedures": [
+            "before_start_flow",
+            "before_start_cl"
+          ],
+          "note": "Puertas cerradas, toboganes armados, BEACON ON.",
+          "why": "Con las puertas cerradas el avión está listo para el push. Se arman los toboganes para una evacuación en tierra o en el despegue."
+        },
+        {
+          "id": "out",
+          "title": "Pushback · OUT",
+          "minutes": 0,
+          "event": "out",
+          "note": "Se marca solo al soltar el freno de aparcamiento.",
+          "why": "La hora OUT es la referencia de puntualidad de la aerolínea: un vuelo es puntual si sale antes de 15 minutos sobre su hora."
+        }
+      ]
+    }
+  ]
+}

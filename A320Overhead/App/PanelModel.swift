@@ -65,6 +65,18 @@ struct ExerciseRun {
     var isRunning: Bool { result == nil }
 }
 
+/// A turnaround in progress, stored on the device so it survives relaunching the app.
+struct TurnaroundRun: Codable, Equatable {
+    var plan: TurnaroundPlan
+    /// Milestone id → when it was done.
+    var completed: [String: Date] = [:]
+    var refuel = ServiceClock()
+    var boarding = ServiceClock()
+    /// Fuel on board when refuelling started, kg.
+    var refuelStartKg: Double?
+    var blockTimes = BlockTimes()
+}
+
 enum PanelSelection: Hashable {
     case all
     case group(String)
@@ -194,6 +206,28 @@ final class PanelModel {
     }
     /// Exercise whose briefing sheet is open.
     var exerciseBriefingID: String?
+    /// Ground-time templates from `mapping/turnaround`.
+    private(set) var turnaroundTemplates: [TurnaroundTemplate] = []
+    /// The turnaround being flown, if any.
+    private(set) var turnaround: TurnaroundRun? {
+        didSet {
+            UserDefaults.standard.set(turnaround.flatMap { try? JSONEncoder().encode($0) }, forKey: Keys.turnaround)
+        }
+    }
+    /// Finished flights, newest first.
+    private(set) var flightLog: [FlightLogEntry] = [] {
+        didSet {
+            UserDefaults.standard.set(try? JSONEncoder().encode(flightLog), forKey: Keys.flightLog)
+        }
+    }
+    var showTurnaroundPlanner = false
+    var showTurnaroundSheet = false
+    var showFlightLog = false
+    @ObservationIgnored private var turnaroundTask: Task<Void, Never>?
+    @ObservationIgnored private var blockDetector = BlockTimeDetector()
+    /// Last values written by the ground services, so each is written only when it changes.
+    @ObservationIgnored private var writtenPassengers: Int?
+    @ObservationIgnored private var writtenFuel: Double?
     /// Switches whose position matters: every overhead control and any control a procedure
     /// checks. Moving one an exercise does not use is a mistake; radios, keypads and display
     /// keys are not judged.
@@ -331,6 +365,8 @@ final class PanelModel {
         static let badges = "ui.verificationBadges.v2"
         static let learnMode = "ui.learnMode"
         static let exerciseResults = "exercises.results"
+        static let turnaround = "turnaround.run"
+        static let flightLog = "turnaround.flightLog"
         static let extras = "diag.extraDatarefs"
         static let selection = "ui.selection"
         static let scale = "ui.canvasScale"
@@ -355,6 +391,15 @@ final class PanelModel {
         demoTiming = DemoTiming(rawValue: defaults.string(forKey: Keys.demoTiming) ?? "") ?? .realistic
         showVerificationBadges = defaults.object(forKey: Keys.badges) as? Bool ?? false
         learnMode = defaults.bool(forKey: Keys.learnMode)
+        if let data = defaults.data(forKey: Keys.turnaround),
+           let stored = try? JSONDecoder().decode(TurnaroundRun.self, from: data) {
+            turnaround = stored
+            blockDetector = BlockTimeDetector(times: stored.blockTimes)
+        }
+        if let data = defaults.data(forKey: Keys.flightLog),
+           let stored = try? JSONDecoder().decode([FlightLogEntry].self, from: data) {
+            flightLog = stored
+        }
         if let data = defaults.data(forKey: Keys.exerciseResults),
            let stored = try? JSONDecoder().decode([String: [ExerciseResult]].self, from: data) {
             exerciseResults = stored
@@ -380,6 +425,7 @@ final class PanelModel {
         canvasScale = storedScale == 0 ? 0.8 : min(max(storedScale, Self.scaleRange.lowerBound), Self.scaleRange.upperBound)
         fitRequestID = 1   // launch fitted: the panel starts still
         loadMappings()
+        if turnaround != nil { startTurnaroundLoop() }
     }
 
     // MARK: Mappings
@@ -423,6 +469,14 @@ final class PanelModel {
                 exercises = try ExerciseLoader.loadAll(in: exercisesDirectory)
             } catch {
                 lastError = "Error leyendo mapping/exercises: \(error.localizedDescription)"
+            }
+        }
+        let turnaroundDirectory = directory.appendingPathComponent("turnaround", isDirectory: true)
+        if FileManager.default.fileExists(atPath: turnaroundDirectory.path) {
+            do {
+                turnaroundTemplates = try TurnaroundLoader.loadAll(in: turnaroundDirectory)
+            } catch {
+                lastError = "Error leyendo mapping/turnaround: \(error.localizedDescription)"
             }
         }
         configurationControls = Set(subpanels.filter { $0.groupID == "overhead" }.flatMap { $0.controls.map(\.id) })
@@ -945,6 +999,249 @@ final class PanelModel {
         }
     }
 
+    // MARK: Turnaround
+
+    /// Read by the turnaround: ground contact, doors, fuel, and the two values the ground
+    /// services write (passengers and fuel to load).
+    static let turnaroundDatarefs = [
+        "sim/flightmodel/failures/onground_any",
+        "AirbusFBW/PaxDoorArray",
+        "toliss_airbus/fuelTankContent_kgs",
+        "AirbusFBW/NoPax",
+        "AirbusFBW/WriteFOB",
+    ]
+
+    var turnaroundTemplate: TurnaroundTemplate? {
+        guard let run = turnaround else { return turnaroundTemplates.first }
+        return turnaroundTemplates.first { $0.id == run.plan.templateID } ?? turnaroundTemplates.first
+    }
+
+    /// A plan to start from: off-blocks in an hour, rounded to five minutes, the last route used.
+    func draftTurnaroundPlan(now: Date = Date()) -> TurnaroundPlan {
+        let inAnHour = now.addingTimeInterval(3600)
+        let rounded = Date(timeIntervalSinceReferenceDate: (inAnHour.timeIntervalSinceReferenceDate / 300).rounded(.up) * 300)
+        var plan = TurnaroundPlan(templateID: turnaroundTemplates.first?.id ?? "departure", offBlocks: rounded)
+        if let last = flightLog.first {
+            plan.flightNumber = last.flightNumber
+            plan.origin = last.destination
+        }
+        return plan
+    }
+
+    func startTurnaround(_ plan: TurnaroundPlan) {
+        turnaround = TurnaroundRun(plan: plan)
+        blockDetector = BlockTimeDetector()
+        writtenPassengers = nil
+        writtenFuel = nil
+        showTurnaroundPlanner = false
+        startTurnaroundLoop()
+        // Two sheets cannot swap at once: open the timeline once the planner has gone.
+        Task {
+            try? await Task.sleep(for: .milliseconds(600))
+            self.showTurnaroundSheet = true
+        }
+    }
+
+    /// Ends the turnaround, keeping the flight in the logbook when asked.
+    func finishTurnaround(saveToLog: Bool) {
+        if saveToLog, let run = turnaround {
+            flightLog.insert(FlightLogEntry(flightNumber: run.plan.flightNumber, origin: run.plan.origin,
+                                            destination: run.plan.destination, offBlocksPlanned: run.plan.offBlocks,
+                                            times: run.blockTimes, passengers: run.plan.passengers), at: 0)
+        }
+        turnaround = nil
+        turnaroundTask?.cancel()
+        turnaroundTask = nil
+        showTurnaroundSheet = false
+    }
+
+    func deleteLogEntries(at offsets: IndexSet) {
+        for index in offsets.sorted(by: >) where flightLog.indices.contains(index) {
+            flightLog.remove(at: index)
+        }
+    }
+
+    func state(of milestone: TurnaroundMilestone, at now: Date) -> MilestoneState {
+        guard let run = turnaround else { return .upcoming }
+        return TurnaroundSchedule.state(of: milestone, offBlocks: run.plan.offBlocks, now: now,
+                                        doneAt: run.completed[milestone.id])
+    }
+
+    func turnaroundDelay(at now: Date) -> Int {
+        guard let run = turnaround, let template = turnaroundTemplate else { return 0 }
+        return TurnaroundSchedule.delay(template.milestones, offBlocks: run.plan.offBlocks, now: now, doneAt: run.completed)
+    }
+
+    /// First milestone not done yet.
+    var nextMilestone: TurnaroundMilestone? {
+        guard let run = turnaround else { return nil }
+        return turnaroundTemplate?.milestones.first { run.completed[$0.id] == nil }
+    }
+
+    /// Marks a milestone done now, or not done.
+    func toggleMilestone(_ id: String) {
+        guard var run = turnaround else { return }
+        run.completed[id] = run.completed[id] == nil ? Date() : nil
+        turnaround = run
+    }
+
+    func startService(_ service: TurnaroundService) {
+        guard var run = turnaround else { return }
+        switch service {
+        case .refuel:
+            run.refuelStartKg = run.refuelStartKg ?? fuelOnBoard ?? 0
+            run.refuel.start(at: Date())
+        case .boarding:
+            run.boarding.start(at: Date())
+        }
+        turnaround = run
+        tickTurnaround()
+    }
+
+    func serviceClock(_ service: TurnaroundService) -> ServiceClock? {
+        switch service {
+        case .refuel: return turnaround?.refuel
+        case .boarding: return turnaround?.boarding
+        }
+    }
+
+    /// Seconds a service lasts: boarding as planned, refuelling from the fuel on board at start.
+    func serviceDuration(_ service: TurnaroundService) -> Double {
+        guard let run = turnaround else { return 0 }
+        switch service {
+        case .boarding:
+            return run.plan.boardingMinutes * 60
+        case .refuel:
+            let start = run.refuelStartKg ?? fuelOnBoard ?? 0
+            return max(0, run.plan.blockFuelKg - start) / max(run.plan.refuelKgPerMinute, 1) * 60
+        }
+    }
+
+    func serviceProgress(_ service: TurnaroundService, at now: Date = Date()) -> Double {
+        serviceClock(service)?.progress(at: now, duration: serviceDuration(service)) ?? 0
+    }
+
+    /// Passengers on board while boarding.
+    func boardedPassengers(at now: Date = Date()) -> Int {
+        guard let run = turnaround else { return 0 }
+        return Int((serviceProgress(.boarding, at: now) * Double(run.plan.passengers)).rounded(.down))
+    }
+
+    /// Fuel being loaded while refuelling, kg.
+    func refuelledKg(at now: Date = Date()) -> Double {
+        guard let run = turnaround else { return 0 }
+        let start = run.refuelStartKg ?? fuelOnBoard ?? 0
+        return start + (run.plan.blockFuelKg - start) * serviceProgress(.refuel, at: now)
+    }
+
+    /// Fuel on board from the tanks, kg; nil while unknown.
+    var fuelOnBoard: Double? {
+        guard let tanks = rawValues["toliss_airbus/fuelTankContent_kgs"]?.arrayValue else { return nil }
+        let total = tanks.compactMap(\.doubleValue).reduce(0, +)
+        return total
+    }
+
+    /// Door 1L (the boarding door) open; nil while unknown.
+    var boardingDoorOpen: Bool? {
+        rawValues["AirbusFBW/PaxDoorArray"]?.element(at: 0)?.doubleValue.map { $0 > 0.5 }
+    }
+
+    var loadSheet: LoadSheet? {
+        turnaround.map { LoadSheet(passengers: $0.plan.passengers, blockFuel: $0.plan.blockFuelKg) }
+    }
+
+    /// Stamps a block time by hand ("out", "off", "on", "in").
+    func stampBlockTime(_ event: String) {
+        guard var run = turnaround else { return }
+        blockDetector.stamp(event, at: Date())
+        run.blockTimes = blockDetector.times
+        turnaround = run
+        tickTurnaround()
+    }
+
+    private func startTurnaroundLoop() {
+        turnaroundTask?.cancel()
+        turnaroundTask = Task { [weak self] in
+            while !Task.isCancelled {
+                self?.tickTurnaround()
+                try? await Task.sleep(for: .seconds(2))
+            }
+        }
+    }
+
+    /// Every two seconds: starts services that fall due, holds boarding while door 1L is
+    /// closed, writes passengers and fuel to the simulator, stamps block times and marks the
+    /// milestones that are done.
+    private func tickTurnaround(now: Date = Date()) {
+        guard var run = turnaround, let template = turnaroundTemplate else { return }
+        for milestone in template.milestones {
+            guard let service = milestone.service, run.plan.autoServices,
+                  now >= TurnaroundSchedule.due(milestone, offBlocks: run.plan.offBlocks) else { continue }
+            switch service {
+            case .refuel where !run.refuel.started:
+                run.refuelStartKg = run.refuelStartKg ?? fuelOnBoard ?? 0
+                run.refuel.start(at: now)
+            case .boarding where !run.boarding.started:
+                run.boarding.start(at: now)
+            default:
+                break
+            }
+        }
+        // Boarding needs the door: it waits while door 1L is known to be closed.
+        if run.boarding.started, run.boarding.progress(at: now, duration: run.plan.boardingMinutes * 60) < 1,
+           let open = boardingDoorOpen {
+            if open { run.boarding.start(at: now) } else { run.boarding.pause(at: now) }
+        }
+
+        if status == .connected, let client {
+            let boardingDuration = run.plan.boardingMinutes * 60
+            if run.boarding.started {
+                let passengers = Int((run.boarding.progress(at: now, duration: boardingDuration) * Double(run.plan.passengers)).rounded(.down))
+                if passengers != writtenPassengers {
+                    writtenPassengers = passengers
+                    Task { try? await client.write(DatarefKey("AirbusFBW/NoPax"), XPValue(Double(passengers))) }
+                }
+            }
+            if run.refuel.started, let start = run.refuelStartKg {
+                let duration = max(0, run.plan.blockFuelKg - start) / max(run.plan.refuelKgPerMinute, 1) * 60
+                let fuel = start + (run.plan.blockFuelKg - start) * run.refuel.progress(at: now, duration: duration)
+                if abs(fuel - (writtenFuel ?? -100)) >= 10 || (fuel == run.plan.blockFuelKg && writtenFuel != fuel) {
+                    writtenFuel = fuel
+                    Task { try? await client.write(DatarefKey("AirbusFBW/WriteFOB"), XPValue(fuel.rounded())) }
+                }
+            }
+        }
+
+        let parkBrake = positionName(ofControl: "park.brake").map { $0 == "ON" }
+        let onGround = status == .connected
+            ? rawValues["sim/flightmodel/failures/onground_any"]?.doubleValue.map { $0 > 0.5 }
+            : nil
+        if blockDetector.update(at: now, parkBrake: parkBrake, onGround: onGround) {
+            run.blockTimes = blockDetector.times
+        }
+
+        for milestone in template.milestones where run.completed[milestone.id] == nil {
+            if let ids = milestone.procedures, !ids.isEmpty,
+               ids.allSatisfy({ id in procedure(id).map(isComplete) ?? false }) {
+                run.completed[milestone.id] = now
+            } else if let service = milestone.service {
+                let done: Bool
+                switch service {
+                case .refuel:
+                    let start = run.refuelStartKg ?? 0
+                    let duration = max(0, run.plan.blockFuelKg - start) / max(run.plan.refuelKgPerMinute, 1) * 60
+                    done = run.refuel.progress(at: now, duration: duration) >= 1
+                case .boarding:
+                    done = run.boarding.progress(at: now, duration: run.plan.boardingMinutes * 60) >= 1
+                }
+                if done { run.completed[milestone.id] = now }
+            } else if milestone.event == "out", let out = run.blockTimes.outTime {
+                run.completed[milestone.id] = out
+            }
+        }
+        if run != turnaround { turnaround = run }
+    }
+
     // MARK: Integral lighting
 
     /// Level (0…1) of the integral lighting for a panel group or built-in panel id.
@@ -1123,6 +1420,7 @@ final class PanelModel {
         if let fcu { names.formUnion(fcu.datarefNames) }
         if hasMCDU { names.formUnion(MCDUScreen.datarefNames(unit: mcduUnit)) }
         names.formUnion(Self.backlightSources)
+        names.formUnion(Self.turnaroundDatarefs)
         return names
     }
 
