@@ -6,38 +6,54 @@ struct ConnectionSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var host = ""
     @State private var port = ""
+    @State private var showDiagnostics = false
 
     var body: some View {
         @Bindable var model = model
         NavigationStack {
             Form {
                 Section {
-                    Toggle("Modo demo", isOn: $model.demoMode)
-                } footer: {
-                    Text("Simula el avión en el iPad, sin X-Plane ni red: los interruptores, el FCU, las radios y el MCDU responden como si hubiera simulador. Empieza siempre en Cold & Dark al conectar.")
-                }
-                Section {
-                    Picker("Tiempos", selection: $model.demoTiming) {
-                        ForEach(DemoTiming.allCases) { timing in
-                            Text(timing.title).tag(timing)
-                        }
+                    HStack(spacing: 10) {
+                        Circle().fill(model.statusColor).frame(width: 10, height: 10)
+                        Text(model.statusLabel).lineLimit(2)
+                        Spacer()
+                        Button(model.status.isActive ? "Desconectar" : "Conectar", action: toggleConnection)
+                            .buttonStyle(.borderedProminent)
+                            .tint(model.status.isActive ? .red : nil)
+                    }
+                    Picker("Origen", selection: $model.demoMode) {
+                        Text("X-Plane").tag(false)
+                        Text("Modo demo").tag(true)
                     }
                     .pickerStyle(.segmented)
+                    if model.demoMode {
+                        Picker("Tiempos", selection: $model.demoTiming) {
+                            ForEach(DemoTiming.allCases) { timing in
+                                Text(timing.title).tag(timing)
+                            }
+                        }
+                    } else {
+                        LabeledContent("IP del PC") {
+                            TextField("192.168.1.10", text: $host)
+                                .multilineTextAlignment(.trailing)
+                                .keyboardType(.numbersAndPunctuation)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                        }
+                        LabeledContent("Puerto") {
+                            TextField("8087", text: $port)
+                                .multilineTextAlignment(.trailing)
+                                .keyboardType(.numberPad)
+                        }
+                    }
                 } header: {
-                    Text("Sistemas del modo demo")
+                    Text("Conexión")
                 } footer: {
-                    Text(model.demoTiming.explanation)
-                }
-                Section("X-Plane") {
-                    TextField("IP del PC con X-Plane", text: $host)
-                        .keyboardType(.numbersAndPunctuation)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    TextField("Puerto", text: $port)
-                        .keyboardType(.numberPad)
-                    Text("Ejecuta tools/xp_relay.py en el PC. Por defecto escucha en el puerto 8087 y reenvía a la Web API de X-Plane (8086), que solo acepta conexiones locales.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    if model.demoMode {
+                        Text("Simula el avión en el iPad, sin X-Plane ni red: los interruptores, el FCU, las radios y el MCDU responden como si hubiera simulador. Empieza siempre en Cold & Dark al conectar. \(model.demoTiming.explanation)")
+                    } else {
+                        Text("Ejecuta tools/xp_relay.py en el PC. Por defecto escucha en el puerto 8087 y reenvía a la Web API de X-Plane (8086), que solo acepta conexiones locales.")
+                    }
                 }
                 Section {
                     Picker("Retroiluminación", selection: $model.backlightMode) {
@@ -64,6 +80,9 @@ struct ConnectionSettingsView: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
+                Section("Avanzado") {
+                    Button("Diagnóstico de datarefs…", systemImage: "stethoscope") { showDiagnostics = true }
+                }
                 if !model.unresolved.isEmpty {
                     Section("Datarefs no reconocidos por el simulador") {
                         ForEach(model.unresolved.sorted(), id: \.self) { name in
@@ -80,24 +99,42 @@ struct ConnectionSettingsView: View {
                     }
                 }
             }
-            .navigationTitle("Conexión")
+            .navigationTitle("Ajustes")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cerrar") { dismiss() }
-                }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(model.demoMode ? "Iniciar demo" : "Guardar y conectar") {
-                        model.host = host.trimmingCharacters(in: .whitespacesAndNewlines)
-                        if let value = Int(port), (1...65535).contains(value) { model.port = value }
-                        model.connect()
+                    Button("Listo") {
+                        applyAddress()
                         dismiss()
                     }
                 }
+            }
+            .sheet(isPresented: $showDiagnostics) {
+                DiagnosticsView()
             }
             .onAppear {
                 host = model.host
                 port = String(model.port)
             }
         }
+    }
+
+    private func toggleConnection() {
+        if model.status.isActive {
+            model.disconnect()
+        } else {
+            applyAddress()
+            model.connect()
+        }
+    }
+
+    /// Saves the typed address; reconnects if it changed while connected to X-Plane.
+    private func applyAddress() {
+        let newHost = host.trimmingCharacters(in: .whitespacesAndNewlines)
+        let newPort = Int(port).flatMap { (1...65535).contains($0) ? $0 : nil } ?? model.port
+        guard newHost != model.host || newPort != model.port else { return }
+        if !newHost.isEmpty { model.host = newHost }
+        model.port = newPort
+        if model.status.isActive && !model.demoMode { model.connect() }
     }
 }

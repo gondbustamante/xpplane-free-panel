@@ -277,7 +277,7 @@ Se hace con el ToLiss cargado y, idealmente, en tierra con motores apagados. Hay
 
 ### Desde el iPad (sin Terminal)
 
-Pulsa el icono del estetoscopio en la barra superior de la app. La pantalla de diagnóstico muestra todos los datarefs suscritos con el valor de cada índice; los que cambian se iluminan en amarillo durante 3 segundos. Haz clic en un interruptor de la cabina virtual y mira qué índice se ilumina: ese es el índice del control. En la misma pantalla puedes añadir cualquier dataref a vigilar (por ejemplo `AirbusFBW/ElecOHPArray`) y lanzar comandos por nombre para comprobar que hacen lo esperado.
+Toca el indicador de estado de la barra superior de la app y elige *Diagnóstico de datarefs…* (también en *Ajustes → Avanzado*). La pantalla de diagnóstico muestra todos los datarefs suscritos con el valor de cada índice; los que cambian se iluminan en amarillo durante 3 segundos. Haz clic en un interruptor de la cabina virtual y mira qué índice se ilumina: ese es el índice del control. En la misma pantalla puedes añadir cualquier dataref a vigilar (por ejemplo `AirbusFBW/ElecOHPArray`) y lanzar comandos por nombre para comprobar que hacen lo esperado.
 
 ### Desde la Terminal del Mac
 

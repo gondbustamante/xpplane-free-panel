@@ -622,6 +622,11 @@ final class PanelModel {
         return procedures[index + 1]
     }
 
+    func previous(before procedure: Procedure) -> Procedure? {
+        guard let index = procedures.firstIndex(of: procedure), index > 0 else { return nil }
+        return procedures[index - 1]
+    }
+
     /// Current position name of a control, nil while it is unknown or the sim is not connected.
     func positionName(ofControl id: String) -> String? {
         guard status == .connected, let control = controlsByID[id],

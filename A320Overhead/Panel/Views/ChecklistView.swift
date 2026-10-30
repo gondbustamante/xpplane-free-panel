@@ -85,8 +85,21 @@ private struct ChecklistRunner: View {
                 confirmReset = true
             } label: {
                 Label("Reiniciar", systemImage: "arrow.counterclockwise")
+                    .labelStyle(.iconOnly)
             }
             .buttonStyle(.bordered)
+            .help("Reiniciar \(procedure.title)")
+            if let previous = model.previous(before: procedure) {
+                Button {
+                    model.open(procedure: previous.id)
+                } label: {
+                    Label("Anterior", systemImage: "chevron.left")
+                        .lineLimit(1)
+                }
+                .buttonStyle(.bordered)
+                .help("Anterior: \(previous.title)")
+                .accessibilityLabel("Anterior: \(previous.title)")
+            }
             Spacer(minLength: 0)
             if let next = model.next(after: procedure) {
                 Button {
