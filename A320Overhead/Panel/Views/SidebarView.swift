@@ -1,45 +1,25 @@
 import SwiftUI
 import XPlaneKit
 
-/// Sidebar sections in their default order. The user reorders and hides them from
-/// "Personalizar barra lateral"; the choice lives in UserDefaults.
-enum SidebarSection: String, CaseIterable, Identifiable {
-    case myPanels
-    case procedures
-    case exercises
-    case turnaround
-    case phases
+/// The sidebar's three tabs, by what the user is doing: flying a phase with its procedures,
+/// picking a cockpit area, or practising (learn mode, exercises, turnaround).
+enum SidebarTab: String, CaseIterable, Identifiable {
+    case flight
     case cockpit
-    case sections
+    case practice
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .myPanels: return "Mis paneles"
-        case .procedures: return "Procedimientos"
-        case .exercises: return "Ejercicios"
-        case .turnaround: return "Turnaround"
-        case .phases: return "Fases de vuelo"
+        case .flight: return "Vuelo"
         case .cockpit: return "Cabina"
-        case .sections: return "Secciones"
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .myPanels: return "square.grid.2x2"
-        case .procedures: return "checklist"
-        case .exercises: return "stopwatch"
-        case .turnaround: return "clock.badge"
-        case .phases: return "airplane.departure"
-        case .cockpit: return "rectangle.3.group"
-        case .sections: return "square.split.2x2"
+        case .practice: return "Práctica"
         }
     }
 }
 
-/// Comma-separated ids kept in @AppStorage (orders, hidden and expanded sets).
+/// Comma-separated ids kept in @AppStorage (zone order and expanded groups).
 enum StoredIDs {
     static func decode(_ raw: String) -> [String] {
         raw.split(separator: ",").map(String.init)
@@ -66,30 +46,32 @@ enum StoredIDs {
     }
 }
 
-/// Left column: status, the user's panels, procedures, flight phases, cockpit areas and every
-/// section, in collapsible sections the user can reorder, hide and search.
+/// Left column: status and the checklist in progress on top, then three tabs. Vuelo lists the
+/// flight phases, each opening its panels and unfolding its procedures; Cabina has the user's
+/// panels and the cockpit areas, each unfolding its sections; Práctica gathers learn mode,
+/// exercises and the turnaround. The search looks through all of them.
 struct SidebarView: View {
     @Environment(PanelModel.self) private var model
     /// Panel being edited; nil panel means "new".
     @State private var editing: EditorTarget?
     @State private var query = ""
     @State private var editMode: EditMode = .inactive
-    @State private var showOrganizer = false
     @State private var confirmResetChecklists = false
     @State private var confirmDeleteResults = false
     @State private var phaseToReset: ProcedureStyle.PhaseGroup?
 
-    @AppStorage("sidebar.order") private var orderRaw = ""
-    @AppStorage("sidebar.hidden") private var hiddenRaw = ""
-    @AppStorage("sidebar.collapsed") private var collapsedRaw = ""
-    /// Disclosure groups inside sections (procedure phases, section groups) start closed.
-    @AppStorage("sidebar.expanded") private var expandedRaw = "procedures:cold_dark"
-    @AppStorage("sidebar.phaseOrder") private var phaseOrderRaw = ""
+    @AppStorage("sidebar.tab") private var tabRaw = SidebarTab.flight.rawValue
+    /// Disclosure groups (phases, cockpit areas) start closed except the first phase.
+    @AppStorage("sidebar.expanded") private var expandedRaw = "flight:cold_dark"
     @AppStorage("sidebar.groupOrder") private var groupOrderRaw = ""
 
     private struct EditorTarget: Identifiable {
         let id = UUID()
         let panel: CustomPanel?
+    }
+
+    private var tab: Binding<SidebarTab> {
+        Binding(get: { SidebarTab(rawValue: tabRaw) ?? .flight }, set: { tabRaw = $0.rawValue })
     }
 
     /// iOS only offers `List(selection:)` with an optional value; keep the last choice on deselect.
@@ -98,21 +80,17 @@ struct SidebarView: View {
                 set: { newValue in if let newValue { model.selection = newValue } })
     }
 
-    private var visibleSections: [SidebarSection] {
-        let hidden = Set(StoredIDs.decode(hiddenRaw))
-        return StoredIDs.ordered(SidebarSection.allCases, by: orderRaw, id: \.rawValue)
-            .filter { !hidden.contains($0.rawValue) }
-    }
-
-    private var phases: [FlightPhase] {
-        StoredIDs.ordered(model.layout.phases, by: phaseOrderRaw, id: \.id)
-    }
-
     private var groups: [PanelGroup] {
         StoredIDs.ordered(model.layout.groups, by: groupOrderRaw, id: \.id)
     }
 
+    /// Procedures grouped by phase, keyed by phase id ("other" for those without one).
+    private var proceduresByPhase: [String: ProcedureStyle.PhaseGroup] {
+        Dictionary(uniqueKeysWithValues: ProcedureStyle.groups(model.procedures, phases: model.layout.phases).map { ($0.id, $0) })
+    }
+
     private var isEditing: Bool { editMode == .active }
+    private var isSearching: Bool { !query.trimmingCharacters(in: .whitespaces).isEmpty }
 
     var body: some View {
         List(selection: selection) {
@@ -121,22 +99,30 @@ struct SidebarView: View {
                 if let active = model.activeProcedure {
                     ActiveChecklistRow(procedure: active)
                 }
-            }
-            if query.trimmingCharacters(in: .whitespaces).isEmpty {
-                ForEach(visibleSections) { section in
-                    Section(isExpanded: sectionExpanded(section)) {
-                        content(for: section)
-                    } header: {
-                        SectionHeader(title: section.title, detail: detail(for: section))
+                if !isSearching {
+                    Picker("Vista", selection: tab) {
+                        ForEach(SidebarTab.allCases) { tab in
+                            Text(tab.title).tag(tab)
+                        }
                     }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .listRowSeparator(.hidden)
                 }
-            } else {
+            }
+            if isSearching {
                 SearchResults(query: query)
+            } else {
+                switch tab.wrappedValue {
+                case .flight: flightTab
+                case .cockpit: cockpitTab
+                case .practice: practiceTab
+                }
             }
         }
         .listStyle(.sidebar)
         .environment(\.editMode, $editMode)
-        .searchable(text: $query, placement: .sidebar, prompt: "Buscar paneles y procedimientos")
+        .searchable(text: $query, placement: .sidebar, prompt: "Buscar paneles, procedimientos y ejercicios")
         .navigationTitle("A320")
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
@@ -148,12 +134,13 @@ struct SidebarView: View {
                         Button("Editar panel", systemImage: "slider.horizontal.3") { editing = EditorTarget(panel: panel) }
                     }
                     Menu {
-                        Button("Ordenar elementos", systemImage: "arrow.up.arrow.down") {
-                            withAnimation { editMode = .active }
+                        if tab.wrappedValue == .cockpit {
+                            Button("Ordenar paneles y zonas", systemImage: "arrow.up.arrow.down") {
+                                withAnimation { editMode = .active }
+                            }
                         }
-                        Button("Personalizar barra lateral…", systemImage: "sidebar.left") { showOrganizer = true }
-                        Divider()
                         Button("Nuevo panel", systemImage: "plus") { editing = EditorTarget(panel: nil) }
+                        Divider()
                         Button("Reiniciar procedimientos…", systemImage: "arrow.counterclockwise", role: .destructive) {
                             confirmResetChecklists = true
                         }
@@ -169,9 +156,6 @@ struct SidebarView: View {
         }
         .sheet(item: $editing) { target in
             CustomPanelEditor(panel: target.panel)
-        }
-        .sheet(isPresented: $showOrganizer) {
-            SidebarOrganizer()
         }
         .confirmationDialog("¿Reiniciar todos los procedimientos?", isPresented: $confirmResetChecklists, titleVisibility: .visible) {
             if model.canResetAircraft {
@@ -200,41 +184,117 @@ struct SidebarView: View {
         } message: {
             Text("Se pierden las estrellas y el historial de todos los ejercicios.")
         }
-    }
-
-    // MARK: Sections
-
-    @ViewBuilder
-    private func content(for section: SidebarSection) -> some View {
-        switch section {
-        case .myPanels: myPanels
-        case .procedures: procedures
-        case .exercises: ExerciseList()
-        case .turnaround: TurnaroundList()
-        case .phases: phaseRows
-        case .cockpit: cockpit
-        case .sections: sectionGroups
+        // Opening a procedure from elsewhere (checklist column, turnaround) unfolds its phase.
+        .onChange(of: model.activeProcedure?.phase) { _, phase in
+            if let phase { expandedRaw = StoredIDs.toggled(expandedRaw, "flight:\(phase)", on: true) }
         }
     }
 
-    private func detail(for section: SidebarSection) -> String? {
-        switch section {
-        case .myPanels:
-            return model.customPanels.isEmpty ? nil : "\(model.customPanels.count)"
-        case .procedures:
+    // MARK: Vuelo
+
+    /// Each phase: tapping it shows its panels, unfolding it lists its flows and checklists.
+    @ViewBuilder
+    private var flightTab: some View {
+        let byPhase = proceduresByPhase
+        Section {
+            ForEach(model.layout.phases) { phase in
+                if let group = byPhase[phase.id], !group.procedures.isEmpty {
+                    DisclosureGroup(isExpanded: disclosureExpanded("flight:\(phase.id)")) {
+                        procedureRows(group.procedures)
+                    } label: {
+                        phaseRow(phase, group: group)
+                    }
+                } else {
+                    phaseRow(phase, group: nil)
+                }
+            }
+            if let other = byPhase["other"], !other.procedures.isEmpty {
+                DisclosureGroup(isExpanded: disclosureExpanded("flight:other")) {
+                    procedureRows(other.procedures)
+                } label: {
+                    SidebarRow(title: "Otros", icon: "list.bullet")
+                }
+            }
+        } header: {
             let done = model.procedures.filter { model.isComplete($0) }.count
-            return model.procedures.isEmpty ? nil : "\(done)/\(model.procedures.count)"
-        case .exercises:
-            let passed = model.exercises.filter { (model.bestResult(of: $0.id)?.stars ?? 0) > 0 }.count
-            return model.exercises.isEmpty ? nil : "\(passed)/\(model.exercises.count)"
-        case .turnaround:
-            return model.flightLog.isEmpty ? nil : "\(model.flightLog.count)"
-        case .phases:
-            return "\(model.layout.phases.count)"
-        case .cockpit:
-            return nil
-        case .sections:
-            return "\(model.subpanels.count)"
+            SectionHeader(title: "Fases de vuelo", detail: model.procedures.isEmpty ? nil : "\(done)/\(model.procedures.count)")
+        } footer: {
+            Text("Toca una fase para ver sus paneles; despliégala para sus procedimientos.")
+        }
+    }
+
+    private func phaseRow(_ phase: FlightPhase, group: ProcedureStyle.PhaseGroup?) -> some View {
+        let total = group?.procedures.count ?? 0
+        let complete = group?.procedures.filter { model.isComplete($0) }.count ?? 0
+        return SidebarRow(title: phase.title, icon: phase.icon ?? "airplane",
+                          detail: total == 0 || complete == total ? nil : "\(complete)/\(total)",
+                          done: total > 0 && complete == total)
+            .tag(PanelSelection.phase(phase.id))
+            .contextMenu {
+                if let group {
+                    Button("Reiniciar fase…", systemImage: "arrow.counterclockwise") { phaseToReset = group }
+                }
+                Button("Crear panel a partir de esta fase", systemImage: "square.on.square") {
+                    editing = EditorTarget(panel: model.customPanel(fromPhase: phase.id))
+                }
+            }
+    }
+
+    private func procedureRows(_ procedures: [Procedure]) -> some View {
+        ForEach(procedures) { procedure in
+            ProcedureRow(procedure: procedure)
+                .tag(PanelSelection.procedure(procedure.id))
+                .contextMenu {
+                    Button("Abrir en la columna", systemImage: "sidebar.right") {
+                        model.open(procedure: procedure.id)
+                    }
+                    Button("Reiniciar", systemImage: "arrow.counterclockwise") {
+                        model.resetTicks(of: procedure)
+                    }
+                }
+        }
+    }
+
+    // MARK: Cabina
+
+    @ViewBuilder
+    private var cockpitTab: some View {
+        Section {
+            myPanels
+        } header: {
+            SectionHeader(title: "Mis paneles", detail: model.customPanels.isEmpty ? nil : "\(model.customPanels.count)")
+        }
+        Section {
+            ForEach(groups) { group in
+                let sections = model.sections(of: group.id)
+                if sections.count > 1 {
+                    DisclosureGroup(isExpanded: disclosureExpanded("zones:\(group.id)")) {
+                        ForEach(sections) { panel in
+                            Text(model.displayTitle(of: panel))
+                                .font(.callout)
+                                .lineLimit(1)
+                                .tag(PanelSelection.subpanel(panel.id))
+                        }
+                    } label: {
+                        SidebarRow(title: group.title, icon: group.icon ?? "square.grid.2x2", detail: "\(sections.count)")
+                            .tag(PanelSelection.group(group.id))
+                    }
+                } else {
+                    SidebarRow(title: group.title, icon: group.icon ?? "square.grid.2x2")
+                        .tag(PanelSelection.group(group.id))
+                }
+            }
+            .onMove { source, destination in
+                var ids = groups.map(\.id)
+                ids.move(fromOffsets: source, toOffset: destination)
+                groupOrderRaw = StoredIDs.encode(ids)
+            }
+            SidebarRow(title: "Todos los paneles", icon: "rectangle.3.group")
+                .tag(PanelSelection.all)
+        } header: {
+            SectionHeader(title: "Zonas de cabina", detail: nil)
+        } footer: {
+            Text("Toca una zona para verla entera; despliégala para ir a una sección.")
         }
     }
 
@@ -274,97 +334,41 @@ struct SidebarView: View {
         }
     }
 
-    @ViewBuilder
-    private var procedures: some View {
-        if model.procedures.isEmpty {
-            Text("Sin procedimientos en mapping/procedures.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-        }
-        ForEach(ProcedureStyle.groups(model.procedures, phases: model.layout.phases)) { group in
-            DisclosureGroup(isExpanded: disclosureExpanded("procedures:\(group.id)")) {
-                ForEach(group.procedures) { procedure in
-                    ProcedureRow(procedure: procedure)
-                        .tag(PanelSelection.procedure(procedure.id))
-                        .contextMenu {
-                            Button("Abrir en la columna", systemImage: "sidebar.right") {
-                                model.open(procedure: procedure.id)
-                            }
-                            Button("Reiniciar", systemImage: "arrow.counterclockwise") {
-                                model.resetTicks(of: procedure)
-                            }
-                        }
-                }
-            } label: {
-                let complete = group.procedures.filter { model.isComplete($0) }.count
-                SidebarRow(title: group.title, icon: group.icon,
-                           detail: complete == group.procedures.count ? nil : "\(complete)/\(group.procedures.count)",
-                           done: complete == group.procedures.count)
-                    .contextMenu {
-                        Button("Reiniciar fase…", systemImage: "arrow.counterclockwise") { phaseToReset = group }
-                    }
-            }
-        }
-    }
+    // MARK: Práctica
 
     @ViewBuilder
-    private var phaseRows: some View {
-        ForEach(phases) { phase in
-            SidebarRow(title: phase.title, icon: phase.icon ?? "airplane", detail: "\(phase.subpanels.count)")
-                .tag(PanelSelection.phase(phase.id))
-                .contextMenu {
-                    Button("Crear panel a partir de esta fase", systemImage: "square.on.square") {
-                        editing = EditorTarget(panel: model.customPanel(fromPhase: phase.id))
+    private var practiceTab: some View {
+        @Bindable var model = model
+        Section {
+            Toggle(isOn: $model.learnMode) {
+                Label {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Modo aprender")
+                        Text("Toca un mando para ver qué hace")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
-                }
-        }
-        .onMove { source, destination in
-            var ids = phases.map(\.id)
-            ids.move(fromOffsets: source, toOffset: destination)
-            phaseOrderRaw = StoredIDs.encode(ids)
-        }
-    }
-
-    @ViewBuilder
-    private var cockpit: some View {
-        ForEach(groups) { group in
-            SidebarRow(title: group.title, icon: group.icon ?? "square.grid.2x2")
-                .tag(PanelSelection.group(group.id))
-        }
-        .onMove { source, destination in
-            var ids = groups.map(\.id)
-            ids.move(fromOffsets: source, toOffset: destination)
-            groupOrderRaw = StoredIDs.encode(ids)
-        }
-        SidebarRow(title: "Todos los paneles", icon: "rectangle.3.group")
-            .tag(PanelSelection.all)
-    }
-
-    @ViewBuilder
-    private var sectionGroups: some View {
-        ForEach(groups) { group in
-            let sections = model.sections(of: group.id)
-            if !sections.isEmpty {
-                DisclosureGroup(isExpanded: disclosureExpanded("sections:\(group.id)")) {
-                    ForEach(sections) { panel in
-                        Text(model.displayTitle(of: panel))
-                            .font(.callout)
-                            .lineLimit(1)
-                            .tag(PanelSelection.subpanel(panel.id))
-                    }
-                } label: {
-                    SidebarRow(title: group.title, icon: group.icon ?? "square.grid.2x2", detail: "\(sections.count)")
+                } icon: {
+                    Image(systemName: "graduationcap")
                 }
             }
+        } header: {
+            SectionHeader(title: "Aprender", detail: nil)
+        }
+        Section {
+            ExerciseList()
+        } header: {
+            let passed = model.exercises.filter { (model.bestResult(of: $0.id)?.stars ?? 0) > 0 }.count
+            SectionHeader(title: "Ejercicios", detail: model.exercises.isEmpty ? nil : "\(passed)/\(model.exercises.count) ★")
+        }
+        Section {
+            TurnaroundList()
+        } header: {
+            SectionHeader(title: "Turnaround", detail: model.flightLog.isEmpty ? nil : "\(model.flightLog.count) vuelos")
         }
     }
 
     // MARK: Expansion
-
-    private func sectionExpanded(_ section: SidebarSection) -> Binding<Bool> {
-        Binding(get: { !StoredIDs.decode(collapsedRaw).contains(section.rawValue) },
-                set: { open in collapsedRaw = StoredIDs.toggled(collapsedRaw, section.rawValue, on: !open) })
-    }
 
     private func disclosureExpanded(_ key: String) -> Binding<Bool> {
         Binding(get: { StoredIDs.decode(expandedRaw).contains(key) },
@@ -527,7 +531,8 @@ private struct SearchResults: View {
         let phases = model.layout.phases.filter { matches($0.title) }
         let groups = model.layout.groups.filter { matches($0.title) }
         let sections = model.subpanels.filter { matches(model.displayTitle(of: $0)) }
-        if procedures.isEmpty && custom.isEmpty && phases.isEmpty && groups.isEmpty && sections.isEmpty {
+        let exercises = model.exercises.filter { matches($0.title) || matches($0.summary ?? "") }
+        if procedures.isEmpty && custom.isEmpty && phases.isEmpty && groups.isEmpty && sections.isEmpty && exercises.isEmpty {
             Section {
                 Text("Sin resultados para «\(query)»")
                     .foregroundStyle(.secondary)
@@ -545,6 +550,18 @@ private struct SearchResults: View {
                 ForEach(groups) { SidebarRow(title: $0.title, icon: $0.icon ?? "square.grid.2x2").tag(PanelSelection.group($0.id)) }
             }
         }
+        if !exercises.isEmpty {
+            Section("Ejercicios") {
+                ForEach(exercises) { exercise in
+                    Button {
+                        model.exerciseBriefingID = exercise.id
+                    } label: {
+                        SidebarRow(title: exercise.title, icon: "stopwatch", detail: exercise.level)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
         if !sections.isEmpty {
             Section("Secciones") {
                 ForEach(sections) { panel in
@@ -555,67 +572,6 @@ private struct SearchResults: View {
                             .foregroundStyle(.secondary)
                     }
                     .tag(PanelSelection.subpanel(panel.id))
-                }
-            }
-        }
-    }
-}
-
-// MARK: Organizer
-
-/// Reorder and show or hide the sidebar sections.
-private struct SidebarOrganizer: View {
-    @Environment(\.dismiss) private var dismiss
-    @AppStorage("sidebar.order") private var orderRaw = ""
-    @AppStorage("sidebar.hidden") private var hiddenRaw = ""
-    @AppStorage("sidebar.phaseOrder") private var phaseOrderRaw = ""
-    @AppStorage("sidebar.groupOrder") private var groupOrderRaw = ""
-
-    private var sections: [SidebarSection] {
-        StoredIDs.ordered(SidebarSection.allCases, by: orderRaw, id: \.rawValue)
-    }
-
-    private func visible(_ section: SidebarSection) -> Binding<Bool> {
-        Binding(get: { !StoredIDs.decode(hiddenRaw).contains(section.rawValue) },
-                set: { show in hiddenRaw = StoredIDs.toggled(hiddenRaw, section.rawValue, on: !show) })
-    }
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    ForEach(sections) { section in
-                        Toggle(isOn: visible(section)) {
-                            Label(section.title, systemImage: section.icon)
-                        }
-                    }
-                    .onMove { source, destination in
-                        var ids = sections.map(\.rawValue)
-                        ids.move(fromOffsets: source, toOffset: destination)
-                        orderRaw = StoredIDs.encode(ids)
-                    }
-                } header: {
-                    Text("Secciones")
-                } footer: {
-                    Text("Arrastra para cambiar el orden. Las secciones ocultas siguen disponibles en la búsqueda.")
-                }
-                Section {
-                    Button("Restablecer orden y visibilidad") {
-                        orderRaw = ""
-                        hiddenRaw = ""
-                        phaseOrderRaw = ""
-                        groupOrderRaw = ""
-                    }
-                } footer: {
-                    Text("El orden de fases y zonas de cabina se cambia con «Ordenar elementos» en la barra lateral.")
-                }
-            }
-            .environment(\.editMode, .constant(.active))
-            .navigationTitle("Barra lateral")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("OK") { dismiss() }
                 }
             }
         }

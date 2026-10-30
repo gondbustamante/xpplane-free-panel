@@ -92,8 +92,6 @@ struct TurnaroundList: View {
                 }
             }
         }
-        Label("Servicios de tierra", systemImage: "figure.walk.departure")
-            .tag(PanelSelection.group("ground"))
     }
 }
 
