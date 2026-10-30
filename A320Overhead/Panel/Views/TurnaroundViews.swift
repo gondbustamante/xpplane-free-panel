@@ -723,13 +723,13 @@ struct FlightLogSheet: View {
                                     }
                                     Text("\(entry.passengers) pax")
                                 }
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                                 if let code = DelayCode.named(entry.delayCode) {
                                     Text("Retraso \(code.code): \(code.text)\(entry.delayNote.map { " · \($0)" } ?? "")")
                                         .font(.caption)
                                         .foregroundStyle(PanelTheme.checklistAmber)
                                 }
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
                             }
                         }
                         .onDelete { model.deleteLogEntries(at: $0) }
