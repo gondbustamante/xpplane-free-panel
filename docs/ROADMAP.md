@@ -173,7 +173,12 @@ Componentes nuevos pendientes: pulsador con tirador de fuego, voltímetros de ba
 - [x] T3 · Embarque y repostaje progresivos que escriben NoPax y WriteFOB; el embarque espera con la puerta 1L cerrada; hoja de carga estimada (ZFW, TOW, límites)
 - [x] T4 · OUT, OFF, ON e IN automáticos (freno de aparcamiento y contacto con el suelo) o a mano, y diario de vuelos con bloque, vuelo y puntualidad
 - [ ] Confirmar en ToLiss: semántica de Chocks, GroundHPAir/LPAir, modos de puerta, NoPax y WriteFOB (¿escribe el FOB o lo pide al camión?)
-- [ ] Plantilla de llegada (desembarque, limpieza, escala corta de 25-30 min) y escala completa llegada + salida
+- [x] Escala corta de 35 min (desembarque, limpieza y seguridad, MCDU del siguiente sector) junto a la salida de 60 min
+- [x] Hitos manuales (inspección exterior, autorización ATC) y por mandos (toboganes desarmados y armados)
+- [x] Repostaje con pasaje a bordo: aviso con las precauciones de EASA CAT.OP.MPA.195 leídas de SEAT BELTS y NO SMOKING
+- [x] Slot ATFM: CTOT con ventana −5/+10, fuera calzos ideal y límite según el rodaje, aviso de slot perdido
+- [x] Códigos de retraso IATA (AHM 730, los habituales en corto radio) y puntualidad A15 en el diario
+- [ ] A-CDM (TOBT/TSAT) en los aeropuertos que lo usan
 - [ ] Ejercicio cronometrado de turnaround completo
 
 ## Fase 3 · Pulido y distribución (continuo)

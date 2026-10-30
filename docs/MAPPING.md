@@ -264,9 +264,10 @@ Plantillas del tiempo en tierra antes de una salida. Cada hito vence unos minuto
     ] } ] }
 ```
 
-- `procedures`: hecho cuando todos están completos. `service`: `refuel` o `boarding`, hecho cuando el servicio termina. `event`: `out`, hecho al soltar el freno de aparcamiento.
+- `procedures`: hecho cuando todos están completos. `checks`: hecho cuando los mandos están en sus posiciones (como en los procedimientos; p. ej. `ground.slides` en `ARMED`). `service`: `deboarding`, `refuel` o `boarding`, hecho cuando el servicio termina. `event`: `out`, hecho al soltar el freno de aparcamiento. `manual: true`: nada lo detecta (inspección exterior, autorización ATC) y se marca a mano.
+- En la plantilla, `boardingMinutes` y `deboardingMinutes` sugieren las duraciones de ese tipo de escala; el planificador las propone al elegirla.
 - Un hito vence en EOBT + `minutes`; pasa a «ahora» cinco minutos antes y a retrasado dos minutos después.
-- El embarque escribe `AirbusFBW/NoPax` poco a poco y se detiene con la puerta 1L cerrada (`AirbusFBW/PaxDoorArray[0]`); el repostaje escribe `AirbusFBW/WriteFOB` hasta el combustible de bloque. Los dos están por confirmar en ToLiss.
+- El desembarque baja `AirbusFBW/NoPax` hasta cero y el embarque lo sube; los dos se detienen con la puerta 1L cerrada, y el embarque espera a que termine el desembarque (`AirbusFBW/PaxDoorArray[0]`); el repostaje escribe `AirbusFBW/WriteFOB` hasta el combustible de bloque. Los dos están por confirmar en ToLiss.
 
 Los servicios de tierra (GPU, calzos, aire, puertas, toboganes, pushback, deshielo) son un subpanel normal en `mapping/ground/services.json`, del grupo `ground`.
 

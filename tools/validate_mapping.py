@@ -454,11 +454,11 @@ def validate_exercises(root):
     return errors
 
 
-TURNAROUND_SERVICES = {"refuel", "boarding"}
+TURNAROUND_SERVICES = {"deboarding", "refuel", "boarding"}
 TURNAROUND_EVENTS = {"out"}
 
 
-def validate_turnarounds(root):
+def validate_turnarounds(root, controls):
     """Turnarounds: unique ids, existing procedures, known services and events."""
     errors, seen = [], set()
     procedures = set()
@@ -491,8 +491,17 @@ def validate_turnarounds(root):
                     errors.append(f"{where}: servicio '{milestone['service']}' desconocido")
                 if milestone.get("event") and milestone["event"] not in TURNAROUND_EVENTS:
                     errors.append(f"{where}: evento '{milestone['event']}' desconocido")
-                if not (milestone.get("procedures") or milestone.get("service") or milestone.get("event")):
-                    errors.append(f"{where}: necesita 'procedures', 'service' o 'event' para saber cuándo está hecho")
+                for check in milestone.get("checks", []):
+                    control = controls.get(check.get("control"))
+                    if control is None:
+                        errors.append(f"{where}: el mando '{check.get('control')}' no existe")
+                        continue
+                    for position in check.get("expect") or []:
+                        if position not in control.get("positions", []):
+                            errors.append(f"{where}: '{check['control']}' no tiene la posición '{position}'")
+                if not (milestone.get("procedures") or milestone.get("service") or milestone.get("event")
+                        or milestone.get("checks") or milestone.get("manual")):
+                    errors.append(f"{where}: necesita 'procedures', 'checks', 'service', 'event' o 'manual'")
     if seen:
         print(f"\nTurnarounds: {len(seen)} con {count} hitos.")
     return errors
@@ -565,7 +574,7 @@ def main():
         print(f"ERROR: {error}")
         failed = True
 
-    for error in validate_turnarounds(root):
+    for error in validate_turnarounds(root, controls):
         print(f"ERROR: {error}")
         failed = True
 

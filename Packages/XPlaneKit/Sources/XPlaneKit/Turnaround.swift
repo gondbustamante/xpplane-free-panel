@@ -2,9 +2,12 @@ import Foundation
 
 // Turnaround: the ground time before a departure, planned backwards from the off-blocks time
 // (EOBT), read from `mapping/turnaround/*.json`. Each milestone is due a number of minutes before
-// off-blocks and is done when its procedures are complete, its ground service has finished or
-// its event (OUT) has happened. Ground services (boarding, refuelling) run on a clock that can
-// pause, and the block times (OUT, OFF, ON, IN) are detected from the aircraft.
+// off-blocks and is done when its procedures are complete, its controls read the wanted
+// positions, its ground service has finished or its event (OUT) has happened; manual milestones
+// (walkaround, ATC clearance) are ticked by hand. Ground services (deboarding, refuelling,
+// boarding) run on a clock that can pause, and the block times (OUT, OFF, ON, IN) are detected
+// from the aircraft. A slot (CTOT) gives the take-off window, and late departures carry an IATA
+// delay code into the logbook, where punctuality is measured as A15.
 
 public struct TurnaroundBook: Codable, Sendable {
     public let id: String
@@ -17,9 +20,17 @@ public struct TurnaroundTemplate: Codable, Sendable, Identifiable, Hashable {
     public let title: String
     public let summary: String?
     public let milestones: [TurnaroundMilestone]
+    /// Suggested boarding and deboarding durations for this kind of turn, minutes.
+    public let boardingMinutes: Double?
+    public let deboardingMinutes: Double?
+
+    public func uses(_ service: TurnaroundService) -> Bool {
+        milestones.contains { $0.service == service }
+    }
 }
 
 public enum TurnaroundService: String, Codable, Sendable, CaseIterable {
+    case deboarding
     case refuel
     case boarding
 }
@@ -37,6 +48,12 @@ public struct TurnaroundMilestone: Codable, Sendable, Identifiable, Hashable {
     public let service: TurnaroundService?
     /// Done when this block event happens ("out").
     public let event: String?
+    /// Done when every control reads one of its expected positions (TOBOGANES ARMED).
+    public var checks: [ProcedureCheck]? = nil
+    /// Nothing can sense it (walkaround, ATC clearance): ticked by hand.
+    public var manual: Bool? = nil
+
+    public var isManual: Bool { manual ?? false }
 }
 
 /// What the user plans: the flight, the off-blocks time and the load.
@@ -52,6 +69,15 @@ public struct TurnaroundPlan: Codable, Sendable, Equatable {
     public var refuelKgPerMinute: Double
     /// Start ground services by themselves when they fall due.
     public var autoServices: Bool
+    /// Calculated take-off time of an ATFM slot, if the flight has one.
+    public var ctot: Date? = nil
+    /// Expected taxi-out time, minutes (for the slot).
+    public var taxiMinutes: Double? = nil
+    /// Passengers arriving on the inbound flight (short turns), for deboarding.
+    public var arrivingPassengers: Int? = nil
+    public var deboardingMinutes: Double? = nil
+
+    public var taxi: Double { taxiMinutes ?? 10 }
 
     public init(templateID: String, offBlocks: Date, flightNumber: String = "", origin: String = "",
                 destination: String = "", passengers: Int = 150, blockFuelKg: Double = 6000,
@@ -146,6 +172,82 @@ public enum TurnaroundSchedule {
             }
         }
         return worst
+    }
+}
+
+/// An ATFM slot: take-off between five minutes before and ten after the CTOT. Off-blocks
+/// should come a taxi time earlier.
+public struct SlotWindow: Sendable, Equatable {
+    public let ctot: Date
+    public let taxiMinutes: Double
+
+    public init(ctot: Date, taxiMinutes: Double) {
+        self.ctot = ctot
+        self.taxiMinutes = taxiMinutes
+    }
+
+    public var earliestTakeoff: Date { ctot.addingTimeInterval(-5 * 60) }
+    public var latestTakeoff: Date { ctot.addingTimeInterval(10 * 60) }
+    /// Off-blocks that lands the take-off on the CTOT.
+    public var targetOffBlocks: Date { ctot.addingTimeInterval(-taxiMinutes * 60) }
+    /// Last off-blocks that still makes the window.
+    public var latestOffBlocks: Date { latestTakeoff.addingTimeInterval(-taxiMinutes * 60) }
+
+    public enum Status: Sendable, Equatable {
+        /// On course: off-blocks (done or still to come) before the latest one.
+        case onTime
+        /// Less than five minutes left before the latest off-blocks.
+        case tight
+        /// The latest off-blocks has passed without OUT: a new slot is needed.
+        case missed
+    }
+
+    public func status(now: Date, outTime: Date?) -> Status {
+        if let outTime { return outTime <= latestOffBlocks ? .onTime : .missed }
+        if now > latestOffBlocks { return .missed }
+        return latestOffBlocks.timeIntervalSince(now) < 5 * 60 ? .tight : .onTime
+    }
+}
+
+/// IATA standard delay codes (AHM 730) most used on a short-haul turnaround.
+public struct DelayCode: Sendable, Hashable, Identifiable {
+    public let code: Int
+    public let group: String
+    public let text: String
+
+    public var id: Int { code }
+
+    public static let common: [DelayCode] = [
+        DelayCode(code: 11, group: "Pasaje y equipaje", text: "Facturación tardía, aceptación fuera de plazo"),
+        DelayCode(code: 12, group: "Pasaje y equipaje", text: "Facturación tardía por congestión"),
+        DelayCode(code: 15, group: "Pasaje y equipaje", text: "Embarque: discrepancias, pasajero que no aparece"),
+        DelayCode(code: 18, group: "Pasaje y equipaje", text: "Procesado y clasificación de equipaje"),
+        DelayCode(code: 31, group: "Handling", text: "Documentación del avión tarde o errónea, hoja de carga"),
+        DelayCode(code: 32, group: "Handling", text: "Carga y descarga: carga especial, falta de personal"),
+        DelayCode(code: 33, group: "Handling", text: "Equipos de carga: falta o avería"),
+        DelayCode(code: 34, group: "Handling", text: "Equipos de servicio: escaleras, falta o avería"),
+        DelayCode(code: 35, group: "Handling", text: "Limpieza del avión"),
+        DelayCode(code: 36, group: "Handling", text: "Repostaje o descarga de combustible"),
+        DelayCode(code: 37, group: "Handling", text: "Catering"),
+        DelayCode(code: 39, group: "Handling", text: "Equipos técnicos: GPU, aire de arranque, tractor"),
+        DelayCode(code: 41, group: "Técnico", text: "Averías del avión"),
+        DelayCode(code: 61, group: "Operaciones y tripulación", text: "Plan de vuelo tarde o cambiado"),
+        DelayCode(code: 62, group: "Operaciones y tripulación", text: "Requisitos operativos: combustible, cambio de carga"),
+        DelayCode(code: 63, group: "Operaciones y tripulación", text: "Tripulación tarde a bordo o procedimientos de salida"),
+        DelayCode(code: 64, group: "Operaciones y tripulación", text: "Falta de tripulación de vuelo"),
+        DelayCode(code: 71, group: "Meteorología", text: "Meteorología en el aeropuerto de salida"),
+        DelayCode(code: 75, group: "Meteorología", text: "Deshielo del avión"),
+        DelayCode(code: 81, group: "ATC y aeropuerto", text: "ATFM: demanda o capacidad en ruta"),
+        DelayCode(code: 82, group: "ATC y aeropuerto", text: "ATFM: personal o equipos ATC en ruta"),
+        DelayCode(code: 83, group: "ATC y aeropuerto", text: "ATFM: restricción en el aeropuerto de destino"),
+        DelayCode(code: 84, group: "ATC y aeropuerto", text: "ATFM: meteorología en destino"),
+        DelayCode(code: 87, group: "ATC y aeropuerto", text: "Instalaciones del aeropuerto: puestos, congestión en plataforma"),
+        DelayCode(code: 89, group: "ATC y aeropuerto", text: "Restricciones en salida: puesta en marcha, pushback"),
+        DelayCode(code: 93, group: "Reaccionario", text: "Rotación: llegada tarde del avión del vuelo anterior"),
+    ]
+
+    public static func named(_ code: Int?) -> DelayCode? {
+        code.flatMap { code in common.first { $0.code == code } }
     }
 }
 
@@ -255,6 +357,10 @@ public struct FlightLogEntry: Codable, Sendable, Identifiable, Equatable {
     public var offBlocksPlanned: Date
     public var times: BlockTimes
     public var passengers: Int
+    /// IATA delay code when the flight left late.
+    public var delayCode: Int? = nil
+    public var delayNote: String? = nil
+    public var ctot: Date? = nil
 
     public init(id: UUID = UUID(), flightNumber: String, origin: String, destination: String,
                 offBlocksPlanned: Date, times: BlockTimes, passengers: Int) {
@@ -270,6 +376,18 @@ public struct FlightLogEntry: Codable, Sendable, Identifiable, Equatable {
     /// Minutes between the planned and the actual off-blocks time.
     public var departureDelay: Int? {
         times.outTime.map { Int(($0.timeIntervalSince(offBlocksPlanned) / 60).rounded()) }
+    }
+
+    /// A15: left no more than 15 minutes after the planned off-blocks time.
+    public var isOnTimeA15: Bool? {
+        departureDelay.map { $0 <= 15 }
+    }
+
+    /// Share of flights with an OUT time that left within 15 minutes (0…1); nil without any.
+    public static func a15(_ entries: [FlightLogEntry]) -> Double? {
+        let judged = entries.compactMap(\.isOnTimeA15)
+        guard !judged.isEmpty else { return nil }
+        return Double(judged.filter { $0 }.count) / Double(judged.count)
     }
 }
 

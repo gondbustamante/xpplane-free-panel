@@ -36,6 +36,14 @@
           "why": "Se reposta antes o al principio del embarque. Con pasajeros a bordo se puede, pero con precauciones (salidas despejadas, SEAT BELTS apagado, aviso a cabina)."
         },
         {
+          "id": "walkaround",
+          "title": "Inspección exterior",
+          "minutes": -45,
+          "manual": true,
+          "note": "Vuelta al avión: tren, neumáticos, superficies, sondas sin fundas, fugas, compuertas cerradas.",
+          "why": "La hace un piloto antes de cada vuelo: es la última ocasión de ver daños (un golpe de un vehículo de handling, una fuga hidráulica) que en cabina no se ven."
+        },
+        {
           "id": "fmgs_prep",
           "title": "Preparación del MCDU",
           "minutes": -40,
@@ -63,6 +71,14 @@
           "why": "Confirma la preparación antes de que lleguen la hoja de carga y la autorización, cuando la carga de trabajo sube."
         },
         {
+          "id": "atc_clearance",
+          "title": "Autorización ATC (DCL/PDC)",
+          "minutes": -20,
+          "manual": true,
+          "note": "Autorización de salida por datos o por voz: SID, nivel inicial, código de transpondedor y, si lo hay, slot.",
+          "why": "Con la autorización se confirma la SID cargada en el MCDU y el código ATC antes de la hoja de carga; pedirla tarde retrasa el push."
+        },
+        {
           "id": "loadsheet",
           "title": "Hoja de carga · cierre del MCDU",
           "minutes": -12,
@@ -84,12 +100,160 @@
           "why": "Con las puertas cerradas el avión está listo para el push. Se arman los toboganes para una evacuación en tierra o en el despegue."
         },
         {
+          "id": "slides",
+          "title": "Cabina asegurada · toboganes armados",
+          "minutes": -3,
+          "checks": [
+            {
+              "control": "ground.slides",
+              "expect": [
+                "ARMED"
+              ]
+            }
+          ],
+          "note": "«Cabin crew, arm slides and cross-check»: puertas cerradas y toboganes armados.",
+          "why": "Con el avión listo para moverse, una evacuación necesita los toboganes. Se arman siempre con todas las puertas cerradas y antes de que el tractor empuje."
+        },
+        {
           "id": "out",
           "title": "Pushback · OUT",
           "minutes": 0,
           "event": "out",
           "note": "Se marca solo al soltar el freno de aparcamiento.",
           "why": "La hora OUT es la referencia de puntualidad de la aerolínea: un vuelo es puntual si sale antes de 15 minutos sobre su hora."
+        }
+      ],
+      "boardingMinutes": 20
+    },
+    {
+      "id": "quick_turn",
+      "title": "Escala corta (35 min)",
+      "summary": "Tránsito entre dos vuelos con el mismo avión: llegada, desembarque, limpieza, repostaje y embarque en unos 35 minutos, como en las aerolíneas de corto radio.",
+      "boardingMinutes": 15,
+      "deboardingMinutes": 8,
+      "milestones": [
+        {
+          "id": "parking",
+          "title": "En calzos · parking",
+          "minutes": -35,
+          "procedures": [
+            "parking_flow"
+          ],
+          "note": "Freno de aparcamiento, motores parados, BEACON OFF: el personal de tierra puede acercarse.",
+          "why": "Nadie se acerca al avión con la luz anticolisión encendida. Cada minuto que tarda el parking se resta de toda la escala."
+        },
+        {
+          "id": "disarm",
+          "title": "Toboganes desarmados",
+          "minutes": -34,
+          "checks": [
+            {
+              "control": "ground.slides",
+              "expect": [
+                "DISARMED"
+              ]
+            }
+          ],
+          "note": "«Cabin crew, disarm slides and cross-check» antes de abrir puertas.",
+          "why": "Abrir una puerta con el tobogán armado lo despliega: inutiliza la puerta, retrasa horas el avión y puede herir a alguien."
+        },
+        {
+          "id": "deboarding",
+          "title": "Desembarque",
+          "minutes": -33,
+          "service": "deboarding",
+          "note": "Con la puerta 1L abierta y la pasarela o escalera puestas.",
+          "why": "El desembarque marca el ritmo de la escala: limpieza, catering y embarque esperan a que salga el último pasajero."
+        },
+        {
+          "id": "refuel",
+          "title": "Repostaje",
+          "minutes": -30,
+          "service": "refuel",
+          "note": "Si coincide con el pasaje a bordo: SEAT BELTS OFF, NO SMOKING ON y salidas despejadas.",
+          "why": "En escalas cortas suele repostarse con pasaje embarcando para ganar tiempo; la normativa lo permite solo con esas precauciones."
+        },
+        {
+          "id": "cleaning",
+          "title": "Limpieza y control de seguridad",
+          "minutes": -25,
+          "manual": true,
+          "note": "La tripulación de cabina comprueba que no queda nada a bordo antes del embarque.",
+          "why": "El control de seguridad de la cabina es obligatorio entre vuelos; la limpieza rápida dura unos 8-10 minutos."
+        },
+        {
+          "id": "walkaround",
+          "title": "Inspección exterior",
+          "minutes": -25,
+          "manual": true,
+          "note": "Vuelta al avión mientras la cabina se limpia.",
+          "why": "Se hace en cada escala: el avión acaba de volar y puede haber un impacto de ave, un neumático dañado o una fuga."
+        },
+        {
+          "id": "fmgs",
+          "title": "MCDU del siguiente sector",
+          "minutes": -24,
+          "procedures": [
+            "fmgs_prep"
+          ],
+          "note": "Nueva ruta, nuevo destino, INIT B y PERF con los datos previstos.",
+          "why": "En tránsito no se repite la preparación completa de cabina, pero el MCDU sí: es otro vuelo con otra ruta y otros pesos."
+        },
+        {
+          "id": "boarding",
+          "title": "Embarque",
+          "minutes": -22,
+          "service": "boarding",
+          "note": "Con la limpieza terminada.",
+          "why": "Un A320 lleno embarca en 15-20 minutos en tránsito; si empieza tarde, la salida se retrasa casi minuto a minuto."
+        },
+        {
+          "id": "atc_clearance",
+          "title": "Autorización ATC (DCL/PDC)",
+          "minutes": -15,
+          "manual": true,
+          "note": "SID, nivel inicial, transpondedor y slot.",
+          "why": "Confirma que la salida cargada en el MCDU es la autorizada antes de cerrar los datos de despegue."
+        },
+        {
+          "id": "loadsheet",
+          "title": "Hoja de carga · cierre del MCDU",
+          "minutes": -8,
+          "procedures": [
+            "fmgs_final"
+          ],
+          "why": "Con el embarque terminado llegan los pesos reales: se confirman velocidades y FLEX antes de cerrar puertas."
+        },
+        {
+          "id": "before_start",
+          "title": "Puertas cerradas · antes del arranque",
+          "minutes": -5,
+          "procedures": [
+            "before_start_flow",
+            "before_start_cl"
+          ],
+          "why": "Puertas cerradas, BEACON ON y checklist BEFORE START: el avión queda listo para pedir push."
+        },
+        {
+          "id": "slides",
+          "title": "Toboganes armados",
+          "minutes": -3,
+          "checks": [
+            {
+              "control": "ground.slides",
+              "expect": [
+                "ARMED"
+              ]
+            }
+          ],
+          "why": "Antes de que el avión se mueva, las puertas deben poder usarse en una evacuación."
+        },
+        {
+          "id": "out",
+          "title": "Pushback · OUT",
+          "minutes": 0,
+          "event": "out",
+          "why": "La puntualidad se mide aquí: A15 significa salir antes de 15 minutos sobre la hora prevista."
         }
       ]
     }

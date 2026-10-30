@@ -85,6 +85,58 @@ final class TurnaroundTests: XCTestCase {
         XCTAssertEqual(detector.times.outTime, at(1), "OUT is not moved by a later release")
     }
 
+    func testDecodesChecksManualAndDefaults() throws {
+        let json = """
+        { "id": "ground", "title": "Tierra", "turnarounds": [
+          { "id": "quick", "title": "Escala corta", "boardingMinutes": 15, "deboardingMinutes": 8, "milestones": [
+            { "id": "deboard", "title": "Desembarque", "minutes": -33, "service": "deboarding" },
+            { "id": "walk", "title": "Inspección exterior", "minutes": -25, "manual": true },
+            { "id": "slides", "title": "Toboganes armados", "minutes": -3,
+              "checks": [ { "control": "ground.slides", "expect": ["ARMED"] } ] }
+          ] } ] }
+        """
+        let template = try XCTUnwrap(JSONDecoder().decode(TurnaroundBook.self, from: Data(json.utf8)).turnarounds.first)
+        XCTAssertEqual(template.boardingMinutes, 15)
+        XCTAssertTrue(template.uses(.deboarding))
+        XCTAssertFalse(template.uses(.refuel))
+        XCTAssertTrue(template.milestones[1].isManual)
+        XCTAssertFalse(template.milestones[0].isManual)
+        XCTAssertEqual(template.milestones[2].checks?.first?.expect, ["ARMED"])
+    }
+
+    func testOldPlanStillDecodes() throws {
+        // A plan saved before slots and short turns existed.
+        let plan = TurnaroundPlan(templateID: "departure", offBlocks: offBlocks)
+        var json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(plan)) as! [String: Any]
+        json.removeValue(forKey: "taxiMinutes")
+        let decoded = try JSONDecoder().decode(TurnaroundPlan.self, from: JSONSerialization.data(withJSONObject: json))
+        XCTAssertNil(decoded.ctot)
+        XCTAssertEqual(decoded.taxi, 10)
+    }
+
+    func testSlotWindow() {
+        let slot = SlotWindow(ctot: at(20), taxiMinutes: 12)
+        XCTAssertEqual(slot.targetOffBlocks, at(8))
+        XCTAssertEqual(slot.latestOffBlocks, at(18))
+        XCTAssertEqual(slot.status(now: at(0), outTime: nil), .onTime)
+        XCTAssertEqual(slot.status(now: at(15), outTime: nil), .tight)
+        XCTAssertEqual(slot.status(now: at(19), outTime: nil), .missed)
+        XCTAssertEqual(slot.status(now: at(30), outTime: at(17)), .onTime)
+    }
+
+    func testPunctualityA15AndDelayCodes() {
+        func entry(_ delay: Double?) -> FlightLogEntry {
+            FlightLogEntry(flightNumber: "", origin: "", destination: "", offBlocksPlanned: offBlocks,
+                           times: BlockTimes(outTime: delay.map { at($0) }), passengers: 0)
+        }
+        let log = [entry(3), entry(16), entry(15), entry(nil)]
+        XCTAssertEqual(FlightLogEntry.a15(log)!, 2.0 / 3.0, accuracy: 0.0001)
+        XCTAssertNil(FlightLogEntry.a15([entry(nil)]))
+        XCTAssertEqual(DelayCode.named(93)?.group, "Reaccionario")
+        XCTAssertNil(DelayCode.named(nil))
+        XCTAssertEqual(Set(DelayCode.common.map(\.code)).count, DelayCode.common.count)
+    }
+
     func testUnknownReadingsDoNotStamp() {
         var detector = BlockTimeDetector()
         detector.update(at: at(0), parkBrake: nil, onGround: nil)

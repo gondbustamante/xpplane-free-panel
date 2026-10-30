@@ -72,9 +72,65 @@ struct TurnaroundRun: Codable, Equatable {
     var completed: [String: Date] = [:]
     var refuel = ServiceClock()
     var boarding = ServiceClock()
+    /// Optional so runs saved before short turns existed still load.
+    var deboarding: ServiceClock?
     /// Fuel on board when refuelling started, kg.
     var refuelStartKg: Double?
     var blockTimes = BlockTimes()
+    /// IATA delay code and note when the flight leaves late.
+    var delayCode: Int?
+    var delayNote: String?
+
+    func clock(_ service: TurnaroundService) -> ServiceClock {
+        switch service {
+        case .deboarding: return deboarding ?? ServiceClock()
+        case .refuel: return refuel
+        case .boarding: return boarding
+        }
+    }
+
+    mutating func setClock(_ service: TurnaroundService, _ clock: ServiceClock) {
+        switch service {
+        case .deboarding: deboarding = clock
+        case .refuel: refuel = clock
+        case .boarding: boarding = clock
+        }
+    }
+
+    /// Seconds a service lasts: (de)boarding as planned, refuelling from the fuel on board at
+    /// its start to the block fuel.
+    func duration(_ service: TurnaroundService, fuelOnBoard: Double?) -> Double {
+        switch service {
+        case .deboarding:
+            return (plan.deboardingMinutes ?? 8) * 60
+        case .boarding:
+            return plan.boardingMinutes * 60
+        case .refuel:
+            let start = refuelStartKg ?? fuelOnBoard ?? 0
+            return max(0, plan.blockFuelKg - start) / max(plan.refuelKgPerMinute, 1) * 60
+        }
+    }
+
+    func progress(_ service: TurnaroundService, at now: Date, fuelOnBoard: Double?) -> Double {
+        clock(service).progress(at: now, duration: duration(service, fuelOnBoard: fuelOnBoard))
+    }
+
+    /// Started and not finished.
+    func isRunning(_ service: TurnaroundService, at now: Date, fuelOnBoard: Double?) -> Bool {
+        clock(service).started && progress(service, at: now, fuelOnBoard: fuelOnBoard) < 1
+    }
+
+    /// Passengers aboard: arriving ones leave while deboarding, then the new ones board.
+    func passengersOnBoard(at now: Date, fuelOnBoard: Double?) -> Int {
+        if boarding.started {
+            return Int((progress(.boarding, at: now, fuelOnBoard: fuelOnBoard) * Double(plan.passengers)).rounded(.down))
+        }
+        if let deboarding, deboarding.started {
+            let arriving = Double(plan.arrivingPassengers ?? plan.passengers)
+            return Int((arriving * (1 - progress(.deboarding, at: now, fuelOnBoard: fuelOnBoard))).rounded(.up))
+        }
+        return 0
+    }
 }
 
 enum PanelSelection: Hashable {
@@ -1135,9 +1191,13 @@ final class PanelModel {
     /// Ends the turnaround, keeping the flight in the logbook when asked.
     func finishTurnaround(saveToLog: Bool) {
         if saveToLog, let run = turnaround {
-            flightLog.insert(FlightLogEntry(flightNumber: run.plan.flightNumber, origin: run.plan.origin,
-                                            destination: run.plan.destination, offBlocksPlanned: run.plan.offBlocks,
-                                            times: run.blockTimes, passengers: run.plan.passengers), at: 0)
+            var entry = FlightLogEntry(flightNumber: run.plan.flightNumber, origin: run.plan.origin,
+                                       destination: run.plan.destination, offBlocksPlanned: run.plan.offBlocks,
+                                       times: run.blockTimes, passengers: run.plan.passengers)
+            entry.delayCode = run.delayCode
+            entry.delayNote = run.delayNote
+            entry.ctot = run.plan.ctot
+            flightLog.insert(entry, at: 0)
         }
         turnaround = nil
         turnaroundTask?.cancel()
@@ -1177,44 +1237,29 @@ final class PanelModel {
 
     func startService(_ service: TurnaroundService) {
         guard var run = turnaround else { return }
-        switch service {
-        case .refuel:
-            run.refuelStartKg = run.refuelStartKg ?? fuelOnBoard ?? 0
-            run.refuel.start(at: Date())
-        case .boarding:
-            run.boarding.start(at: Date())
-        }
+        if service == .refuel { run.refuelStartKg = run.refuelStartKg ?? fuelOnBoard ?? 0 }
+        var clock = run.clock(service)
+        clock.start(at: Date())
+        run.setClock(service, clock)
         turnaround = run
         tickTurnaround()
     }
 
     func serviceClock(_ service: TurnaroundService) -> ServiceClock? {
-        switch service {
-        case .refuel: return turnaround?.refuel
-        case .boarding: return turnaround?.boarding
-        }
+        turnaround?.clock(service)
     }
 
-    /// Seconds a service lasts: boarding as planned, refuelling from the fuel on board at start.
     func serviceDuration(_ service: TurnaroundService) -> Double {
-        guard let run = turnaround else { return 0 }
-        switch service {
-        case .boarding:
-            return run.plan.boardingMinutes * 60
-        case .refuel:
-            let start = run.refuelStartKg ?? fuelOnBoard ?? 0
-            return max(0, run.plan.blockFuelKg - start) / max(run.plan.refuelKgPerMinute, 1) * 60
-        }
+        turnaround?.duration(service, fuelOnBoard: fuelOnBoard) ?? 0
     }
 
     func serviceProgress(_ service: TurnaroundService, at now: Date = Date()) -> Double {
-        serviceClock(service)?.progress(at: now, duration: serviceDuration(service)) ?? 0
+        turnaround?.progress(service, at: now, fuelOnBoard: fuelOnBoard) ?? 0
     }
 
-    /// Passengers on board while boarding.
+    /// Passengers on board: leaving while deboarding, arriving while boarding.
     func boardedPassengers(at now: Date = Date()) -> Int {
-        guard let run = turnaround else { return 0 }
-        return Int((serviceProgress(.boarding, at: now) * Double(run.plan.passengers)).rounded(.down))
+        turnaround?.passengersOnBoard(at: now, fuelOnBoard: fuelOnBoard) ?? 0
     }
 
     /// Fuel being loaded while refuelling, kg.
@@ -1222,6 +1267,51 @@ final class PanelModel {
         guard let run = turnaround else { return 0 }
         let start = run.refuelStartKg ?? fuelOnBoard ?? 0
         return start + (run.plan.blockFuelKg - start) * serviceProgress(.refuel, at: now)
+    }
+
+    /// Refuelling while passengers board, disembark or sit aboard (EASA CAT.OP.MPA.195): the
+    /// precautions the signs show, as short warnings. Empty when nothing is wrong or no
+    /// refuelling with passengers is going on.
+    func refuelWithPassengersIssues(at now: Date = Date()) -> [String] {
+        guard let run = turnaround, run.isRunning(.refuel, at: now, fuelOnBoard: fuelOnBoard),
+              run.passengersOnBoard(at: now, fuelOnBoard: fuelOnBoard) > 0
+                || run.isRunning(.boarding, at: now, fuelOnBoard: fuelOnBoard)
+                || run.isRunning(.deboarding, at: now, fuelOnBoard: fuelOnBoard) else { return [] }
+        var issues: [String] = []
+        if let belts = positionName(ofControl: "signs.seat_belts"), belts != "OFF" {
+            issues.append("SEAT BELTS debe estar OFF para poder evacuar")
+        }
+        if let smoking = positionName(ofControl: "signs.no_smoking"), smoking == "OFF" {
+            issues.append("NO SMOKING debe estar ON (o AUTO)")
+        }
+        return issues
+    }
+
+    /// Refuelling with passengers boarding, disembarking or aboard, precautions met or not.
+    func isRefuellingWithPassengers(at now: Date = Date()) -> Bool {
+        guard let run = turnaround, run.isRunning(.refuel, at: now, fuelOnBoard: fuelOnBoard) else { return false }
+        return run.passengersOnBoard(at: now, fuelOnBoard: fuelOnBoard) > 0
+            || run.isRunning(.boarding, at: now, fuelOnBoard: fuelOnBoard)
+            || run.isRunning(.deboarding, at: now, fuelOnBoard: fuelOnBoard)
+    }
+
+    var slotWindow: SlotWindow? {
+        guard let plan = turnaround?.plan, let ctot = plan.ctot else { return nil }
+        return SlotWindow(ctot: ctot, taxiMinutes: plan.taxi)
+    }
+
+    /// Minutes after the planned off-blocks: the actual OUT, or now while still on stand.
+    func departureDelay(at now: Date = Date()) -> Int {
+        guard let run = turnaround else { return 0 }
+        let reference = run.blockTimes.outTime ?? now
+        return max(0, Int((reference.timeIntervalSince(run.plan.offBlocks) / 60).rounded(.down)))
+    }
+
+    func setDelay(code: Int?, note: String?) {
+        guard var run = turnaround else { return }
+        run.delayCode = code
+        run.delayNote = note?.isEmpty == true ? nil : note
+        turnaround = run
     }
 
     /// Fuel on board from the tanks, kg; nil while unknown.
@@ -1259,45 +1349,45 @@ final class PanelModel {
         }
     }
 
-    /// Every two seconds: starts services that fall due, holds boarding while door 1L is
+    /// Every two seconds: starts services that fall due, holds (de)boarding while door 1L is
     /// closed, writes passengers and fuel to the simulator, stamps block times and marks the
     /// milestones that are done.
     private func tickTurnaround(now: Date = Date()) {
         guard var run = turnaround, let template = turnaroundTemplate else { return }
+        let fuel = fuelOnBoard
         for milestone in template.milestones {
-            guard let service = milestone.service, run.plan.autoServices,
+            guard let service = milestone.service, run.plan.autoServices, !run.clock(service).started,
                   now >= TurnaroundSchedule.due(milestone, offBlocks: run.plan.offBlocks) else { continue }
-            switch service {
-            case .refuel where !run.refuel.started:
-                run.refuelStartKg = run.refuelStartKg ?? fuelOnBoard ?? 0
-                run.refuel.start(at: now)
-            case .boarding where !run.boarding.started:
-                run.boarding.start(at: now)
-            default:
-                break
-            }
+            // Boarding waits for the last arriving passenger to leave.
+            if service == .boarding, run.isRunning(.deboarding, at: now, fuelOnBoard: fuel) { continue }
+            if service == .refuel { run.refuelStartKg = run.refuelStartKg ?? fuel ?? 0 }
+            var clock = run.clock(service)
+            clock.start(at: now)
+            run.setClock(service, clock)
         }
-        // Boarding needs the door: it waits while door 1L is known to be closed.
-        if run.boarding.started, run.boarding.progress(at: now, duration: run.plan.boardingMinutes * 60) < 1,
-           let open = boardingDoorOpen {
-            if open { run.boarding.start(at: now) } else { run.boarding.pause(at: now) }
+        // Passengers need the door: (de)boarding waits while door 1L is known to be closed.
+        if let open = boardingDoorOpen {
+            for service in [TurnaroundService.deboarding, .boarding] where run.clock(service).started
+                && run.progress(service, at: now, fuelOnBoard: fuel) < 1 {
+                var clock = run.clock(service)
+                if open { clock.start(at: now) } else { clock.pause(at: now) }
+                run.setClock(service, clock)
+            }
         }
 
         if status == .connected, let client {
-            let boardingDuration = run.plan.boardingMinutes * 60
-            if run.boarding.started {
-                let passengers = Int((run.boarding.progress(at: now, duration: boardingDuration) * Double(run.plan.passengers)).rounded(.down))
+            if run.boarding.started || run.deboarding?.started == true {
+                let passengers = run.passengersOnBoard(at: now, fuelOnBoard: fuel)
                 if passengers != writtenPassengers {
                     writtenPassengers = passengers
                     Task { try? await client.write(DatarefKey("AirbusFBW/NoPax"), XPValue(Double(passengers))) }
                 }
             }
             if run.refuel.started, let start = run.refuelStartKg {
-                let duration = max(0, run.plan.blockFuelKg - start) / max(run.plan.refuelKgPerMinute, 1) * 60
-                let fuel = start + (run.plan.blockFuelKg - start) * run.refuel.progress(at: now, duration: duration)
-                if abs(fuel - (writtenFuel ?? -100)) >= 10 || (fuel == run.plan.blockFuelKg && writtenFuel != fuel) {
-                    writtenFuel = fuel
-                    Task { try? await client.write(DatarefKey("AirbusFBW/WriteFOB"), XPValue(fuel.rounded())) }
+                let loaded = start + (run.plan.blockFuelKg - start) * run.progress(.refuel, at: now, fuelOnBoard: fuel)
+                if abs(loaded - (writtenFuel ?? -100)) >= 10 || (loaded == run.plan.blockFuelKg && writtenFuel != loaded) {
+                    writtenFuel = loaded
+                    Task { try? await client.write(DatarefKey("AirbusFBW/WriteFOB"), XPValue(loaded.rounded())) }
                 }
             }
         }
@@ -1310,24 +1400,19 @@ final class PanelModel {
             run.blockTimes = blockDetector.times
         }
 
-        for milestone in template.milestones where run.completed[milestone.id] == nil {
-            if let ids = milestone.procedures, !ids.isEmpty,
-               ids.allSatisfy({ id in procedure(id).map(isComplete) ?? false }) {
-                run.completed[milestone.id] = now
+        for milestone in template.milestones where run.completed[milestone.id] == nil && !milestone.isManual {
+            var done = false
+            if let ids = milestone.procedures, !ids.isEmpty {
+                done = ids.allSatisfy { id in procedure(id).map(isComplete) ?? false }
+            } else if let checks = milestone.checks, !checks.isEmpty {
+                done = checks.allSatisfy { check in positionName(ofControl: check.control).map { check.expect.contains($0) } ?? false }
             } else if let service = milestone.service {
-                let done: Bool
-                switch service {
-                case .refuel:
-                    let start = run.refuelStartKg ?? 0
-                    let duration = max(0, run.plan.blockFuelKg - start) / max(run.plan.refuelKgPerMinute, 1) * 60
-                    done = run.refuel.progress(at: now, duration: duration) >= 1
-                case .boarding:
-                    done = run.boarding.progress(at: now, duration: run.plan.boardingMinutes * 60) >= 1
-                }
-                if done { run.completed[milestone.id] = now }
+                done = run.clock(service).started && run.progress(service, at: now, fuelOnBoard: fuel) >= 1
             } else if milestone.event == "out", let out = run.blockTimes.outTime {
                 run.completed[milestone.id] = out
+                continue
             }
+            if done { run.completed[milestone.id] = now }
         }
         if run != turnaround { turnaround = run }
     }
