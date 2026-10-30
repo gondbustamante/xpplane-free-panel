@@ -1,8 +1,8 @@
 import SwiftUI
 import XPlaneKit
 
-/// The sidebar's three tabs, by what the user is doing: flying a phase with its procedures,
-/// picking a cockpit area, or practising (learn mode, exercises, turnaround).
+/// The sidebar's three tabs, by what the user is doing: flying (the turnaround and each phase
+/// with its procedures), picking a cockpit area, or practising (learn mode, exercises).
 enum SidebarTab: String, CaseIterable, Identifiable {
     case flight
     case cockpit
@@ -46,10 +46,10 @@ enum StoredIDs {
     }
 }
 
-/// Left column: status and the checklist in progress on top, then three tabs. Vuelo lists the
-/// flight phases, each opening its panels and unfolding its procedures; Cabina has the user's
-/// panels and the cockpit areas, each unfolding its sections; Práctica gathers learn mode,
-/// exercises and the turnaround. The search looks through all of them.
+/// Left column: status and the checklist in progress on top, then three tabs. Vuelo has the
+/// turnaround and the flight phases, each opening its panels and unfolding its procedures;
+/// Cabina has the user's panels and the cockpit areas, each unfolding its sections; Práctica
+/// gathers learn mode and the exercises. The search looks through all of them.
 struct SidebarView: View {
     @Environment(PanelModel.self) private var model
     /// Panel being edited; nil panel means "new".
@@ -196,6 +196,12 @@ struct SidebarView: View {
     @ViewBuilder
     private var flightTab: some View {
         let byPhase = proceduresByPhase
+        // The turnaround is part of flying, with X-Plane as much as in the demo.
+        Section {
+            TurnaroundList()
+        } header: {
+            SectionHeader(title: "Turnaround", detail: model.flightLog.isEmpty ? nil : "\(model.flightLog.count) vuelos")
+        }
         Section {
             ForEach(model.layout.phases) { phase in
                 if let group = byPhase[phase.id], !group.procedures.isEmpty {
@@ -360,11 +366,6 @@ struct SidebarView: View {
         } header: {
             let passed = model.exercises.filter { (model.bestResult(of: $0.id)?.stars ?? 0) > 0 }.count
             SectionHeader(title: "Ejercicios", detail: model.exercises.isEmpty ? nil : "\(passed)/\(model.exercises.count) ★")
-        }
-        Section {
-            TurnaroundList()
-        } header: {
-            SectionHeader(title: "Turnaround", detail: model.flightLog.isEmpty ? nil : "\(model.flightLog.count) vuelos")
         }
     }
 
