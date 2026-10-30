@@ -41,11 +41,11 @@ open A320Overhead.xcodeproj
 
 La firma sale de `Signing.xcconfig`, con el equipo del proyecto por defecto, así que `git pull` y `xcodegen generate` no la pierden. Para firmar con otro equipo, copia `Local.xcconfig.example` como `Local.xcconfig` y pon tu Team ID: ese archivo no se versiona. No elijas el equipo en *Signing & Capabilities*: ese cambio vive en el `.xcodeproj`, que se regenera. En Xcode elige tu iPad como destino y ejecuta. Los tests de la capa de red se ejecutan con `cd Packages/XPlaneKit && swift test`.
 
-**Sin simulador:** pulsa **Demo** en la barra superior (o activa *Modo demo* en el engranaje). La app simula el avión en el propio iPad a partir del mapeo: interruptores y pulsadores con sus leyendas, FCU, radios y MCDU responden como si hubiera X-Plane. Útil para probar la interfaz, enseñarla o desarrollar sin el PC. El avión arranca en Cold & Dark en cada conexión y simula las dependencias entre sistemas: sin baterías no hay luces, sin corriente alterna no hay FCU ni MCDU, el APU tarda en abrir su toma y en estar AVAIL, las IRS tardan en alinearse y los motores necesitan IGN/START y aire de sangrado. Una franja bajo la barra superior resume el estado, como el memo del ECAM, y permite elegir tiempos *Realista*, *Rápido* o *Instantáneo* (también en el engranaje).
+**Sin simulador:** pulsa **Probar demo** en la barra superior (o elige *Modo demo* en el menú de estado → *Ajustes…*). La app simula el avión en el propio iPad a partir del mapeo: interruptores y pulsadores con sus leyendas, FCU, radios y MCDU responden como si hubiera X-Plane. Útil para probar la interfaz, enseñarla o desarrollar sin el PC. El avión arranca en Cold & Dark en cada conexión y simula las dependencias entre sistemas: sin baterías no hay luces, sin corriente alterna no hay FCU ni MCDU, el APU tarda en abrir su toma y en estar AVAIL, las IRS tardan en alinearse y los motores necesitan IGN/START y aire de sangrado. Una franja bajo la barra superior resume el estado, como el memo del ECAM, y permite elegir tiempos *Realista*, *Rápido* o *Instantáneo* (también en *Ajustes*).
 
 **3. En el iPad**
 
-Pulsa el engranaje, introduce la IP del PC y el puerto 8087, y *Guardar y conectar*. Con el ToLiss cargado, los interruptores reflejan el estado del avión.
+Toca el indicador de estado de la barra superior → *Ajustes…*, introduce la IP del PC y el puerto 8087, y pulsa *Conectar*. El mismo menú sirve para desconectar, reconectar o cambiar entre X-Plane y el modo demo. Con el ToLiss cargado, los interruptores reflejan el estado del avión.
 
 Un dedo acciona interruptores y pulsadores; dos dedos desplazan y pellizcan para hacer zoom. Un toque con dos dedos acerca la zona tocada a tamaño táctil y otro vuelve a la vista ajustada, igual que el botón de ajuste. La barra lateral tiene arriba el estado del simulador y el checklist en curso, y debajo tres pestañas: **Vuelo** (las fases; tocar una muestra sus paneles y desplegarla, sus procedimientos), **Cabina** (tus paneles y las zonas de cabina, cada una desplegable a sus secciones) y **Práctica** (modo aprender, ejercicios y turnaround). La búsqueda recorre las tres. En el FCU cada ventana muestra el valor real del avión (con el punto de modo gestionado y las rayas cuando toca); la rueda se gira arrastrando o con − / +, PUSH y PULL hacen lo mismo que empujar o tirar de la rueda, y tocar la ventana permite teclear un valor exacto.
 
@@ -65,7 +65,7 @@ Los procedimientos incluyen la **preparación del MCDU como la hacen los pilotos
 
 ## Verificar y ampliar el mapeo
 
-Los índices del array `AirbusFBW/OHPLightSwitches` proceden de scripts publicados por usuarios y hay que confirmarlos en tu versión de ToLiss. El flujo está en [docs/MAPPING.md](docs/MAPPING.md). Desde el iPad: icono del estetoscopio, haz clic en un interruptor de la cabina virtual y mira qué índice se ilumina. Desde la Terminal:
+Los índices del array `AirbusFBW/OHPLightSwitches` proceden de scripts publicados por usuarios y hay que confirmarlos en tu versión de ToLiss. El flujo está en [docs/MAPPING.md](docs/MAPPING.md). Desde el iPad: menú de estado → *Diagnóstico de datarefs…*, haz clic en un interruptor de la cabina virtual y mira qué índice se ilumina. Desde la Terminal:
 
 ```bash
 # Con el ToLiss cargado:
