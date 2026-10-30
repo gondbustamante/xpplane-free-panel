@@ -70,7 +70,7 @@ struct ExerciseBriefingSheet: View {
     @Environment(PanelModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @State private var mode: ExerciseMode = .guided
-    @State private var fromColdAndDark = false
+    @State private var prepare = true
     @State private var confirmDelete = false
 
     private var steps: [ExerciseStep] { model.exerciseSteps(exercise, mode: mode) }
@@ -144,12 +144,18 @@ struct ExerciseBriefingSheet: View {
                 }
                 Section {
                     if model.status == .connected {
-                        if model.canResetAircraft {
-                            Toggle("Empezar con el avión en Cold & Dark", isOn: $fromColdAndDark)
+                        if model.canPrepare(exercise) {
+                            Toggle(isOn: $prepare) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Preparar el avión antes de empezar")
+                                    Text(preparationText)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
                         }
                         Button {
-                            model.beginExercise(exercise.id, mode: examAvailable ? mode : .guided,
-                                                fromColdAndDark: fromColdAndDark)
+                            model.beginExercise(exercise.id, mode: examAvailable ? mode : .guided, prepare: prepare)
                             dismiss()
                         } label: {
                             Label("Empezar", systemImage: "play.fill")
@@ -181,12 +187,17 @@ struct ExerciseBriefingSheet: View {
             .confirmationDialog("¿Borrar los resultados de \(exercise.title)?", isPresented: $confirmDelete, titleVisibility: .visible) {
                 Button("Borrar", role: .destructive) { model.deleteResults(of: exercise.id) }
             }
-            .onAppear {
-                // Exercises that start cold and dark default to resetting the demo aircraft.
-                fromColdAndDark = exercise.start?.hasPrefix("Cold & Dark") ?? false
-            }
         }
         .preferredColorScheme(.dark)
+    }
+
+    /// What preparing does: cold and dark (demo) and the procedures applied.
+    private var preparationText: String {
+        var parts: [String] = []
+        if exercise.startsColdAndDark && model.canResetAircraft { parts.append("Cold & Dark") }
+        parts += (exercise.setup ?? []).compactMap { model.procedure($0)?.title }
+        let steps = parts.joined(separator: " → ")
+        return "\(steps). Así empiezas en la situación inicial del ejercicio y no arrastras pasos pendientes de antes."
     }
 }
 
@@ -197,6 +208,19 @@ struct ExerciseBar: View {
     @State private var confirmRestart = false
 
     var body: some View {
+        if let preparing = model.preparingExercise {
+            HStack(spacing: 10) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("Preparando el avión para «\(preparing.title)»: no toques los mandos.")
+                    .font(.footnote)
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(PanelTheme.checklistCyan)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 6)
+            .background(PanelTheme.checklistCyan.opacity(0.10))
+        }
         if let run = model.exerciseRun, run.isRunning {
             let tracker = run.tracker
             let target = Double(tracker.definition.targetSeconds)
@@ -265,8 +289,8 @@ struct ExerciseBar: View {
                 Text("No se guarda resultado.")
             }
             .confirmationDialog("¿Reiniciar el ejercicio?", isPresented: $confirmRestart, titleVisibility: .visible) {
-                if model.canResetAircraft {
-                    Button("Reiniciar con el avión en Cold & Dark") { model.repeatExercise(fromColdAndDark: true) }
+                if model.canPrepare(tracker.definition) {
+                    Button("Reiniciar en la situación inicial") { model.repeatExercise(prepare: true) }
                 }
                 Button("Reiniciar desde el estado actual") { model.repeatExercise() }
             } message: {
@@ -333,12 +357,12 @@ struct ExerciseResultSheet: View {
                         Button("Cerrar") { model.closeExerciseResult() }
                     }
                     ToolbarItem(placement: .confirmationAction) {
-                        if model.canResetAircraft {
+                        if model.canPrepare(run.tracker.definition) {
                             Menu("Repetir") {
-                                Button("Repetir con el avión en Cold & Dark") { model.repeatExercise(fromColdAndDark: true) }
+                                Button("Repetir en la situación inicial") { model.repeatExercise(prepare: true) }
                                 Button("Repetir desde el estado actual") { model.repeatExercise() }
                             } primaryAction: {
-                                model.repeatExercise()
+                                model.repeatExercise(prepare: true)
                             }
                         } else {
                             Button("Repetir") { model.repeatExercise() }

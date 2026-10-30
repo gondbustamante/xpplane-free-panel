@@ -8,7 +8,10 @@
       "level": "Básico",
       "summary": "De avión frío y oscuro a APU en marcha con su aire disponible.",
       "start": "Cold & Dark: todo apagado. En modo demo, conecta y empieza.",
-      "procedures": ["power_up"],
+      "coldAndDark": true,
+      "procedures": [
+        "power_up"
+      ],
       "targetSeconds": 90
     },
     {
@@ -17,7 +20,13 @@
       "level": "Intermedio",
       "summary": "La preparación de cabina de memoria: de izquierda a derecha y de arriba abajo, y después el pedestal.",
       "start": "Avión con energía y APU en marcha (tras «Encendido del avión»).",
-      "procedures": ["cockpit_prep_flow"],
+      "coldAndDark": true,
+      "setup": [
+        "power_up"
+      ],
+      "procedures": [
+        "cockpit_prep_flow"
+      ],
       "targetSeconds": 240
     },
     {
@@ -26,7 +35,12 @@
       "level": "Avanzado",
       "summary": "Encendido, preparación de cabina y antes del arranque seguidos, como en una salida real.",
       "start": "Cold & Dark.",
-      "procedures": ["power_up", "cockpit_prep_flow", "before_start_flow"],
+      "coldAndDark": true,
+      "procedures": [
+        "power_up",
+        "cockpit_prep_flow",
+        "before_start_flow"
+      ],
       "targetSeconds": 480
     },
     {
@@ -35,7 +49,16 @@
       "level": "Intermedio",
       "summary": "Arranque de los dos motores en el orden correcto y configuración para rodar.",
       "start": "Listo para arrancar: APU BLEED ON y BEACON ON.",
-      "procedures": ["engine_start_flow", "after_start_flow"],
+      "coldAndDark": true,
+      "setup": [
+        "power_up",
+        "cockpit_prep_flow",
+        "before_start_flow"
+      ],
+      "procedures": [
+        "engine_start_flow",
+        "after_start_flow"
+      ],
       "targetSeconds": 180
     },
     {
@@ -44,7 +67,17 @@
       "level": "Básico",
       "summary": "Luces y TCAS al entrar en la pista para despegar.",
       "start": "Rodando hacia el punto de espera con NOSE en TAXI.",
-      "procedures": ["line_up_flow"],
+      "coldAndDark": true,
+      "setup": [
+        "power_up",
+        "cockpit_prep_flow",
+        "before_start_flow",
+        "engine_start_flow",
+        "after_start_flow"
+      ],
+      "procedures": [
+        "line_up_flow"
+      ],
       "targetSeconds": 40
     },
     {
@@ -53,7 +86,19 @@
       "level": "Básico",
       "summary": "Limpiar el avión tras el despegue y pasar FL100.",
       "start": "En el aire, con flaps de despegue y luces de pista encendidas.",
-      "procedures": ["after_takeoff_flow", "climb_flow"],
+      "coldAndDark": true,
+      "setup": [
+        "power_up",
+        "cockpit_prep_flow",
+        "before_start_flow",
+        "engine_start_flow",
+        "after_start_flow",
+        "line_up_flow"
+      ],
+      "procedures": [
+        "after_takeoff_flow",
+        "climb_flow"
+      ],
       "targetSeconds": 60
     },
     {
@@ -62,7 +107,20 @@
       "level": "Avanzado",
       "summary": "Después del aterrizaje, parking y asegurar el avión, hasta dejarlo frío y oscuro.",
       "start": "Recién aterrizado, saliendo de la pista.",
-      "procedures": ["after_landing_flow", "parking_flow", "securing_flow"],
+      "coldAndDark": true,
+      "setup": [
+        "power_up",
+        "cockpit_prep_flow",
+        "before_start_flow",
+        "engine_start_flow",
+        "after_start_flow",
+        "line_up_flow"
+      ],
+      "procedures": [
+        "after_landing_flow",
+        "parking_flow",
+        "securing_flow"
+      ],
       "targetSeconds": 300
     },
     {
@@ -71,7 +129,13 @@
       "level": "Avanzado",
       "summary": "DATA, INIT, F-PLN, SEC F-PLN, RAD NAV, INIT B y PERF con un plan de vuelo real. Solo guiado: el MCDU no se puede comprobar solo.",
       "start": "Avión con energía y las IRS alineándose. Ten a mano un OFP (por ejemplo, de SimBrief).",
-      "procedures": ["fmgs_prep"],
+      "coldAndDark": true,
+      "setup": [
+        "power_up"
+      ],
+      "procedures": [
+        "fmgs_prep"
+      ],
       "targetSeconds": 900
     }
   ]

@@ -30,8 +30,8 @@ final class ExerciseTests: XCTestCase {
         try JSONDecoder().decode(ProcedureBook.self, from: Data(json.utf8)).procedures
     }
 
-    private func tracker(_ mode: ExerciseMode = .guided) throws -> ExerciseTracker {
-        ExerciseTracker(definition: definition, procedures: try procedures(), mode: mode)
+    private func tracker(_ mode: ExerciseMode = .guided, settle: Double = 0) throws -> ExerciseTracker {
+        ExerciseTracker(definition: definition, procedures: try procedures(), mode: mode, settle: settle)
     }
 
     func testStepsSkipOptionalAndRepeatedChecks() throws {
@@ -80,6 +80,67 @@ final class ExerciseTests: XCTestCase {
         run.update(at: 1, position: { state[$0] }, ticked: { $0.item.challenge == "BAT" || $0.item.challenge == "FIRE TEST" })
         XCTAssertEqual(run.hints, 1)
         XCTAssertEqual(run.doneCount, 3)   // BAT, FIRE TEST and MODE NORM
+    }
+
+    func testIntermediatePositionIsNotJudged() throws {
+        // ENG MODE goes CRANK → NORM → IGN/START: passing NORM must not tick the later
+        // "MODE NORM" step out of order.
+        var run = try tracker(.exam, settle: 2)
+        var state = ["bat": "ON", "mode": "CRANK", "apu": "OFF"]
+        run.update(at: 0, position: { state[$0] }, ticked: { _ in false })
+        XCTAssertEqual(run.doneAtStart, [0])
+        state["mode"] = "NORM"
+        run.update(at: 1.0, position: { state[$0] }, ticked: { _ in false })
+        state["mode"] = "IGN"
+        run.update(at: 1.6, position: { state[$0] }, ticked: { _ in false })
+        run.update(at: 4, position: { state[$0] }, ticked: { _ in false })
+        XCTAssertTrue(run.mistakes.isEmpty, "\(run.mistakes)")
+        XCTAssertTrue(run.isDone(1))
+        XCTAssertFalse(run.isDone(3), "NORM was only passed through")
+    }
+
+    func testPositionHeldIsJudgedAfterSettling() throws {
+        var run = try tracker(.exam, settle: 2)
+        var state = ["bat": "OFF", "mode": "NORM", "apu": "OFF"]
+        run.update(at: 0, position: { state[$0] }, ticked: { _ in false })
+        state["apu"] = "ON"   // before BAT: out of order once it holds
+        run.update(at: 1, position: { state[$0] }, ticked: { _ in false })
+        XCTAssertTrue(run.mistakes.isEmpty, "not judged while it may still be on its way")
+        run.update(at: 3.5, position: { state[$0] }, ticked: { _ in false })
+        XCTAssertEqual(run.mistakes.map(\.kind), [.outOfOrder])
+        XCTAssertEqual(run.mistakes.first?.at, 1, "stamped when the position was reached")
+    }
+
+    func testBriefUndoIsForgiven() throws {
+        var run = try tracker(.exam, settle: 2)
+        var state = ["bat": "ON", "mode": "NORM", "apu": "OFF"]
+        run.update(at: 0, position: { state[$0] }, ticked: { _ in false })
+        state["bat"] = "OFF"
+        run.update(at: 1, position: { state[$0] }, ticked: { _ in false })
+        state["bat"] = "ON"
+        run.update(at: 1.5, position: { state[$0] }, ticked: { _ in false })
+        run.update(at: 5, position: { state[$0] }, ticked: { _ in false })
+        XCTAssertTrue(run.mistakes.isEmpty, "\(run.mistakes)")
+        XCTAssertTrue(run.isDone(0))
+    }
+
+    func testFinishedAtIsWhenTheLastStepWasReached() throws {
+        var run = try tracker(.exam, settle: 2)
+        var state = ["bat": "ON", "mode": "IGN", "apu": "ON"]
+        run.update(at: 0, position: { state[$0] }, ticked: { _ in false })
+        state["mode"] = "NORM"
+        run.update(at: 10, position: { state[$0] }, ticked: { _ in false })
+        XCTAssertNil(run.finishedAt)
+        run.update(at: 13, position: { state[$0] }, ticked: { _ in false })
+        XCTAssertTrue(run.isComplete)
+        XCTAssertEqual(run.finishedAt, 10)
+    }
+
+    func testStartingState() {
+        let plain = ExerciseDefinition(id: "a", title: "A", procedures: [], targetSeconds: 10)
+        XCTAssertFalse(plain.hasStartingState)
+        let setup = ExerciseDefinition(id: "b", title: "B", procedures: [], targetSeconds: 10, setup: ["power"])
+        XCTAssertTrue(setup.hasStartingState)
     }
 
     func testScoring() {

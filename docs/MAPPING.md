@@ -236,13 +236,16 @@ Ejercicios cronometrados sobre los procedimientos. Cada uno encadena uno o vario
   "exercises": [
     { "id": "power_up", "title": "Encendido del avión", "level": "Básico",
       "summary": "Qué entrena", "start": "Situación inicial",
-      "procedures": ["power_up"], "targetSeconds": 90 }
+      "procedures": ["power_up"], "targetSeconds": 90,
+      "coldAndDark": true, "setup": [] }
   ] }
 ```
 
 - Pasos: los ítems de los procedimientos, sin los opcionales ni los que repiten las mismas `checks` de un paso anterior. En modo examen solo cuentan los ítems con `checks`.
 - Puntuación: 100 puntos menos medio punto por cada 1 % por encima del objetivo (máximo 30), 5 por paso deshecho, 3 por paso fuera de orden, 2 por mover un mando que el ejercicio no usa (solo overhead y mandos de procedimientos; radios y teclados no cuentan) y 5 por pista. 90 o más son tres estrellas, 75 dos y 50 una.
 - Mover un mando hacia lo que pide otro paso del ejercicio no cuenta como deshacer (ENG MODE en NORM al empezar y luego en IGN/START).
+- Una posición solo cuenta cuando el mando lleva 2 s quieto en ella: las posiciones por las que se pasa (NORM entre CRANK e IGN/START, AUTO entre OFF y ON) no marcan, desmarcan ni penalizan nada. El paso cuenta con la hora en que se alcanzó, no con la de la comprobación.
+- Situación inicial: `coldAndDark` (en la demo, el avión vuelve a Cold & Dark) y `setup`, procedimientos cuyos ítems detectados se aplican en orden antes de empezar (arrancando el APU por el camino). La ficha del ejercicio ofrece «Preparar el avión antes de empezar»; en la demo los sistemas van instantáneos mientras se prepara.
 
 El validador comprueba ids únicos, procedimientos existentes y un `targetSeconds` positivo.
 

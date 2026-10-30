@@ -206,6 +206,14 @@ final class PanelModel {
     }
     /// Exercise whose briefing sheet is open.
     var exerciseBriefingID: String?
+    /// The tracker as it evolves: settling times change on every reading, so the run on screen
+    /// gets a copy only when something visible changes and panels do not redraw each time.
+    @ObservationIgnored private var liveTracker: ExerciseTracker?
+    /// Re-reads the run twice a second: a position counts once it has held, with or without
+    /// a new reading from the simulator.
+    @ObservationIgnored private var exerciseTask: Task<Void, Never>?
+    /// Exercise being prepared (aircraft set to its starting state).
+    private(set) var preparingExercise: ExerciseDefinition?
     /// Ground-time templates from `mapping/turnaround`.
     private(set) var turnaroundTemplates: [TurnaroundTemplate] = []
     /// The turnaround being flown, if any.
@@ -875,7 +883,16 @@ final class PanelModel {
         exerciseBriefingID = nil
         var tracker = ExerciseTracker(definition: definition, procedures: procedures, mode: mode)
         tracker.update(at: 0, position: positionName(ofControl:), ticked: isTicked(step:))
+        liveTracker = tracker
         exerciseRun = ExerciseRun(tracker: tracker, startedAt: Date())
+        exerciseTask?.cancel()
+        exerciseTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(500))
+                guard let self, self.isExerciseRunning else { return }
+                self.refreshExercise()
+            }
+        }
         guard let first = definition.procedures.first else { return }
         switch mode {
         case .guided:
@@ -887,33 +904,95 @@ final class PanelModel {
     }
 
     func abandonExercise() {
-        exerciseRun = nil
+        endExercise()
     }
 
     /// Closes the result sheet.
     func closeExerciseResult() {
+        endExercise()
+    }
+
+    private func endExercise() {
+        exerciseTask?.cancel()
+        exerciseTask = nil
+        liveTracker = nil
         exerciseRun = nil
     }
 
-    /// Starts again the current or just finished exercise; in the demo, optionally from cold
-    /// and dark.
-    func repeatExercise(fromColdAndDark: Bool = false) {
+    /// Starts again the current or just finished exercise, preparing the aircraft when asked.
+    func repeatExercise(prepare: Bool = false) {
         guard let run = exerciseRun else { return }
-        exerciseRun = nil
-        beginExercise(run.tracker.definition.id, mode: run.tracker.mode, fromColdAndDark: fromColdAndDark)
+        endExercise()
+        beginExercise(run.tracker.definition.id, mode: run.tracker.mode, prepare: prepare)
     }
 
-    /// `startExercise`, after resetting the demo aircraft when asked.
-    func beginExercise(_ id: String, mode: ExerciseMode, fromColdAndDark: Bool) {
-        guard fromColdAndDark, canResetAircraft else {
+    /// The app can put the aircraft in this exercise's starting state: its setup procedures,
+    /// and in the demo also cold and dark first.
+    func canPrepare(_ definition: ExerciseDefinition) -> Bool {
+        guard status == .connected else { return false }
+        return !(definition.setup ?? []).isEmpty || (definition.startsColdAndDark && canResetAircraft)
+    }
+
+    /// `startExercise`, after preparing the aircraft when asked.
+    func beginExercise(_ id: String, mode: ExerciseMode, prepare: Bool) {
+        guard let definition = exercise(id) else { return }
+        exerciseBriefingID = nil
+        guard prepare, canPrepare(definition) else {
             startExercise(id, mode: mode)
             return
         }
-        exerciseBriefingID = nil
         Task {
-            await resetDemoAircraft()
+            await prepareAircraft(for: definition)
+            // Let the last readings arrive before the starting state is recorded.
+            try? await Task.sleep(for: .milliseconds(400))
             startExercise(id, mode: mode)
         }
+    }
+
+    /// Puts the aircraft in an exercise's starting state: cold and dark first when it starts
+    /// there (demo only), then every sensed item of its setup procedures, in order, starting the
+    /// APU on the way. In the demo the systems run instantly meanwhile, so the APU is available
+    /// and engines started by the setup are running.
+    func prepareAircraft(for definition: ExerciseDefinition) async {
+        preparingExercise = definition
+        let demo = client as? DemoSimulator
+        if let demo { await demo.setTiming(.instant) }
+        if definition.startsColdAndDark, demo != nil { await resetDemoAircraft() }
+        for id in definition.setup ?? [] {
+            guard let procedure = procedure(id) else { continue }
+            for item in procedure.items where !item.isOptional {
+                for check in item.checks ?? [] {
+                    await setControl(check.control, to: check.expect)
+                }
+                // APU START is not a sensed item: press it once the master switch is on.
+                if item.checks?.contains(where: { $0.control == "apu.master" }) == true {
+                    await startAPUIfNeeded()
+                }
+            }
+        }
+        if let demo { await demo.setTiming(demoTiming) }
+        preparingExercise = nil
+    }
+
+    /// Moves a control until it reads one of the wanted positions (a few tries, as the simulator
+    /// confirms each move).
+    private func setControl(_ id: String, to wanted: [String]) async {
+        guard let control = controlsByID[id], isAvailable(control) else { return }
+        for _ in 0..<6 {
+            guard let current = positionName(ofControl: id), !wanted.contains(current),
+                  let index = control.positions.firstIndex(of: current),
+                  let target = wanted.first.flatMap({ control.positions.firstIndex(of: $0) }) else { return }
+            if control.kind == .korry { press(control) } else { move(control, by: target - index) }
+            try? await Task.sleep(for: .milliseconds(250))
+        }
+    }
+
+    private func startAPUIfNeeded() async {
+        guard let start = controlsByID["apu.start"], isAvailable(start),
+              rawValues["AirbusFBW/APUAvail"]?.doubleValue ?? 0 < 0.5 else { return }
+        try? await Task.sleep(for: .milliseconds(250))
+        press(start)
+        try? await Task.sleep(for: .milliseconds(400))
     }
 
     /// Deletes the stored results of one exercise, or of all with nil.
@@ -927,11 +1006,10 @@ final class PanelModel {
 
     /// Exam mode: shows the next step and points at its control, at the price of a hint.
     func revealExerciseStep() {
-        guard var run = exerciseRun, run.isRunning, let current = run.tracker.currentStep else { return }
-        run.revealed.insert(current)
-        run.tracker.useHint()
-        exerciseRun = run
-        if let control = run.tracker.steps[current].item.checks?.first?.control {
+        guard isExerciseRunning, let tracker = liveTracker, let current = tracker.currentStep else { return }
+        exerciseRun?.revealed.insert(current)
+        updateTracker { $0.useHint() }
+        if let control = tracker.steps[current].item.checks?.first?.control {
             highlight(control: control)
         }
     }
@@ -964,33 +1042,40 @@ final class PanelModel {
     }
 
     private func exerciseTouched(_ control: ControlDefinition) {
-        guard var run = exerciseRun, run.isRunning, configurationControls.contains(control.id) else { return }
-        let before = run.tracker.mistakes.count
-        run.tracker.touch(control: control.id, at: exerciseElapsed())
-        if run.tracker.mistakes.count != before { exerciseRun = run }
+        guard configurationControls.contains(control.id) else { return }
+        let elapsed = exerciseElapsed()
+        updateTracker { $0.touch(control: control.id, at: elapsed) }
     }
 
     private func exerciseHint() {
-        guard var run = exerciseRun, run.isRunning else { return }
-        run.tracker.useHint()
-        exerciseRun = run
+        updateTracker { $0.useHint() }
     }
 
-    /// Re-reads the run after the simulator or a hand tick changed something. Only writes the
-    /// run back when it changed, so the panels do not redraw on every dataref update.
+    /// Re-reads the run after the simulator or a hand tick changed something, and twice a second.
     private func refreshExercise() {
-        guard var run = exerciseRun, run.isRunning else { return }
         let elapsed = exerciseElapsed()
-        let before = (run.tracker.doneCount, run.tracker.mistakes.count, run.tracker.hints)
-        run.tracker.update(at: elapsed, position: positionName(ofControl:), ticked: isTicked(step:))
-        let after = (run.tracker.doneCount, run.tracker.mistakes.count, run.tracker.hints)
-        if run.tracker.isComplete {
-            let result = run.tracker.result(elapsed: elapsed)
+        updateTracker { $0.update(at: elapsed, position: positionName(ofControl:), ticked: isTicked(step:)) }
+    }
+
+    /// Applies a change to the live tracker; the run on screen is only rewritten when the steps
+    /// done, the mistakes or the hints change, or the exercise ends.
+    private func updateTracker(_ change: (inout ExerciseTracker) -> Void) {
+        guard var run = exerciseRun, run.isRunning, var tracker = liveTracker else { return }
+        let before = (tracker.doneCount, tracker.mistakes.count, tracker.hints)
+        change(&tracker)
+        liveTracker = tracker
+        let after = (tracker.doneCount, tracker.mistakes.count, tracker.hints)
+        if tracker.isComplete {
+            // The time the last step was reached, not when the settling noticed it.
+            let result = tracker.result(elapsed: tracker.finishedAt ?? exerciseElapsed())
             run.result = result
             exerciseResults[result.exerciseID, default: []].insert(result, at: 0)
             exerciseResults[result.exerciseID] = Array(exerciseResults[result.exerciseID, default: []].prefix(20))
+            exerciseTask?.cancel()
+            exerciseTask = nil
         }
         guard before != after || run.result != nil else { return }
+        run.tracker = tracker
         exerciseRun = run
         // Guided: the checklist column follows the procedure of the next step.
         if run.isRunning, run.tracker.mode == .guided, let current = run.tracker.currentStep {

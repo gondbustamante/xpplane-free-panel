@@ -444,9 +444,11 @@ def validate_exercises(root):
             ids = exercise.get("procedures") or []
             if not ids:
                 errors.append(f"{where}: sin 'procedures'")
-            for pid in ids:
+            for pid in ids + (exercise.get("setup") or []):
                 if pid not in procedures:
                     errors.append(f"{where}: el procedimiento '{pid}' no existe")
+            if "coldAndDark" in exercise and not isinstance(exercise["coldAndDark"], bool):
+                errors.append(f"{where}: 'coldAndDark' debe ser true o false")
     if paths:
         print(f"\nEjercicios: {len(seen)}.")
     return errors

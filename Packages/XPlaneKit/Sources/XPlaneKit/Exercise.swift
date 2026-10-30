@@ -10,6 +10,13 @@ import Foundation
 //   hints         "show on panel", "set", a hint in exam mode, or ticking by hand a sensed step
 //                 the simulator reads as not done
 //
+// A sensed step only counts once its controls have stayed put for `settle` seconds: a selector
+// that has to pass through NORM on its way from CRANK to IGN/START does not tick (or untick) the
+// steps that want NORM on the way.
+//
+// Each exercise declares the state it starts from (`coldAndDark`, `setup`), so the app can put
+// the aircraft there first and the run does not begin with someone else's mistakes.
+//
 // Guided mode runs every step with the checklist on screen; exam mode hides it and only counts
 // the sensed steps, the ones the app can judge.
 
@@ -32,6 +39,27 @@ public struct ExerciseDefinition: Codable, Sendable, Identifiable, Hashable {
     public let targetSeconds: Int
     /// State the aircraft should be in at the start.
     public let start: String?
+    /// Starts from a cold and dark aircraft (the demo can reset it).
+    public let coldAndDark: Bool?
+    /// Procedures whose sensed items set the starting state, applied in order before the run.
+    public let setup: [String]?
+
+    public init(id: String, title: String, summary: String? = nil, level: String? = nil, procedures: [String],
+                targetSeconds: Int, start: String? = nil, coldAndDark: Bool? = nil, setup: [String]? = nil) {
+        self.id = id
+        self.title = title
+        self.summary = summary
+        self.level = level
+        self.procedures = procedures
+        self.targetSeconds = targetSeconds
+        self.start = start
+        self.coldAndDark = coldAndDark
+        self.setup = setup
+    }
+
+    public var startsColdAndDark: Bool { coldAndDark ?? false }
+    /// Has a starting state the app can prepare.
+    public var hasStartingState: Bool { startsColdAndDark || !(setup ?? []).isEmpty }
 }
 
 public enum ExerciseMode: String, Codable, Sendable, CaseIterable, Identifiable {
@@ -139,13 +167,21 @@ public struct ExerciseTracker: Sendable {
     private let superseded: Set<Int>
     private let relevant: Set<String>
     private var started = false
+    /// Seconds a control must hold a position before the step counts it.
+    public let settle: Double
+    /// Last sensed state of each step and since when it holds.
+    private var lastStates: [ProcedureCheckState] = []
+    private var since: [Double] = []
+    /// When each step was reached, for the finishing time.
+    private var reachedAt: [Int: Double] = [:]
 
     /// Steps from `procedures` (looked up by id): optional items are left out, and so are items
     /// that repeat an earlier step's checks (FUEL PUMPS ON in two flows). In exam mode only
     /// sensed items count.
-    public init(definition: ExerciseDefinition, procedures: [Procedure], mode: ExerciseMode) {
+    public init(definition: ExerciseDefinition, procedures: [Procedure], mode: ExerciseMode, settle: Double = 2) {
         self.definition = definition
         self.mode = mode
+        self.settle = settle
         var steps: [ExerciseStep] = []
         var seenChecks: Set<[ProcedureCheck]> = []
         for id in definition.procedures {
@@ -195,41 +231,57 @@ public struct ExerciseTracker: Sendable {
     public mutating func update(at time: Double, position: (String) -> String?, ticked: (ExerciseStep) -> Bool) {
         let states = steps.map { $0.item.sensedState(position: position) }
         let manual = steps.map(ticked)
-        func isDoneNow(_ i: Int) -> Bool { states[i] == .satisfied || manual[i] }
 
         guard started else {
             started = true
-            doneAtStart = Set(steps.indices.filter(isDoneNow))
+            lastStates = states
+            since = steps.map { _ in time }
+            doneAtStart = Set(steps.indices.filter { states[$0] == .satisfied || manual[$0] })
             done = doneAtStart
             return
         }
+        for i in steps.indices where states[i] != lastStates[i] {
+            lastStates[i] = states[i]
+            since[i] = time
+        }
+        func settled(_ i: Int) -> Bool { time - since[i] >= settle }
+        func isDoneNow(_ i: Int) -> Bool { manual[i] || (states[i] == .satisfied && settled(i)) }
+
         for i in steps.indices {
             let step = steps[i]
             if step.item.isSensed, manual[i], states[i] == .unsatisfied, !forced.contains(i) {
                 forced.insert(i)
                 hints += 1
             }
-            let now = isDoneNow(i)
-            if now, !done.contains(i) {
+            if isDoneNow(i), !done.contains(i) {
+                // Skipped: an earlier sensed step not done and not even reached right now.
                 let skipped = steps.indices.contains { j in
-                    j < i && steps[j].item.isSensed && !done.contains(j) && !isDoneNow(j)
+                    j < i && steps[j].item.isSensed && !done.contains(j) && states[j] != .satisfied
                 }
                 if step.item.isSensed, states[i] == .satisfied, skipped {
-                    mistakes.append(mistake(.outOfOrder, step, at: time))
+                    mistakes.append(mistake(.outOfOrder, step, at: since[i]))
                 }
                 done.insert(i)
-            } else if !now, done.contains(i), !superseded.contains(i) {
+                reachedAt[i] = manual[i] ? time : since[i]
+            } else if done.contains(i), !manual[i], states[i] != .satisfied, settled(i), !superseded.contains(i) {
                 done.remove(i)
+                reachedAt[i] = nil
                 // Moving the control to what another step wants is the procedure, not a mistake
                 // (MODE NORM in place at the start, then IGN/START for the engine start).
                 let wantedElsewhere = steps.indices.contains { k in
                     k != i && states[k] == .satisfied && !steps[k].controls.isDisjoint(with: step.controls)
                 }
                 if step.item.isSensed, !forced.contains(i), !wantedElsewhere {
-                    mistakes.append(mistake(.undone, step, at: time))
+                    mistakes.append(mistake(.undone, step, at: since[i]))
                 }
             }
         }
+    }
+
+    /// Seconds into the run when the last step was reached, once all are done.
+    public var finishedAt: Double? {
+        guard isComplete else { return nil }
+        return reachedAt.values.max() ?? 0
     }
 
     public func result(elapsed: Double, date: Date = Date()) -> ExerciseResult {
