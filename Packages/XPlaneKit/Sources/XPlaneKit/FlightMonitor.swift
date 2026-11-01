@@ -277,6 +277,14 @@ public struct PositionReport: Codable, Sendable, Equatable, Identifiable {
     public let actualFuel: Double?
     public let plannedFuel: Double?
 
+    public init(ident: String, date: Date, altitude: Int?, actualFuel: Double?, plannedFuel: Double?) {
+        self.ident = ident
+        self.date = date
+        self.altitude = altitude
+        self.actualFuel = actualFuel
+        self.plannedFuel = plannedFuel
+    }
+
     public var id: String { ident + "\(date.timeIntervalSince1970)" }
     public var deviation: Double? {
         guard let actualFuel, let plannedFuel else { return nil }
