@@ -181,6 +181,17 @@ Componentes nuevos pendientes: pulsador con tirador de fuego, voltímetros de ba
 - [ ] A-CDM (TOBT/TSAT) en los aeropuertos que lo usan
 - [ ] Ejercicio cronometrado de turnaround completo
 
+## Fase P · Plan de vuelo y SimBrief (2026-11-01)
+
+- [x] Importar el último OFP de SimBrief (API pública por usuario o Pilot ID), con parser tolerante (todo llega como texto y `{}` es vacío) y tests sobre la estructura real
+- [x] Guía del MCDU en la columna lateral: DATA, INIT A, F-PLN (salida, ruta tramo a tramo, totales, escalones), SEC F-PLN, RAD NAV (ILS de la TLR), INIT B (ZFW, BLOCK, TAXI, reservas, TOW/TRIP), PERF (V1/VR/V2, TRANS ALT, FLAPS, FLEX, ECON) y, en vuelo, llegada, TRANS FL e ILS
+- [x] Por cada dato: página y LSK, valor exacto, dónde está en el OFP, por qué y qué afecta; «Teclear» lo escribe en el scratchpad
+- [x] Comprobación contra ToLiss (`toliss_airbus/init/*`, `toliss_airbus/performance/*`); las unidades de esos datarefs están por confirmar (se aceptan t o kg, FL o ft)
+- [x] El OFP rellena el planificador del turnaround (vuelo, ruta, EOBT, pasajeros, combustible, rodaje)
+- [ ] Confirmar en ToLiss las unidades de los datarefs de INIT y PERF y si `flight_no` llega como texto
+- [ ] Navigraph: enlaces a la carta de la SID, la STAR y la aproximación (según lo que permita su app o su API)
+- [ ] Seguimiento de combustible en ruta contra el navlog del OFP
+
 ## Fase 3 · Pulido y distribución (continuo)
 
 - Descubrimiento automático del simulador (requiere entitlement multicast de Apple; alternativa: escaneo de la subred por el puerto del relay)

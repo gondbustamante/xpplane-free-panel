@@ -74,6 +74,15 @@ struct ConnectionSettingsView: View {
                 } footer: {
                     Text("«Según el avión» sigue los mandos de iluminación integral de la cabina (OVHD INTEG LT, panel principal, FCU y MCDU). El nivel manual se usa en «Siempre» y mientras no hay conexión.")
                 }
+                Section {
+                    TextField("Usuario de SimBrief o Pilot ID", text: $model.simBriefUser)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                } header: {
+                    Text("SimBrief")
+                } footer: {
+                    Text("Para cargar tu último OFP en la Guía MCDU y en el turnaround. El Pilot ID está en SimBrief → Account Settings.")
+                }
                 Section("Interfaz") {
                     Toggle("Marcar controles con mapeo sin verificar", isOn: $model.showVerificationBadges)
                     Text("Útil al verificar datarefs desde Diagnóstico. Apagado por defecto para que el panel se vea como el del avión.")

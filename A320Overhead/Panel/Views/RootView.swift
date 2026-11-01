@@ -83,7 +83,14 @@ struct RootView: View {
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        withAnimation { model.showChecklist.toggle() }
+                        withAnimation {
+                            // From the MCDU guide, the button brings the checklist back.
+                            if model.showChecklist && model.inspectorPanel != .checklist {
+                                model.inspectorPanel = .checklist
+                            } else {
+                                model.showChecklist.toggle()
+                            }
+                        }
                     } label: {
                         Label("Checklist", systemImage: model.showChecklist ? "checklist.checked" : "checklist")
                     }
@@ -93,7 +100,7 @@ struct RootView: View {
             }
             // Checklist beside the panels; a sheet when the window is narrow.
             .inspector(isPresented: showChecklist) {
-                ChecklistColumn()
+                InspectorColumn()
                     .inspectorColumnWidth(min: 320, ideal: 380, max: 480)
             }
         }

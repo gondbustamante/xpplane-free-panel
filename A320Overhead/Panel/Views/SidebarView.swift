@@ -196,6 +196,11 @@ struct SidebarView: View {
     @ViewBuilder
     private var flightTab: some View {
         let byPhase = proceduresByPhase
+        Section {
+            OFPSidebarRow()
+        } header: {
+            SectionHeader(title: "Plan de vuelo", detail: model.ofp?.airac.map { "AIRAC \($0)" })
+        }
         // The turnaround is part of flying, with X-Plane as much as in the demo.
         Section {
             TurnaroundList()

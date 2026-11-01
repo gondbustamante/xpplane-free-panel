@@ -285,6 +285,31 @@ final class PanelModel {
         }
     }
     var showTurnaroundPlanner = false
+    /// SimBrief user name or numeric pilot ID.
+    var simBriefUser: String {
+        didSet { UserDefaults.standard.set(simBriefUser, forKey: Keys.simBriefUser) }
+    }
+    /// Last OFP loaded from SimBrief, kept on the device.
+    private(set) var ofp: SimBriefOFP? {
+        didSet { UserDefaults.standard.set(ofp.flatMap { try? JSONEncoder().encode($0) }, forKey: Keys.ofp) }
+    }
+    private(set) var ofpLoading = false
+    private(set) var ofpError: String?
+    /// MCDU guide steps ticked by hand, keyed "requestID#stepID".
+    private(set) var guideDone: Set<String> {
+        didSet { UserDefaults.standard.set(Array(guideDone), forKey: Keys.guideDone) }
+    }
+    /// What the column beside the panels shows.
+    enum InspectorPanel: String {
+        case checklist
+        case mcduGuide
+    }
+    var inspectorPanel: InspectorPanel {
+        didSet { UserDefaults.standard.set(inspectorPanel.rawValue, forKey: Keys.inspectorPanel) }
+    }
+    /// Guide entry being typed into the MCDU scratchpad.
+    private(set) var typingEntryID: String?
+    @ObservationIgnored private var typingTask: Task<Void, Never>?
     var showTurnaroundSheet = false
     var showFlightLog = false
     @ObservationIgnored private var turnaroundTask: Task<Void, Never>?
@@ -314,6 +339,7 @@ final class PanelModel {
             autoFit = true
             if case .procedure(let id) = selection {
                 activeProcedureID = id
+                inspectorPanel = .checklist
                 showChecklist = true
             }
         }
@@ -430,6 +456,10 @@ final class PanelModel {
         static let learnMode = "ui.learnMode"
         static let exerciseResults = "exercises.results"
         static let turnaround = "turnaround.run"
+        static let simBriefUser = "simbrief.user"
+        static let ofp = "simbrief.ofp"
+        static let guideDone = "simbrief.guideDone"
+        static let inspectorPanel = "ui.inspectorPanel"
         static let flightLog = "turnaround.flightLog"
         static let extras = "diag.extraDatarefs"
         static let selection = "ui.selection"
@@ -455,6 +485,10 @@ final class PanelModel {
         demoTiming = DemoTiming(rawValue: defaults.string(forKey: Keys.demoTiming) ?? "") ?? .realistic
         showVerificationBadges = defaults.object(forKey: Keys.badges) as? Bool ?? false
         learnMode = defaults.bool(forKey: Keys.learnMode)
+        simBriefUser = defaults.string(forKey: Keys.simBriefUser) ?? ""
+        ofp = defaults.data(forKey: Keys.ofp).flatMap { try? JSONDecoder().decode(SimBriefOFP.self, from: $0) }
+        guideDone = Set(defaults.stringArray(forKey: Keys.guideDone) ?? [])
+        inspectorPanel = InspectorPanel(rawValue: defaults.string(forKey: Keys.inspectorPanel) ?? "") ?? .checklist
         if let data = defaults.data(forKey: Keys.turnaround),
            let stored = try? JSONDecoder().decode(TurnaroundRun.self, from: data) {
             turnaround = stored
@@ -713,6 +747,7 @@ final class PanelModel {
     /// follows; any other panel the user chose stays on screen.
     func open(procedure id: String) {
         activeProcedureID = id
+        inspectorPanel = .checklist
         showChecklist = true
         if case .procedure = selection { selection = .procedure(id) }
     }
@@ -1167,7 +1202,16 @@ final class PanelModel {
         let inAnHour = now.addingTimeInterval(3600)
         let rounded = Date(timeIntervalSinceReferenceDate: (inAnHour.timeIntervalSinceReferenceDate / 300).rounded(.up) * 300)
         var plan = TurnaroundPlan(templateID: turnaroundTemplates.first?.id ?? "departure", offBlocks: rounded)
-        if let last = flightLog.first {
+        if let ofp {
+            // The SimBrief OFP fills the flight, the load and the scheduled off-blocks time.
+            plan.flightNumber = ofp.callsign ?? ""
+            plan.origin = ofp.origin.icao
+            plan.destination = ofp.destination.icao
+            if let passengers = ofp.weights.passengers { plan.passengers = passengers }
+            if let block = ofp.kilograms(ofp.fuel.block) { plan.blockFuelKg = (block / 100).rounded() * 100 }
+            if let taxi = ofp.taxiOutMinutes { plan.taxiMinutes = taxi }
+            if let out = ofp.scheduledOut, out > now { plan.offBlocks = out }
+        } else if let last = flightLog.first {
             plan.flightNumber = last.flightNumber
             plan.origin = last.destination
         }
@@ -1478,6 +1522,108 @@ final class PanelModel {
         MCDUScreen.decode(unit: mcduUnit, values: mcduRaw)
     }
 
+    // MARK: SimBrief and the MCDU guide
+
+    /// Fetches the user's latest OFP from SimBrief.
+    func loadOFP() async {
+        guard let url = SimBriefOFP.fetchURL(user: simBriefUser) else {
+            ofpError = "Escribe tu usuario de SimBrief o tu Pilot ID (está en Account Settings de SimBrief)."
+            return
+        }
+        ofpLoading = true
+        ofpError = nil
+        defer { ofpLoading = false }
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let loaded = try SimBriefOFP.parse(data)
+            ofp = loaded
+        } catch SimBriefOFP.ParseError.simBrief(let message) {
+            ofpError = "SimBrief responde: \(message)"
+        } catch SimBriefOFP.ParseError.missingAirports {
+            ofpError = "El OFP no trae origen y destino. Genera el plan en SimBrief y vuelve a cargarlo."
+        } catch let error as SimBriefOFP.ParseError {
+            ofpError = "No se pudo leer el OFP (\(error))."
+        } catch {
+            ofpError = "No se pudo conectar con SimBrief: \(error.localizedDescription)"
+        }
+    }
+
+    func clearOFP() {
+        ofp = nil
+        ofpError = nil
+    }
+
+    var mcduGuideSteps: [MCDUGuideStep] {
+        ofp.map(MCDUGuide.steps(for:)) ?? []
+    }
+
+    private func guideKey(_ step: MCDUGuideStep) -> String {
+        "\(ofp?.requestID ?? "ofp")#\(step.id)"
+    }
+
+    /// What ToLiss holds for an entry against the OFP: true, false, or nil while unknown.
+    func checkResult(_ entry: GuideEntry) -> Bool? {
+        guard status == .connected, let check = entry.check else { return nil }
+        return check.matches(rawValues[check.dataref])
+    }
+
+    /// Ticked by hand, or every entry checked and matching in ToLiss.
+    func isGuideDone(_ step: MCDUGuideStep) -> Bool {
+        if guideDone.contains(guideKey(step)) { return true }
+        let checked = step.entries.filter { $0.check != nil }
+        return !checked.isEmpty && checked.count == step.entries.count && checked.allSatisfy { checkResult($0) == true }
+    }
+
+    func toggleGuideDone(_ step: MCDUGuideStep) {
+        let key = guideKey(step)
+        if guideDone.contains(key) { guideDone.remove(key) } else { guideDone.insert(key) }
+    }
+
+    func resetGuide() {
+        let prefix = "\(ofp?.requestID ?? "ofp")#"
+        guideDone = guideDone.filter { !$0.hasPrefix(prefix) }
+    }
+
+    /// Title of the page on the MCDU now, to point at the steps that go on it.
+    var mcduPageTitle: String {
+        mcduScreen.text(row: 0).trimmingCharacters(in: .whitespaces)
+    }
+
+    /// Types an entry into the MCDU scratchpad, key by key; the user then presses the LSK.
+    func typeIntoMCDU(_ entry: GuideEntry) {
+        guard status == .connected else { return }
+        typingTask?.cancel()
+        typingEntryID = entry.id
+        let keys = entry.value.uppercased().compactMap(Self.mcduKey(for:))
+        typingTask = Task { [weak self] in
+            for key in keys {
+                guard !Task.isCancelled else { break }
+                self?.pressMCDU(key)
+                try? await Task.sleep(for: .milliseconds(90))
+            }
+            self?.typingEntryID = nil
+        }
+    }
+
+    /// ToLiss key command suffix for a scratchpad character.
+    static func mcduKey(for character: Character) -> String? {
+        switch character {
+        case "A"..."Z", "0"..."9": return "Key\(character)"
+        case "/": return "KeySlash"
+        case ".": return "KeyDecimal"
+        case "-": return "KeyPM"
+        case " ": return "KeySpace"
+        default: return nil
+        }
+    }
+
+    /// Shows the guide beside the MCDU.
+    func openMCDUGuide() {
+        inspectorPanel = .mcduGuide
+        showChecklist = true
+        if !visibleItems.contains(where: { $0.id == "mcdu" }) { selection = .group("mcdu") }
+    }
+
     /// Switches between the captain's (1) and first officer's (2) MCDU.
     func setMCDUUnit(_ unit: Int) {
         guard unit == 1 || unit == 2, unit != mcduUnit else { return }
@@ -1596,6 +1742,7 @@ final class PanelModel {
         if hasMCDU { names.formUnion(MCDUScreen.datarefNames(unit: mcduUnit)) }
         names.formUnion(Self.backlightSources)
         names.formUnion(Self.turnaroundDatarefs)
+        names.formUnion(MCDUGuide.datarefs)
         return names
     }
 
