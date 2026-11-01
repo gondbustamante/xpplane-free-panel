@@ -82,12 +82,12 @@ public struct ATISInfo: Sendable, Equatable {
             info.qnh = Int((inHg / 100 * 33.8639).rounded())
         }
         if let groups = groups(#"\s(\d{3}|VRB)(\d{2,3})(?:G(\d{2,3}))?KT\b"#, in: t) {
-            info.windDirection = Int(groups[0])
-            info.windSpeed = Int(groups[1])
+            info.windDirection = groups[0].flatMap { Int($0) }
+            info.windSpeed = groups[1].flatMap { Int($0) }
             info.gust = groups[2].flatMap { Int($0) }
         } else if let groups = groups(#"WIND\s+(\d{3})\s*(?:/|DEGREES?|AT)\s*(\d{1,3})"#, in: t) {
-            info.windDirection = Int(groups[0])
-            info.windSpeed = Int(groups[1])
+            info.windDirection = groups[0].flatMap { Int($0) }
+            info.windSpeed = groups[1].flatMap { Int($0) }
         }
         if let groups = groups(#"\s(M?\d{2})/(M?\d{2})\s"#, in: t) {
             info.temperature = celsius(groups[0])
