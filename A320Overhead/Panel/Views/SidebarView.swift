@@ -199,6 +199,12 @@ struct SidebarView: View {
         Section {
             OFPSidebarRow()
             Button {
+                model.showDispatch = true
+            } label: {
+                Label("Despacho y briefing", systemImage: "doc.text.below.ecg")
+            }
+            .disabled(model.ofp == nil)
+            Button {
                 model.inspectorPanel = .flight
                 model.showChecklist = true
             } label: {

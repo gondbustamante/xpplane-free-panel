@@ -58,6 +58,23 @@ final class TurnaroundTests: XCTestCase {
         XCTAssertEqual(ServiceClock().progress(at: at(0), duration: 0), 0)
     }
 
+    func testLoadSheetFromOFPWeights() throws {
+        let json = """
+        { "params": { "units": "kgs" }, "origin": { "icao_code": "LEMD" }, "destination": { "icao_code": "LEBL" },
+          "fuel": { "taxi": "200", "enroute_burn": "3510" },
+          "weights": { "pax_count": "168", "payload": "16632", "est_zfw": "59132", "max_zfw": "62500", "max_tow": "78000", "max_ldw": "66000" } }
+        """
+        let ofp = try SimBriefOFP.parse(Data(json.utf8))
+        let basis = try XCTUnwrap(LoadSheet.Basis.ofp(ofp))
+        XCTAssertEqual(basis.dryOperatingWeight, 42_500)
+        XCTAssertEqual(basis.massPerPassenger, 99)
+        let same = LoadSheet(passengers: 168, blockFuel: 6000, basis: basis)
+        XCTAssertEqual(same.zeroFuelWeight, 59_132, "with the planned passengers it is the OFP ZFW")
+        XCTAssertEqual(same.landingWeight, 59_132 + 5800 - 3510)
+        XCTAssertTrue(same.withinLimits)
+        XCTAssertFalse(LoadSheet(passengers: 210, blockFuel: 6000, basis: basis).withinLimits)
+    }
+
     func testLoadSheet() {
         let sheet = LoadSheet(passengers: 150, blockFuel: 6000)
         XCTAssertEqual(sheet.zeroFuelWeight, 42_500 + 150 * 97)

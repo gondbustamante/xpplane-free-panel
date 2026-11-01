@@ -124,6 +124,9 @@ struct RootView: View {
         .sheet(isPresented: resultPresented) {
             ExerciseResultSheet()
         }
+        .sheet(isPresented: Bindable(model).showDispatch) {
+            DispatchSheet()
+        }
         .sheet(isPresented: Bindable(model).showTurnaroundPlanner) {
             TurnaroundPlannerSheet()
         }

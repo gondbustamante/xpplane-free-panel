@@ -264,20 +264,62 @@ public struct LoadSheet: Sendable, Equatable {
     public static let maxZeroFuelWeight = 62_500.0
     public static let maxTakeoffWeight = 78_000.0
 
+    /// Where the masses come from: standard A320 figures, or the OFP of this flight.
+    public struct Basis: Sendable, Equatable {
+        public var dryOperatingWeight: Double
+        /// Passenger plus their bags, kg.
+        public var massPerPassenger: Double
+        public var taxiFuel: Double
+        public var maxZeroFuelWeight: Double
+        public var maxTakeoffWeight: Double
+        public var maxLandingWeight: Double?
+        public var tripFuel: Double?
+        public var fromOFP: Bool
+
+        public static let standard = Basis(dryOperatingWeight: LoadSheet.dryOperatingWeight,
+                                           massPerPassenger: LoadSheet.passengerMass + LoadSheet.bagMass,
+                                           taxiFuel: LoadSheet.taxiFuel, maxZeroFuelWeight: LoadSheet.maxZeroFuelWeight,
+                                           maxTakeoffWeight: LoadSheet.maxTakeoffWeight, maxLandingWeight: nil, tripFuel: nil, fromOFP: false)
+
+        /// The OFP's operating weight (ZFW minus payload), its mass per passenger and its limits, in kg.
+        /// Nil when the OFP lacks the weights.
+        public static func ofp(_ ofp: SimBriefOFP) -> Basis? {
+            let w = ofp.weights
+            guard let zfw = ofp.kilograms(w.zeroFuel), let payload = ofp.kilograms(w.payload),
+                  let passengers = w.passengers, passengers > 0 else { return nil }
+            return Basis(dryOperatingWeight: zfw - payload,
+                         massPerPassenger: payload / Double(passengers),
+                         taxiFuel: ofp.kilograms(ofp.fuel.taxi) ?? LoadSheet.taxiFuel,
+                         maxZeroFuelWeight: ofp.kilograms(w.maxZeroFuel) ?? LoadSheet.maxZeroFuelWeight,
+                         maxTakeoffWeight: ofp.kilograms(w.maxTakeoff) ?? LoadSheet.maxTakeoffWeight,
+                         maxLandingWeight: ofp.kilograms(w.maxLanding),
+                         tripFuel: ofp.kilograms(ofp.fuel.trip),
+                         fromOFP: true)
+        }
+    }
+
     public let passengers: Int
     public let zeroFuelWeight: Double
     public let blockFuel: Double
     public let takeoffWeight: Double
+    public let basis: Basis
 
-    public init(passengers: Int, blockFuel: Double) {
+    public init(passengers: Int, blockFuel: Double, basis: Basis = .standard) {
         self.passengers = passengers
         self.blockFuel = blockFuel
-        zeroFuelWeight = Self.dryOperatingWeight + Double(passengers) * (Self.passengerMass + Self.bagMass)
-        takeoffWeight = zeroFuelWeight + blockFuel - Self.taxiFuel
+        self.basis = basis
+        zeroFuelWeight = basis.dryOperatingWeight + Double(passengers) * basis.massPerPassenger
+        takeoffWeight = zeroFuelWeight + blockFuel - basis.taxiFuel
+    }
+
+    /// Takeoff weight minus the planned trip fuel, when the OFP gives it.
+    public var landingWeight: Double? {
+        basis.tripFuel.map { takeoffWeight - $0 }
     }
 
     public var withinLimits: Bool {
-        zeroFuelWeight <= Self.maxZeroFuelWeight && takeoffWeight <= Self.maxTakeoffWeight
+        zeroFuelWeight <= basis.maxZeroFuelWeight && takeoffWeight <= basis.maxTakeoffWeight
+            && (landingWeight ?? 0) <= (basis.maxLandingWeight ?? .infinity)
     }
 }
 

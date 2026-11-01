@@ -339,6 +339,13 @@ final class PanelModel {
     }
     /// A plan prepared from the flight just finished, for the next leg.
     var nextLegDraft: TurnaroundPlan?
+    /// Dispatch and departure briefing of the current OFP.
+    private(set) var dispatch = DispatchState() {
+        didSet { UserDefaults.standard.set(try? JSONEncoder().encode(dispatch), forKey: Keys.dispatch) }
+    }
+    var showDispatch = false
+    @ObservationIgnored private var levelBust = LevelBustMonitor()
+    @ObservationIgnored private var speedLimitWarned = false
     @ObservationIgnored private var flightTask: Task<Void, Never>?
     @ObservationIgnored private var gateTracker = GateTracker()
     @ObservationIgnored private var minimumsCallouts = MinimumsCallouts()
@@ -502,6 +509,7 @@ final class PanelModel {
         static let positionReports = "flight.positionReports"
         static let lastLanding = "flight.lastLanding"
         static let voiceCallouts = "flight.voiceCallouts"
+        static let dispatch = "dispatch.state"
         static let flightLog = "turnaround.flightLog"
         static let extras = "diag.extraDatarefs"
         static let selection = "ui.selection"
@@ -535,6 +543,8 @@ final class PanelModel {
         positionReports = defaults.data(forKey: Keys.positionReports)
             .flatMap { try? JSONDecoder().decode([PositionReport].self, from: $0) } ?? []
         lastLanding = defaults.data(forKey: Keys.lastLanding).flatMap { try? JSONDecoder().decode(LandingReport.self, from: $0) }
+        dispatch = defaults.data(forKey: Keys.dispatch).flatMap { try? JSONDecoder().decode(DispatchState.self, from: $0) }
+            ?? DispatchState()
         if let data = defaults.data(forKey: Keys.turnaround),
            let stored = try? JSONDecoder().decode(TurnaroundRun.self, from: data) {
             turnaround = stored
@@ -1259,7 +1269,10 @@ final class PanelModel {
             plan.origin = ofp.origin.icao
             plan.destination = ofp.destination.icao
             if let passengers = ofp.weights.passengers { plan.passengers = passengers }
-            if let block = ofp.kilograms(ofp.fuel.block) { plan.blockFuelKg = (block / 100).rounded() * 100 }
+            if let block = ofp.kilograms(ofp.fuel.block) {
+                let extra = dispatch.requestID == ofp.requestID ? dispatch.extraFuelKg : 0
+                plan.blockFuelKg = ((block + extra) / 100).rounded() * 100
+            }
             if let taxi = ofp.taxiOutMinutes { plan.taxiMinutes = taxi }
             if let out = ofp.scheduledOut, out > now { plan.offBlocks = out }
         } else if let last = flightLog.first {
@@ -1456,7 +1469,16 @@ final class PanelModel {
     }
 
     var loadSheet: LoadSheet? {
-        turnaround.map { LoadSheet(passengers: $0.plan.passengers, blockFuel: $0.plan.blockFuelKg) }
+        turnaround.map { LoadSheet(passengers: $0.plan.passengers, blockFuel: $0.plan.blockFuelKg,
+                                   basis: loadSheetBasis(origin: $0.plan.origin, destination: $0.plan.destination)) }
+    }
+
+    /// The OFP's weights when it is the plan of this leg; standard masses otherwise.
+    func loadSheetBasis(origin: String, destination: String) -> LoadSheet.Basis {
+        guard let ofp, ofp.origin.icao.uppercased() == origin.uppercased(),
+              ofp.destination.icao.uppercased() == destination.uppercased(),
+              let basis = LoadSheet.Basis.ofp(ofp) else { return .standard }
+        return basis
     }
 
     /// Stamps a block time by hand ("out", "off", "on", "in").
@@ -1743,6 +1765,13 @@ final class PanelModel {
                     let fix = ofp.fixes[index]
                     positionReports.append(PositionReport(ident: fix.ident, date: now, altitude: Int(data.altitude.rounded()),
                                                           actualFuel: data.fuelKg, plannedFuel: ofp.kilograms(fix.plannedFuel)))
+                    // SID constraints from the briefing, checked as each point is passed.
+                    for constraint in dispatch.sidConstraints where constraint.fix.uppercased() == fix.ident.uppercased() {
+                        let problems = constraint.violations(altitude: data.altitude, speed: data.ias)
+                        if !problems.isEmpty {
+                            postAlert("SID \(constraint.fix): \(problems.joined(separator: ", "))", .warning, speak: false)
+                        }
+                    }
                 }
                 reportBaseline = progress.lastPassed
             }
@@ -1750,6 +1779,22 @@ final class PanelModel {
                 if status.level > lastFuelLevel { announce(fuel: status) }
                 lastFuelLevel = status.level
             }
+        }
+
+        // Level bust: a captured FCU altitude left by more than 300 ft.
+        if !data.onGround, let selected = rawValues["sim/cockpit/autopilot/altitude"]?.doubleValue, selected > 0,
+           let deviation = levelBust.update(altitude: data.altitude, selected: selected, at: now) {
+            postAlert("Altitud: \(Int(abs(deviation).rounded())) ft \(deviation > 0 ? "por encima" : "por debajo") de la seleccionada (\(Int(selected)))",
+                      .warning, speak: true)
+        }
+        // 250 kt below FL100, the usual limit in European airspace unless ATC says otherwise.
+        if !data.onGround, data.altitude < 9800, data.ias > 262 {
+            if !speedLimitWarned {
+                speedLimitWarned = true
+                postAlert("\(Int(data.ias.rounded())) kt por debajo de FL100: límite habitual 250 kt", .warning, speak: false)
+            }
+        } else if data.altitude > 10500 || data.ias < 250 {
+            speedLimitWarned = false
         }
 
         // Approach: height above the destination, from the radio altimeter near the ground.
@@ -1805,10 +1850,6 @@ final class PanelModel {
         }
     }
 
-    func dismissFlightAlert() {
-        flightAlert = nil
-    }
-
     func clearPositionReports() {
         positionReports = []
         reportBaseline = nil
@@ -1829,9 +1870,10 @@ final class PanelModel {
             let (data, _) = try await URLSession.shared.data(from: url)
             let loaded = try SimBriefOFP.parse(data)
             if loaded.requestID != ofp?.requestID {
-                // A new flight: its position reports start empty.
+                // A new flight: its position reports and its dispatch start empty.
                 positionReports = []
                 reportBaseline = nil
+                dispatch = Self.newDispatch(for: loaded)
             }
             ofp = loaded
         } catch SimBriefOFP.ParseError.simBrief(let message) {
@@ -1851,7 +1893,81 @@ final class PanelModel {
     }
 
     var mcduGuideSteps: [MCDUGuideStep] {
-        ofp.map(MCDUGuide.steps(for:)) ?? []
+        guard let ofp else { return [] }
+        return MCDUGuide.steps(for: ofp, extraFuel: extraFuelInOFPUnits)
+    }
+
+    /// The captain's extra fuel in the OFP's unit.
+    private var extraFuelInOFPUnits: Double {
+        guard let ofp, dispatch.requestID == ofp.requestID else { return 0 }
+        return ofp.isPounds ? dispatch.extraFuelKg / 0.453592 : dispatch.extraFuelKg
+    }
+
+    // MARK: Dispatch and briefing
+
+    /// A dispatch for a new OFP, with the clearance and ATIS prefilled from it.
+    static func newDispatch(for ofp: SimBriefOFP) -> DispatchState {
+        var state = DispatchState(requestID: ofp.requestID)
+        state.clearance.sid = ofp.sid ?? ""
+        state.clearance.runway = ofp.origin.runway ?? ""
+        state.atisText = ofp.origin.atis?.first ?? ""
+        return state
+    }
+
+    func updateDispatch(_ change: (inout DispatchState) -> Void) {
+        var state = dispatch
+        if let ofp, state.requestID != ofp.requestID { state = Self.newDispatch(for: ofp) }
+        change(&state)
+        dispatch = state
+    }
+
+    var atis: ATISInfo { ATISInfo.parse(dispatch.atisText) }
+
+    /// MEL items deferred for this flight.
+    var deferredItems: [MELItem] {
+        MELItem.catalog.filter { dispatch.melItems.contains($0.id) }
+    }
+
+    /// Puts the ATIS QNH on every BARO window.
+    @discardableResult
+    func applyATISQNH() -> Bool {
+        guard let qnh = atis.qnh else { return false }
+        return baroPanels.map { setQNH($0, Double(qnh)) }.contains(true)
+    }
+
+    /// Types the cleared squawk on the ATC panel keypad.
+    func applySquawk() {
+        let code = dispatch.clearance.squawk
+        guard dispatch.clearance.isSquawkValid, status == .connected else { return }
+        let keys = ["atc.keyclr"] + code.map { "atc.key\($0)" }
+        Task {
+            for id in keys {
+                if let control = controlsByID[id] { press(control) }
+                try? await Task.sleep(for: .milliseconds(150))
+            }
+        }
+    }
+
+    /// Selects the cleared initial altitude on the FCU.
+    @discardableResult
+    func applyInitialAltitude() -> Bool {
+        guard let altitude = dispatch.clearance.initialAltitude,
+              let selector = fcu?.selectors.first(where: { $0.id == "fcu.alt" }) else { return false }
+        return set(selector, to: "\(altitude)")
+    }
+
+    /// Report time and the maximum end of the flight duty period for the planned off-blocks.
+    func dutyPeriod(offBlocks: Date) -> (report: Date, maximumEnd: Date, maximumMinutes: Int) {
+        let report = offBlocks.addingTimeInterval(-Double(dispatch.reportMinutesBeforeOffBlocks) * 60)
+        let parts = Calendar.current.dateComponents([.hour, .minute], from: report)
+        let minutes = DutyPeriod.maximumMinutes(reportMinuteOfDay: (parts.hour ?? 0) * 60 + (parts.minute ?? 0),
+                                                sectors: dispatch.sectorsToday)
+        return (report, report.addingTimeInterval(Double(minutes) * 60), minutes)
+    }
+
+    /// Off-blocks used for dispatch figures: the turnaround's, else the OFP's.
+    var plannedOffBlocks: Date? {
+        turnaround?.plan.offBlocks ?? ofp?.scheduledOut
     }
 
     private func guideKey(_ step: MCDUGuideStep) -> String {

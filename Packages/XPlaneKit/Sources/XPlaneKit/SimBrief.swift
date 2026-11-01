@@ -17,6 +17,12 @@ public struct SimBriefOFP: Codable, Sendable, Equatable {
         public var metar: String?
         public var latitude: Double? = nil
         public var longitude: Double? = nil
+        /// "vfr", "mvfr", "ifr", "lifr" from the METAR.
+        public var weatherCategory: String? = nil
+        public var taf: String? = nil
+        /// ATIS messages SimBrief found (VATSIM and others).
+        public var atis: [String]? = nil
+        public var notams: [String]? = nil
     }
 
     /// A navlog point: where it is, how far from the previous one and the fuel planned on board.
@@ -35,6 +41,9 @@ public struct SimBriefOFP: Codable, Sendable, Equatable {
         /// Seconds from take-off.
         public var timeTotal: Int?
         public var stage: String?
+        /// Airway or procedure the point is flown by, and whether it belongs to the SID or STAR.
+        public var airway: String? = nil
+        public var isProcedure: Bool? = nil
     }
 
     public struct Fuel: Codable, Sendable, Equatable {
@@ -110,6 +119,8 @@ public struct SimBriefOFP: Codable, Sendable, Equatable {
     /// Optional so an OFP saved before the navlog was read still loads.
     public var navlog: [NavFix]? = nil
     public var enrouteAlternates: [Airport]? = nil
+    /// The ICAO flight plan as filed (FPL message).
+    public var atcFlightPlan: String? = nil
 
     public var fixes: [NavFix] { navlog ?? [] }
 
@@ -233,10 +244,12 @@ public struct SimBriefOFP: Codable, Sendable, Equatable {
                 return NavFix(ident: ident, type: text(fix["type"]), latitude: latitude, longitude: longitude,
                               legDistance: number(fix["distance"]), altitude: integer(fix["altitude_feet"]),
                               plannedFuel: number(fix["fuel_plan_onboard"]), minimumFuel: number(fix["fuel_min_onboard"]),
-                              timeTotal: integer(fix["time_total"]), stage: text(fix["stage"]))
+                              timeTotal: integer(fix["time_total"]), stage: text(fix["stage"]),
+                              airway: text(fix["via_airway"]), isProcedure: text(fix["is_sid_star"]).map { $0 == "1" })
             }
         }
         ofp.enrouteAlternates = runways(root["enroute_altn"]).compactMap { airport($0) }
+        ofp.atcFlightPlan = text((root["atc"] as? [String: Any])?["flightplan_text"])
 
         // Performance (TLR): the planned runway's take-off data and the landing runway's ILS.
         if let tlr = root["tlr"] as? [String: Any] {
@@ -263,7 +276,27 @@ public struct SimBriefOFP: Codable, Sendable, Equatable {
         return Airport(icao: icao, name: text(object["name"]), elevation: integer(object["elevation"]),
                        runway: text(object["plan_rwy"]), transitionAltitude: integer(object["trans_alt"]),
                        transitionLevel: integer(object["trans_level"]), metar: text(object["metar"]),
-                       latitude: number(object["pos_lat"]), longitude: number(object["pos_long"]))
+                       latitude: number(object["pos_lat"]), longitude: number(object["pos_long"]),
+                       weatherCategory: text(object["metar_category"])?.lowercased(), taf: text(object["taf"]),
+                       atis: messages(object["atis"], keys: ["message", "text"]),
+                       notams: messages(object["notam"], keys: ["notam_text", "text", "message"]))
+    }
+
+    /// Texts from a field that may be a string, a list of strings or a list of objects.
+    private static func messages(_ value: Any?, keys: [String]) -> [String]? {
+        var result: [String] = []
+        let items: [Any] = (value as? [Any]) ?? (value.map { [$0] } ?? [])
+        for item in items {
+            if let string = text(item) {
+                result.append(string)
+            } else if let object = item as? [String: Any] {
+                if let string = keys.lazy.compactMap({ text(object[$0]) }).first {
+                    let id = text(object["notam_id"]) ?? text(object["network"])
+                    result.append(id.map { "\($0): \(string)" } ?? string)
+                }
+            }
+        }
+        return result.isEmpty ? nil : result
     }
 
     private static func runways(_ value: Any?) -> [[String: Any]] {

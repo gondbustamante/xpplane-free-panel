@@ -102,6 +102,37 @@ final class SimBriefTests: XCTestCase {
         XCTAssertTrue(steps.first { $0.id == "fpln_arrival" }?.later ?? false)
     }
 
+    func testWeatherATISNotamsAndFlightPlan() throws {
+        let json = """
+        { "origin": { "icao_code": "EDDM", "metar_category": "VFR", "taf": "EDDM 231100Z 2312/2418 31005KT CAVOK",
+                      "atis": [ { "network": "vatsim", "letter": "C",
+                                  "message": "MUENCHEN INFORMATION C RUNWAYS IN USE 26L AND 26R TRL 60 WIND 320 DEGREES 7 KNOTS TEMPERATURE 12 DEW POINT -2 QNH 1017" } ],
+                      "notam": [ { "notam_id": "A1234/26", "notam_text": "RWY 08L/26R CLSD 2200-0500" } ] },
+          "destination": { "icao_code": "EDDS", "metar_category": "lifr", "atis": {}, "notam": {} },
+          "atc": { "flightplan_text": "(FPL-DLH123-IS -A320/M-SDE2E3FGHIRWY/LB1 -EDDM1515 -N0450F360 RIDA6S RIDAR -EDDS0050 EDDF)" },
+          "navlog": { "fix": [ { "ident": "DM052", "pos_lat": "48.3", "pos_long": "11.5", "via_airway": "RIDA6S", "is_sid_star": "1" } ] } }
+        """
+        let ofp = try SimBriefOFP.parse(Data(json.utf8))
+        XCTAssertEqual(ofp.origin.weatherCategory, "vfr")
+        XCTAssertEqual(ofp.destination.weatherCategory, "lifr")
+        XCTAssertEqual(ofp.origin.notams, ["A1234/26: RWY 08L/26R CLSD 2200-0500"])
+        XCTAssertNil(ofp.destination.notams)
+        let atis = ATISInfo.parse(try XCTUnwrap(ofp.origin.atis?.first))
+        XCTAssertEqual(atis.letter, "C")
+        XCTAssertEqual(atis.runway, "26L")
+        XCTAssertEqual(atis.windSpeed, 7)
+        XCTAssertEqual(atis.qnh, 1017)
+        XCTAssertEqual(atis.transitionLevel, 60)
+        XCTAssertTrue(ofp.atcFlightPlan?.hasPrefix("(FPL-DLH123") ?? false)
+        XCTAssertEqual(ofp.fixes.first?.isProcedure, true)
+        XCTAssertEqual(ofp.fixes.first?.airway, "RIDA6S")
+    }
+
+    func testExtraFuelGoesOnTheBlock() throws {
+        let steps = MCDUGuide.steps(for: try ofp(), extraFuel: 500)
+        XCTAssertEqual(steps.first { $0.id == "initb_block" }?.entries.first?.value, "6.5")
+    }
+
     func testChecksAcceptEitherUnit() {
         let zfw = GuideCheck(dataref: "z", kind: .mass, expected: 59.132)
         XCTAssertEqual(zfw.matches(.number(59.1)), true)

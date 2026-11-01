@@ -171,7 +171,7 @@ struct TurnaroundPlannerSheet: View {
                 } header: {
                     Text("Carga y servicios")
                 } footer: {
-                    let sheet = LoadSheet(passengers: plan.passengers, blockFuel: plan.blockFuelKg)
+                    let sheet = LoadSheet(passengers: plan.passengers, blockFuel: plan.blockFuelKg, basis: model.loadSheetBasis(origin: plan.origin, destination: plan.destination))
                     Text("ZFW estimado \(Int(sheet.zeroFuelWeight)) kg, TOW \(Int(sheet.takeoffWeight)) kg\(sheet.withinLimits ? "" : ": por encima de los límites del A320"). El embarque y el repostaje escriben en el simulador el número de pasajeros y el combustible a bordo poco a poco.")
                 }
             }
@@ -447,17 +447,23 @@ struct TurnaroundSheet: View {
             if let sheet = model.loadSheet {
                 Section {
                     LabeledContent("Pasajeros", value: "\(sheet.passengers)")
-                    LabeledContent("ZFW", value: "\(Int(sheet.zeroFuelWeight)) kg")
+                    LabeledContent("ZFW", value: "\(Int(sheet.zeroFuelWeight)) kg · máx \(Int(sheet.basis.maxZeroFuelWeight))")
                     LabeledContent("Combustible de bloque", value: "\(Int(sheet.blockFuel)) kg")
-                    LabeledContent("TOW", value: "\(Int(sheet.takeoffWeight)) kg")
+                    LabeledContent("TOW", value: "\(Int(sheet.takeoffWeight)) kg · máx \(Int(sheet.basis.maxTakeoffWeight))")
+                    if let landing = sheet.landingWeight {
+                        LabeledContent("LW prevista", value: "\(Int(landing)) kg" + (sheet.basis.maxLandingWeight.map { " · máx \(Int($0))" } ?? ""))
+                    }
                     if !sheet.withinLimits {
-                        Label("Por encima del MZFW o del MTOW del A320: revisa la carga.", systemImage: "exclamationmark.triangle")
+                        Label("Por encima de un peso máximo (MZFW, MTOW o MLW): revisa la carga.", systemImage: "exclamationmark.triangle")
                             .foregroundStyle(PanelTheme.checklistAmber)
                     }
                 } header: {
                     Text("Hoja de carga (estimada)")
                 } footer: {
-                    Text("Con masas estándar (\(Int(LoadSheet.passengerMass)) kg por pasajero y \(Int(LoadSheet.bagMass)) kg de equipaje) sobre un peso operativo típico de \(Int(LoadSheet.dryOperatingWeight)) kg. Estos son los datos que van a INIT B o FUEL PRED en «Cierre del MCDU con la hoja de carga».")
+                    Text((sheet.basis.fromOFP
+                          ? "Con los pesos del OFP: peso operativo \(Int(sheet.basis.dryOperatingWeight)) kg y \(Int(sheet.basis.massPerPassenger)) kg por pasajero con equipaje, sobre los pasajeros reales del embarque. "
+                          : "Con masas estándar (\(Int(LoadSheet.passengerMass)) kg por pasajero y \(Int(LoadSheet.bagMass)) kg de equipaje) sobre un peso operativo típico de \(Int(LoadSheet.dryOperatingWeight)) kg. ")
+                         + "Estos son los datos que van a INIT B o FUEL PRED en «Cierre del MCDU con la hoja de carga».")
                 }
             }
 

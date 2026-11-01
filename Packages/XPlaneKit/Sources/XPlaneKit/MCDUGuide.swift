@@ -142,7 +142,8 @@ public enum MCDUGuide {
         seconds.map { String(format: "%d:%02d", $0 / 3600, ($0 % 3600) / 60) }
     }
 
-    public static func steps(for ofp: SimBriefOFP) -> [MCDUGuideStep] {
+    /// `extraFuel`: fuel the captain adds over the OFP, in the OFP's unit; it goes on the BLOCK.
+    public static func steps(for ofp: SimBriefOFP, extraFuel: Double = 0) -> [MCDUGuideStep] {
         var steps: [MCDUGuideStep] = []
         let unit = ofp.massUnit
         let o = ofp.origin.icao
@@ -293,12 +294,15 @@ public enum MCDUGuide {
                 why: "El OFP trae el ZFW estimado; el definitivo y el centro de gravedad llegan en la hoja de carga. Se meten ahora y se corrigen con la hoja final.",
                 affects: "TOW, velocidades características (VLS, F, S, O), nivel máximo y todas las predicciones."))
         }
-        if let block = mcduMass(ofp.fuel.block) {
+        let blockFuel = ofp.fuel.block.map { $0 + extraFuel }
+        if let block = mcduMass(blockFuel) {
             steps.append(MCDUGuideStep(
                 id: "initb_block", page: "INIT B / FUEL PRED", field: "BLOCK", location: "LSK 2R",
                 entries: [GuideEntry(id: "block", label: "BLOCK", value: block,
-                                     check: GuideCheck(dataref: "toliss_airbus/init/BlockFuel", kind: .mass, expected: (ofp.fuel.block ?? 0) / 1000))],
-                source: "«BLOCK» (o «RAMP») del bloque de combustible del OFP",
+                                     check: GuideCheck(dataref: "toliss_airbus/init/BlockFuel", kind: .mass, expected: (blockFuel ?? 0) / 1000))],
+                source: extraFuel > 0
+                    ? "«BLOCK» del OFP más el combustible extra que has decidido en el despacho (\(Int(extraFuel.rounded())))"
+                    : "«BLOCK» (o «RAMP») del bloque de combustible del OFP",
                 why: "Es el combustible total a bordo al empezar a rodar. Comprueba que coincide con el FOB del ECAM.",
                 affects: "TOW y combustible previsto en cada punto y en destino."))
         }

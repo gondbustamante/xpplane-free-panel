@@ -40,6 +40,7 @@ struct FlightMonitorColumn: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 RouteFuelCard()
+                DepartureCard()
                 CruiseCard()
                 DescentCard()
                 ApproachCard()
@@ -334,6 +335,40 @@ private struct PositionReportsCard: View {
     }
 }
 
+// MARK: Departure: SID constraints from the briefing and deferred items (4.3, 1.6)
+
+private struct DepartureCard: View {
+    @Environment(PanelModel.self) private var model
+
+    var body: some View {
+        let constraints = model.dispatch.sidConstraints
+        let deferred = model.deferredItems
+        if !constraints.isEmpty || !deferred.isEmpty {
+            MonitorCard(title: "SALIDA Y MEL", icon: "airplane.departure") {
+                ForEach(constraints) { constraint in
+                    let report = model.positionReports.last { $0.ident.uppercased() == constraint.fix.uppercased() }
+                    let problems = report?.altitude.map { constraint.violations(altitude: Double($0), speed: nil) }
+                    HStack {
+                        Text(constraint.text).font(.footnote.monospaced())
+                        Spacer()
+                        if let report, let altitude = report.altitude {
+                            Text("\(altitude) ft").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                            Image(systemName: problems?.isEmpty ?? true ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                                .foregroundStyle(problems?.isEmpty ?? true ? PanelTheme.checklistGreen : PanelTheme.checklistAmber)
+                        } else {
+                            Text("pendiente").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                ForEach(deferred) { item in
+                    Label("\(item.ata) · \(item.title)", systemImage: "wrench.and.screwdriver")
+                        .font(.caption).foregroundStyle(PanelTheme.checklistAmber)
+                }
+            }
+        }
+    }
+}
+
 // MARK: Nearest airports (5.4)
 
 private struct NearbyAirportsCard: View {
@@ -354,27 +389,22 @@ private struct NearbyAirportsCard: View {
     }
 }
 
-/// Banner over the panel for callouts, gate results, fuel states and the touchdown. It goes
-/// away by itself after eight seconds (critical ones stay until dismissed).
+/// Banner over the panel for callouts, gate results, fuel states and the touchdown. Nothing to
+/// press: it goes away by itself (6 s for information, 10 s for warnings, 20 s for critical
+/// ones) and lets touches through to the panel underneath, so it never asks for attention
+/// with buttons while flying. The monitor column keeps the full picture.
 struct FlightAlertBanner: View {
     @Environment(PanelModel.self) private var model
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             if let alert = model.flightAlert,
-               alert.level == .critical || context.date.timeIntervalSince(alert.date) < 8 {
+               context.date.timeIntervalSince(alert.date) < lifetime(alert.level) {
                 HStack(spacing: 10) {
                     Image(systemName: icon(alert.level))
                     Text(alert.text)
                         .font(.callout.weight(.semibold))
                         .multilineTextAlignment(.leading)
-                    Spacer(minLength: 4)
-                    Button {
-                        model.dismissFlightAlert()
-                    } label: {
-                        Image(systemName: "xmark")
-                    }
-                    .buttonStyle(.plain)
                 }
                 .foregroundStyle(colour(alert.level))
                 .padding(.horizontal, 14)
@@ -386,7 +416,16 @@ struct FlightAlertBanner: View {
                 .padding(.top, 10)
                 .frame(maxWidth: 640)
                 .transition(.move(edge: .top).combined(with: .opacity))
+                .allowsHitTesting(false)
             }
+        }
+    }
+
+    private func lifetime(_ level: PanelModel.FlightAlert.Level) -> TimeInterval {
+        switch level {
+        case .info, .good: return 6
+        case .warning: return 10
+        case .critical: return 20
         }
     }
 

@@ -203,6 +203,21 @@ Componentes nuevos pendientes: pulsador con tirador de fuego, voltímetros de ba
 - [ ] Confirmar en X-Plane/ToLiss: `ap_speed_value` como VAPP en aproximación, DH/MDA de PERF APPR, desviaciones de NAV1 con el ILS
 - [ ] Viento en el cálculo del TOD; distancia de aterrizaje; tiempo de servicio
 
+## Fase D · Despacho y briefing de salida (2026-11-01)
+
+- [x] Resumen del despacho: vuelo, escalones, pesos del OFP frente a MZFW/MTOW/MLW con margen, alternos (destino y en ruta), aceptación del despacho
+- [x] Hoja de carga del turnaround con los pesos del OFP (peso operativo y masa por pasajero) sobre los pasajeros reales; LW prevista
+- [x] Combustible: desglose del OFP y extra del comandante con motivo; el extra va al BLOCK de la guía del MCDU y del turnaround
+- [x] Meteorología (METAR, TAF, categoría con consejo), NOTAM con marcas de leído, MEL simulada con consecuencias, tiempo de actividad EASA ORO.FTL.205 simplificado
+- [x] Plan ATC presentado, ruta y navlog completo
+- [x] ATIS: pegar o elegir del OFP, lectura de letra, pista, viento, temperatura, QNH y nivel de transición; QNH a los BARO
+- [x] Autorización de salida con colación; código al transpondedor y altitud inicial al FCU; aviso si la SID no es la del OFP
+- [x] Briefing de salida TEM: configuración y velocidades del TLR, EOSID, altitud de aceleración, amenazas
+- [x] Restricciones de la SID anotadas de la carta de Navigraph y comprobadas en vuelo al pasar cada punto; aviso de salirse de la altitud del FCU (level bust) y de 250 kt bajo FL100
+- [x] Avisos en vuelo pasivos: sin botones, desaparecen solos y no bloquean el panel
+- [x] Inspección exterior guiada (12 puntos)
+- [ ] Confirmar en X-Plane: teclado del transpondedor del ToLiss (`atc.key*`) y `sim/cockpit/autopilot/altitude` como ALT del FCU
+
 ## Fase 3 · Pulido y distribución (continuo)
 
 - Descubrimiento automático del simulador (requiere entitlement multicast de Apple; alternativa: escaneo de la subred por el puerto del relay)
