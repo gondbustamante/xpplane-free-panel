@@ -48,6 +48,7 @@ struct RootView: View {
                 TurnaroundBar()
                 ExerciseBar()
                 PanelCanvas()
+                    .overlay { MiniTimers() }
             }
             .background(PanelTheme.cockpitBackground.ignoresSafeArea())
             .navigationTitle(model.selectionTitle)

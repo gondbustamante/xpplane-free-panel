@@ -246,11 +246,13 @@ struct TurnaroundPlannerSheet: View {
 }
 
 /// Strip under the connection bar while a turnaround runs: countdown, next milestone, delay.
+/// It can shrink to a floating pill in a corner of the panel (`MiniTimers`).
 struct TurnaroundBar: View {
     @Environment(PanelModel.self) private var model
+    @AppStorage(MiniTimers.turnaroundKey) private var minimized = false
 
     var body: some View {
-        if let run = model.turnaround {
+        if let run = model.turnaround, !minimized {
             TimelineView(.periodic(from: .now, by: 1)) { context in
                 let now = context.date
                 let delay = model.turnaroundDelay(at: now)
@@ -300,6 +302,14 @@ struct TurnaroundBar: View {
                     Button("Abrir") { model.showTurnaroundSheet = true }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
+                    Button {
+                        withAnimation(.snappy) { minimized = true }
+                    } label: {
+                        Image(systemName: "arrow.down.right.and.arrow.up.left")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .accessibilityLabel("Minimizar a una esquina")
                 }
             }
             .foregroundStyle(PanelTheme.checklistCyan)
@@ -750,5 +760,151 @@ struct FlightLogSheet: View {
     private func times(_ times: BlockTimes) -> String {
         func show(_ date: Date?) -> String { date.map(TurnaroundFormat.utc) ?? "--:--" }
         return "OUT \(show(times.outTime))  OFF \(show(times.offTime))  ON \(show(times.onTime))  IN \(show(times.inTime))"
+    }
+}
+
+// MARK: Floating timers
+
+/// The turnaround countdown and the exercise stopwatch, minimised to pills in a corner of the
+/// panel. A tap opens the full strip again; dragging moves them to another corner.
+struct MiniTimers: View {
+    static let turnaroundKey = "ui.turnaroundMinimized"
+    static let exerciseKey = "ui.exerciseMinimized"
+    static let cornerKey = "ui.miniTimerCorner"
+
+    enum Corner: String, CaseIterable {
+        case topLeading, topTrailing, bottomLeading, bottomTrailing
+
+        var alignment: Alignment {
+            switch self {
+            case .topLeading: return .topLeading
+            case .topTrailing: return .topTrailing
+            case .bottomLeading: return .bottomLeading
+            case .bottomTrailing: return .bottomTrailing
+            }
+        }
+
+        var isTop: Bool { self == .topLeading || self == .topTrailing }
+        var isLeading: Bool { self == .topLeading || self == .bottomLeading }
+
+        static func from(top: Bool, leading: Bool) -> Corner {
+            switch (top, leading) {
+            case (true, true): return .topLeading
+            case (true, false): return .topTrailing
+            case (false, true): return .bottomLeading
+            case (false, false): return .bottomTrailing
+            }
+        }
+    }
+
+    @Environment(PanelModel.self) private var model
+    @AppStorage(MiniTimers.turnaroundKey) private var turnaroundMinimized = false
+    @AppStorage(MiniTimers.exerciseKey) private var exerciseMinimized = false
+    @AppStorage(MiniTimers.cornerKey) private var cornerRaw = Corner.topTrailing.rawValue
+    @State private var drag: CGSize = .zero
+
+    private var corner: Corner { Corner(rawValue: cornerRaw) ?? .topTrailing }
+    private var showsTurnaround: Bool { turnaroundMinimized && model.turnaround != nil }
+    private var showsExercise: Bool { exerciseMinimized && model.isExerciseRunning }
+
+    var body: some View {
+        Color.clear
+            .allowsHitTesting(false)
+            .overlay(alignment: corner.alignment) {
+                if showsTurnaround || showsExercise {
+                    VStack(alignment: corner.isLeading ? .leading : .trailing, spacing: 8) {
+                        if showsTurnaround { turnaroundPill }
+                        if showsExercise { exercisePill }
+                    }
+                    .padding(12)
+                    .offset(drag)
+                    .gesture(
+                        DragGesture(minimumDistance: 8)
+                            .onChanged { drag = $0.translation }
+                            .onEnded { value in
+                                // Snap to the corner the pills were thrown towards.
+                                var top = corner.isTop
+                                var leading = corner.isLeading
+                                if value.translation.height > 60 { top = false } else if value.translation.height < -60 { top = true }
+                                if value.translation.width > 80 { leading = false } else if value.translation.width < -80 { leading = true }
+                                withAnimation(.snappy) {
+                                    cornerRaw = Corner.from(top: top, leading: leading).rawValue
+                                    drag = .zero
+                                }
+                            }
+                    )
+                    .transition(.scale(scale: 0.6).combined(with: .opacity))
+                }
+            }
+    }
+
+    private var turnaroundPill: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            if let run = model.turnaround {
+                let delay = model.turnaroundDelay(at: context.date)
+                let warning = !model.refuelWithPassengersIssues(at: context.date).isEmpty
+                pill(colour: delay > 0 || warning ? PanelTheme.checklistAmber : PanelTheme.checklistCyan) {
+                    Image(systemName: "clock.badge")
+                    Text(TurnaroundFormat.countdown(to: run.plan.offBlocks, now: context.date))
+                        .monospacedDigit()
+                    Circle()
+                        .fill(delay > 0 ? PanelTheme.checklistAmber : PanelTheme.checklistGreen)
+                        .frame(width: 8, height: 8)
+                    if warning {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                    }
+                } action: {
+                    withAnimation(.snappy) { turnaroundMinimized = false }
+                }
+                .contextMenu {
+                    Button("Abrir turnaround", systemImage: "list.bullet.rectangle") { model.showTurnaroundSheet = true }
+                    Button("Mostrar la barra", systemImage: "arrow.up.left.and.arrow.down.right") {
+                        withAnimation(.snappy) { turnaroundMinimized = false }
+                    }
+                }
+                .accessibilityLabel("Turnaround \(TurnaroundFormat.countdown(to: run.plan.offBlocks, now: context.date)), toca para desplegar")
+            }
+        }
+    }
+
+    private var exercisePill: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            if let run = model.exerciseRun, run.isRunning {
+                let elapsed = model.exerciseElapsed(at: context.date)
+                let target = Double(run.tracker.definition.targetSeconds)
+                pill(colour: elapsed > target ? PanelTheme.checklistAmber : PanelTheme.checklistCyan) {
+                    Image(systemName: "stopwatch.fill")
+                    Text(ExerciseFormat.time(elapsed))
+                        .monospacedDigit()
+                    Text("\(run.tracker.doneCount)/\(run.tracker.steps.count)")
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                    if !run.tracker.mistakes.isEmpty {
+                        Label("\(run.tracker.mistakes.count)", systemImage: "xmark.circle")
+                            .foregroundStyle(PanelTheme.checklistAmber)
+                    }
+                } action: {
+                    withAnimation(.snappy) { exerciseMinimized = false }
+                }
+                .accessibilityLabel("Ejercicio \(ExerciseFormat.time(elapsed)), toca para desplegar")
+            }
+        }
+    }
+
+    private func pill<Content: View>(colour: Color, @ViewBuilder content: () -> Content,
+                                     action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                content()
+            }
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(colour)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(Capsule().fill(.ultraThinMaterial))
+            .overlay(Capsule().strokeBorder(colour.opacity(0.7), lineWidth: 1))
+            .shadow(color: .black.opacity(0.4), radius: 6, y: 2)
+        }
+        .buttonStyle(.plain)
     }
 }

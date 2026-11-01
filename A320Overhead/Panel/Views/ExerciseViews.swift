@@ -206,6 +206,7 @@ struct ExerciseBar: View {
     @Environment(PanelModel.self) private var model
     @State private var confirmAbandon = false
     @State private var confirmRestart = false
+    @AppStorage(MiniTimers.exerciseKey) private var minimized = false
 
     var body: some View {
         if let preparing = model.preparingExercise {
@@ -221,7 +222,7 @@ struct ExerciseBar: View {
             .padding(.vertical, 6)
             .background(PanelTheme.checklistCyan.opacity(0.10))
         }
-        if let run = model.exerciseRun, run.isRunning {
+        if let run = model.exerciseRun, run.isRunning, !minimized {
             let tracker = run.tracker
             let target = Double(tracker.definition.targetSeconds)
             VStack(alignment: .leading, spacing: 6) {
@@ -258,6 +259,14 @@ struct ExerciseBar: View {
                     Button("Reiniciar") { confirmRestart = true }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
+                    Button {
+                        withAnimation(.snappy) { minimized = true }
+                    } label: {
+                        Image(systemName: "arrow.down.right.and.arrow.up.left")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .accessibilityLabel("Minimizar a una esquina")
                     Button("Abandonar", role: .destructive) { confirmAbandon = true }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
