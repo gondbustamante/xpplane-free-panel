@@ -49,6 +49,7 @@ struct RootView: View {
                 ExerciseBar()
                 PanelCanvas()
                     .overlay { MiniTimers() }
+                    .overlay(alignment: .top) { FlightAlertBanner() }
             }
             .background(PanelTheme.cockpitBackground.ignoresSafeArea())
             .navigationTitle(model.selectionTitle)

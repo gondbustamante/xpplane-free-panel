@@ -1,3 +1,4 @@
+import AVFoundation
 import Foundation
 import Observation
 import XPlaneKit
@@ -77,6 +78,10 @@ struct TurnaroundRun: Codable, Equatable {
     /// Fuel on board when refuelling started, kg.
     var refuelStartKg: Double?
     var blockTimes = BlockTimes()
+    /// Fuel on board at OUT and IN, kg, and the touchdown of this flight.
+    var fuelAtOut: Double?
+    var fuelAtIn: Double?
+    var landing: LandingReport?
     /// IATA delay code and note when the flight leaves late.
     var delayCode: Int?
     var delayNote: String?
@@ -303,10 +308,44 @@ final class PanelModel {
     enum InspectorPanel: String {
         case checklist
         case mcduGuide
+        case flight
     }
     var inspectorPanel: InspectorPanel {
         didSet { UserDefaults.standard.set(inspectorPanel.rawValue, forKey: Keys.inspectorPanel) }
     }
+    /// Position reports of the current OFP's flight.
+    private(set) var positionReports: [PositionReport] = [] {
+        didSet { UserDefaults.standard.set(try? JSONEncoder().encode(positionReports), forKey: Keys.positionReports) }
+    }
+    /// Stabilised approach gates of the approach in progress.
+    private(set) var gateResults: [GateResult] = []
+    /// Last touchdown measured.
+    private(set) var lastLanding: LandingReport? {
+        didSet { UserDefaults.standard.set(lastLanding.flatMap { try? JSONEncoder().encode($0) }, forKey: Keys.lastLanding) }
+    }
+    /// Where the aircraft is on the OFP route (airborne, with an OFP).
+    private(set) var routeProgress: RouteProgress?
+    /// Banner over the panel: a callout, a gate result, a fuel state, the touchdown.
+    struct FlightAlert: Equatable {
+        enum Level { case info, good, warning, critical }
+        let text: String
+        let level: Level
+        let date: Date
+    }
+    private(set) var flightAlert: FlightAlert?
+    /// Speak the minimums callouts and the gate results.
+    var voiceCallouts: Bool {
+        didSet { UserDefaults.standard.set(voiceCallouts, forKey: Keys.voiceCallouts) }
+    }
+    /// A plan prepared from the flight just finished, for the next leg.
+    var nextLegDraft: TurnaroundPlan?
+    @ObservationIgnored private var flightTask: Task<Void, Never>?
+    @ObservationIgnored private var gateTracker = GateTracker()
+    @ObservationIgnored private var minimumsCallouts = MinimumsCallouts()
+    @ObservationIgnored private var landingDetector = LandingDetector()
+    @ObservationIgnored private var reportBaseline: Int?
+    @ObservationIgnored private var lastFuelLevel: FuelStatus.Level = .onPlan
+    @ObservationIgnored private let speech = AVSpeechSynthesizer()
     /// Guide entry being typed into the MCDU scratchpad.
     private(set) var typingEntryID: String?
     @ObservationIgnored private var typingTask: Task<Void, Never>?
@@ -460,6 +499,9 @@ final class PanelModel {
         static let ofp = "simbrief.ofp"
         static let guideDone = "simbrief.guideDone"
         static let inspectorPanel = "ui.inspectorPanel"
+        static let positionReports = "flight.positionReports"
+        static let lastLanding = "flight.lastLanding"
+        static let voiceCallouts = "flight.voiceCallouts"
         static let flightLog = "turnaround.flightLog"
         static let extras = "diag.extraDatarefs"
         static let selection = "ui.selection"
@@ -489,6 +531,10 @@ final class PanelModel {
         ofp = defaults.data(forKey: Keys.ofp).flatMap { try? JSONDecoder().decode(SimBriefOFP.self, from: $0) }
         guideDone = Set(defaults.stringArray(forKey: Keys.guideDone) ?? [])
         inspectorPanel = InspectorPanel(rawValue: defaults.string(forKey: Keys.inspectorPanel) ?? "") ?? .checklist
+        voiceCallouts = defaults.object(forKey: Keys.voiceCallouts) as? Bool ?? true
+        positionReports = defaults.data(forKey: Keys.positionReports)
+            .flatMap { try? JSONDecoder().decode([PositionReport].self, from: $0) } ?? []
+        lastLanding = defaults.data(forKey: Keys.lastLanding).flatMap { try? JSONDecoder().decode(LandingReport.self, from: $0) }
         if let data = defaults.data(forKey: Keys.turnaround),
            let stored = try? JSONDecoder().decode(TurnaroundRun.self, from: data) {
             turnaround = stored
@@ -524,6 +570,7 @@ final class PanelModel {
         fitRequestID = 1   // launch fitted: the panel starts still
         loadMappings()
         if turnaround != nil { startTurnaroundLoop() }
+        startFlightMonitor()
     }
 
     // MARK: Mappings
@@ -1202,6 +1249,10 @@ final class PanelModel {
         let inAnHour = now.addingTimeInterval(3600)
         let rounded = Date(timeIntervalSinceReferenceDate: (inAnHour.timeIntervalSinceReferenceDate / 300).rounded(.up) * 300)
         var plan = TurnaroundPlan(templateID: turnaroundTemplates.first?.id ?? "departure", offBlocks: rounded)
+        if let draft = nextLegDraft {
+            nextLegDraft = nil
+            return draft
+        }
         if let ofp {
             // The SimBrief OFP fills the flight, the load and the scheduled off-blocks time.
             plan.flightNumber = ofp.callsign ?? ""
@@ -1241,12 +1292,46 @@ final class PanelModel {
             entry.delayCode = run.delayCode
             entry.delayNote = run.delayNote
             entry.ctot = run.plan.ctot
+            entry.landingRate = run.landing?.rate
+            entry.landingG = run.landing?.peakG
+            if let out = run.fuelAtOut, let into = run.fuelAtIn, out > into { entry.fuelUsedKg = out - into }
+            if let ofp, ofp.origin.icao == run.plan.origin, ofp.destination.icao == run.plan.destination,
+               let trip = ofp.kilograms(ofp.fuel.trip) {
+                entry.plannedFuelKg = trip + (ofp.kilograms(ofp.fuel.taxi) ?? 0)
+            }
             flightLog.insert(entry, at: 0)
         }
         turnaround = nil
         turnaroundTask?.cancel()
         turnaroundTask = nil
         showTurnaroundSheet = false
+    }
+
+    /// After IN: saves this flight and opens the planner for the next leg from here, as a short
+    /// turn off-blocks 35 minutes after IN.
+    func planNextLeg() {
+        guard let run = turnaround else { return }
+        let arrival = run.blockTimes.inTime ?? Date()
+        var plan = TurnaroundPlan(templateID: turnaroundTemplates.first { $0.id == "quick_turn" }?.id ?? run.plan.templateID,
+                                  offBlocks: arrival.addingTimeInterval(35 * 60))
+        plan.origin = run.plan.destination
+        plan.flightNumber = run.plan.flightNumber
+        plan.arrivingPassengers = run.plan.passengers
+        if let template = turnaroundTemplates.first(where: { $0.id == plan.templateID }) {
+            if let minutes = template.boardingMinutes { plan.boardingMinutes = minutes }
+            plan.deboardingMinutes = template.deboardingMinutes
+        }
+        finishTurnaround(saveToLog: true)
+        nextLegDraft = plan
+        Task {
+            try? await Task.sleep(for: .milliseconds(600))
+            self.showTurnaroundPlanner = true
+        }
+    }
+
+    func updateNotes(of id: UUID, _ notes: String) {
+        guard let index = flightLog.firstIndex(where: { $0.id == id }) else { return }
+        flightLog[index].notes = notes.isEmpty ? nil : notes
     }
 
     func deleteLogEntries(at offsets: IndexSet) {
@@ -1443,6 +1528,9 @@ final class PanelModel {
         if blockDetector.update(at: now, parkBrake: parkBrake, onGround: onGround) {
             run.blockTimes = blockDetector.times
         }
+        // Fuel on board at OUT and IN, for the burn against the plan.
+        if run.blockTimes.outTime != nil, run.fuelAtOut == nil { run.fuelAtOut = flightData?.fuelKg }
+        if run.blockTimes.inTime != nil, run.fuelAtIn == nil { run.fuelAtIn = flightData?.fuelKg }
 
         for milestone in template.milestones where run.completed[milestone.id] == nil && !milestone.isManual {
             var done = false
@@ -1522,6 +1610,210 @@ final class PanelModel {
         MCDUScreen.decode(unit: mcduUnit, values: mcduRaw)
     }
 
+    // MARK: Flight monitor
+
+    /// Live aircraft data the monitor reads (standard X-Plane datarefs plus ToLiss targets).
+    static let flightDatarefs = [
+        "sim/flightmodel/position/latitude", "sim/flightmodel/position/longitude",
+        "sim/cockpit2/gauges/indicators/altitude_ft_pilot", "sim/flightmodel/position/indicated_airspeed",
+        "sim/flightmodel/position/groundspeed", "sim/flightmodel/position/vh_ind_fpm",
+        "sim/cockpit2/gauges/indicators/radio_altimeter_height_ft_pilot", "sim/flightmodel/weight/m_fuel_total",
+        "sim/flightmodel/forces/g_nrml", "sim/cockpit2/controls/gear_handle_down",
+        "sim/cockpit2/radios/indicators/nav1_hdef_dots_pilot", "sim/cockpit2/radios/indicators/nav1_vdef_dots_pilot",
+        "toliss_airbus/pfdoutputs/general/ap_speed_value", "toliss_airbus/performance/DH", "toliss_airbus/performance/MDA",
+        "toliss_airbus/performance/DestQNH", "toliss_airbus/performance/DestTemp",
+        "toliss_airbus/performance/DestWindDir", "toliss_airbus/performance/DestWindSpd",
+    ]
+
+    struct FlightData {
+        var latitude: Double
+        var longitude: Double
+        var altitude: Double
+        var ias: Double
+        /// Knots.
+        var groundspeed: Double
+        var verticalSpeed: Double
+        var radioAltitude: Double
+        var fuelKg: Double
+        var g: Double
+        var onGround: Bool
+        var gearDown: Bool?
+        var localizerDots: Double?
+        var glideslopeDots: Double?
+        var targetSpeed: Double?
+        var decisionHeight: Double?
+        var minimumAltitude: Double?
+    }
+
+    /// The aircraft now, from X-Plane; nil in the demo (it does not fly) or before a position.
+    var flightData: FlightData? {
+        guard status == .connected, !demoMode,
+              let latitude = rawValues["sim/flightmodel/position/latitude"]?.doubleValue,
+              let longitude = rawValues["sim/flightmodel/position/longitude"]?.doubleValue,
+              latitude != 0 || longitude != 0 else { return nil }
+        func value(_ name: String) -> Double? { rawValues[name]?.doubleValue }
+        func positive(_ name: String) -> Double? { value(name).flatMap { $0 > 0 ? $0 : nil } }
+        return FlightData(
+            latitude: latitude, longitude: longitude,
+            altitude: value("sim/cockpit2/gauges/indicators/altitude_ft_pilot") ?? 0,
+            ias: value("sim/flightmodel/position/indicated_airspeed") ?? 0,
+            groundspeed: (value("sim/flightmodel/position/groundspeed") ?? 0) * 1.943844,
+            verticalSpeed: value("sim/flightmodel/position/vh_ind_fpm") ?? 0,
+            radioAltitude: value("sim/cockpit2/gauges/indicators/radio_altimeter_height_ft_pilot") ?? 0,
+            fuelKg: value("sim/flightmodel/weight/m_fuel_total") ?? 0,
+            g: value("sim/flightmodel/forces/g_nrml") ?? 1,
+            onGround: (value("sim/flightmodel/failures/onground_any") ?? 1) > 0.5,
+            gearDown: value("sim/cockpit2/controls/gear_handle_down").map { $0 > 0.5 },
+            localizerDots: value("sim/cockpit2/radios/indicators/nav1_hdef_dots_pilot"),
+            glideslopeDots: value("sim/cockpit2/radios/indicators/nav1_vdef_dots_pilot"),
+            targetSpeed: positive("toliss_airbus/pfdoutputs/general/ap_speed_value"),
+            decisionHeight: positive("toliss_airbus/performance/DH"),
+            minimumAltitude: positive("toliss_airbus/performance/MDA"))
+    }
+
+    /// Fuel against the OFP at this point of the route, kg.
+    var fuelStatus: FuelStatus? {
+        guard let ofp, let data = flightData, let planned = ofp.kilograms(routeProgress?.plannedFuelNow),
+              let landing = ofp.kilograms(ofp.fuel.landing), let reserve = ofp.kilograms(ofp.fuel.finalReserve) else { return nil }
+        return FuelStatus.evaluate(actual: data.fuelKg, plannedNow: planned, plannedLanding: landing,
+                                   finalReserve: reserve, alternate: ofp.kilograms(ofp.fuel.alternate) ?? 0)
+    }
+
+    var destinationElevation: Double { Double(ofp?.destination.elevation ?? 0) }
+
+    /// Landing flaps: FULL, or 3 with GPWS LDG FLAP 3 on.
+    private var landingConfiguration: Bool? {
+        guard let flaps = positionName(ofControl: "flaps.lever") else { return nil }
+        return flaps == "FULL" || (flaps == "3" && positionName(ofControl: "gpws.ldg_flap3") == "ON")
+    }
+
+    /// Airports to divert to, nearest first: destination, alternates, en-route alternates, origin.
+    var nearbyAirports: [(airport: SimBriefOFP.Airport, distance: Double)] {
+        guard let ofp, let data = flightData else { return [] }
+        var airports: [SimBriefOFP.Airport] = [ofp.destination]
+        if let alternate = ofp.alternate { airports.append(alternate) }
+        airports += ofp.enrouteAlternates ?? []
+        airports.append(ofp.origin)
+        var seen = Set<String>()
+        airports = airports.filter { seen.insert($0.icao).inserted }
+        return airports.compactMap { airport -> (SimBriefOFP.Airport, Double)? in
+            guard let lat = airport.latitude, let lon = airport.longitude else { return nil }
+            return (airport, Geo.distance(data.latitude, data.longitude, lat, lon))
+        }
+        .sorted { $0.1 < $1.1 }
+        .map { (airport: $0.0, distance: $0.1) }
+    }
+
+    private func startFlightMonitor() {
+        flightTask?.cancel()
+        flightTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                self?.tickFlightMonitor()
+            }
+        }
+    }
+
+    /// Once a second with X-Plane: route progress and position reports, fuel state, approach
+    /// gates, minimums callouts and the touchdown.
+    private func tickFlightMonitor(now: Date = Date()) {
+        guard let data = flightData else { return }
+
+        if let report = landingDetector.update(onGround: data.onGround, verticalSpeed: data.verticalSpeed,
+                                               g: data.g, speed: data.ias, at: now) {
+            lastLanding = report
+            if var run = turnaround, run.blockTimes.outTime != nil, run.landing == nil {
+                run.landing = report
+                turnaround = run
+            }
+            postAlert("Toma: \(report.rate) ft/min · \(String(format: "%.2f", report.peakG)) g · \(report.rating)",
+                  report.isHard ? .warning : .good, speak: false)
+        }
+        guard let ofp else { return }
+
+        if !data.onGround, let progress = RouteProgress.locate(latitude: data.latitude, longitude: data.longitude, on: ofp.fixes) {
+            if progress != routeProgress { routeProgress = progress }
+            // Position reports for the points passed since the monitor started following.
+            if reportBaseline == nil {
+                reportBaseline = positionReports.last.flatMap { last in ofp.fixes.lastIndex { $0.ident == last.ident } }
+                    ?? progress.lastPassed
+            }
+            if let baseline = reportBaseline, progress.lastPassed > baseline {
+                for index in (baseline + 1)...progress.lastPassed where ofp.fixes.indices.contains(index) {
+                    let fix = ofp.fixes[index]
+                    positionReports.append(PositionReport(ident: fix.ident, date: now, altitude: Int(data.altitude.rounded()),
+                                                          actualFuel: data.fuelKg, plannedFuel: ofp.kilograms(fix.plannedFuel)))
+                }
+                reportBaseline = progress.lastPassed
+            }
+            if let status = fuelStatus, status.level != lastFuelLevel {
+                if status.level > lastFuelLevel { announce(fuel: status) }
+                lastFuelLevel = status.level
+            }
+        }
+
+        // Approach: height above the destination, from the radio altimeter near the ground.
+        let height = data.radioAltitude > 0 && data.radioAltitude < 2500 ? data.radioAltitude : data.altitude - destinationElevation
+        let nearDestination = (routeProgress?.distanceToGo ?? 0) < 40 || height < 3000
+        guard !data.onGround, nearDestination else { return }
+        let snapshot = ApproachSnapshot(heightAboveField: height, landingConfiguration: landingConfiguration, gearDown: data.gearDown,
+                                        speed: data.ias, targetSpeed: data.targetSpeed, verticalSpeed: data.verticalSpeed,
+                                        localizerDots: data.localizerDots, glideslopeDots: data.glideslopeDots)
+        if let gate = gateTracker.update(snapshot, at: now) {
+            gateResults = gateTracker.results
+            if gate.isStable {
+                postAlert("Estable a \(gate.gate) ft", .good, speak: true)
+            } else {
+                postAlert("No estable a \(gate.gate) ft: \(gate.failures.joined(separator: ", "))\(gate.gate == 500 ? ". Motor y al aire" : "")",
+                      gate.gate == 500 ? .critical : .warning, speak: true)
+            }
+        } else if height > 2000, !gateResults.isEmpty {
+            gateResults = []
+        }
+        // Minimums: DH on the radio altimeter, MDA on the barometric altimeter.
+        if let dh = data.decisionHeight {
+            if let callout = minimumsCallouts.update(height: data.radioAltitude, minimum: dh) {
+                postAlert(callout.rawValue, callout == .minimum ? .warning : .info, speak: true)
+            }
+        } else if let mda = data.minimumAltitude {
+            if let callout = minimumsCallouts.update(height: data.altitude - destinationElevation, minimum: mda - destinationElevation) {
+                postAlert(callout.rawValue, callout == .minimum ? .warning : .info, speak: true)
+            }
+        }
+    }
+
+    private func announce(fuel status: FuelStatus) {
+        switch status.level {
+        case .onPlan:
+            break
+        case .watch:
+            postAlert("Combustible por debajo del plan: \(Int(status.estimatedLanding)) kg previstos en destino", .warning, speak: false)
+        case .noAlternate:
+            postAlert("Combustible: ya no llegas al alterno con la reserva final. Decide antes de comprometerte con el destino", .warning, speak: true)
+        case .mayday:
+            postAlert("MAYDAY FUEL: previsión de aterrizar por debajo de la reserva final", .critical, speak: true)
+        }
+    }
+
+    private func postAlert(_ text: String, _ level: FlightAlert.Level, speak: Bool) {
+        flightAlert = FlightAlert(text: text, level: level, date: Date())
+        if speak && voiceCallouts {
+            let utterance = AVSpeechUtterance(string: text)
+            utterance.voice = AVSpeechSynthesisVoice(language: text.uppercased() == text ? "en-US" : "es-ES")
+            utterance.rate = 0.52
+            speech.speak(utterance)
+        }
+    }
+
+    func dismissFlightAlert() {
+        flightAlert = nil
+    }
+
+    func clearPositionReports() {
+        positionReports = []
+        reportBaseline = nil
+    }
+
     // MARK: SimBrief and the MCDU guide
 
     /// Fetches the user's latest OFP from SimBrief.
@@ -1536,6 +1828,11 @@ final class PanelModel {
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             let loaded = try SimBriefOFP.parse(data)
+            if loaded.requestID != ofp?.requestID {
+                // A new flight: its position reports start empty.
+                positionReports = []
+                reportBaseline = nil
+            }
             ofp = loaded
         } catch SimBriefOFP.ParseError.simBrief(let message) {
             ofpError = "SimBrief responde: \(message)"
@@ -1743,6 +2040,7 @@ final class PanelModel {
         names.formUnion(Self.backlightSources)
         names.formUnion(Self.turnaroundDatarefs)
         names.formUnion(MCDUGuide.datarefs)
+        names.formUnion(Self.flightDatarefs)
         return names
     }
 

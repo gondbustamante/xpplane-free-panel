@@ -11,6 +11,7 @@ struct InspectorColumn: View {
             Picker("Columna", selection: $model.inspectorPanel) {
                 Text("Checklist").tag(PanelModel.InspectorPanel.checklist)
                 Text("Guía MCDU").tag(PanelModel.InspectorPanel.mcduGuide)
+                Text("Vuelo").tag(PanelModel.InspectorPanel.flight)
             }
             .pickerStyle(.segmented)
             .padding(.horizontal, 12)
@@ -19,6 +20,7 @@ struct InspectorColumn: View {
             switch model.inspectorPanel {
             case .checklist: ChecklistColumn()
             case .mcduGuide: MCDUGuideColumn()
+            case .flight: FlightMonitorColumn()
             }
         }
         .background(PanelTheme.checklistSurface)

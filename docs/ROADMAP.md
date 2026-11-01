@@ -192,6 +192,17 @@ Componentes nuevos pendientes: pulsador con tirador de fuego, voltímetros de ba
 - [ ] Navigraph: enlaces a la carta de la SID, la STAR y la aproximación (según lo que permita su app o su API)
 - [ ] Seguimiento de combustible en ruta contra el navlog del OFP
 
+## Fase V · Crucero, descenso, aproximación y llegada (2026-11-01)
+
+- [x] Navlog del OFP (coordenadas, combustible previsto y mínimo, tiempos), alternos en ruta y coordenadas de aeropuertos
+- [x] Posición en la ruta y combustible frente al plan con estados OACI (por debajo del plan, sin alterno, MAYDAY FUEL); informes de posición automáticos; próximo escalón; aeropuertos más cercanos
+- [x] TOD por la regla de 3 y desviación del perfil en el descenso
+- [x] Briefing de aproximación con datos del OFP y de PERF APPR; aproximación estabilizada a 1000 y 500 ft; llamadas de mínimos (DH radio o MDA baro) en pantalla y por voz
+- [x] Análisis de la toma (ft/min, g, valoración) y aviso flotante sobre el panel
+- [x] Diario: combustible OUT→IN frente al plan, toma, notas (parte técnico), exportación CSV; siguiente escala encadenada tras el IN
+- [ ] Confirmar en X-Plane/ToLiss: `ap_speed_value` como VAPP en aproximación, DH/MDA de PERF APPR, desviaciones de NAV1 con el ILS
+- [ ] Viento en el cálculo del TOD; distancia de aterrizaje; tiempo de servicio
+
 ## Fase 3 · Pulido y distribución (continuo)
 
 - Descubrimiento automático del simulador (requiere entitlement multicast de Apple; alternativa: escaneo de la subred por el puerto del relay)

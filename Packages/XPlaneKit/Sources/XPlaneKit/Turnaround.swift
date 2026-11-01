@@ -361,6 +361,14 @@ public struct FlightLogEntry: Codable, Sendable, Identifiable, Equatable {
     public var delayCode: Int? = nil
     public var delayNote: String? = nil
     public var ctot: Date? = nil
+    /// Touchdown sink rate (ft/min) and peak load factor.
+    public var landingRate: Int? = nil
+    public var landingG: Double? = nil
+    /// Fuel burnt from OUT to IN, and what the OFP planned (taxi + trip), kg.
+    public var fuelUsedKg: Double? = nil
+    public var plannedFuelKg: Double? = nil
+    /// Remarks, technical log style.
+    public var notes: String? = nil
 
     public init(id: UUID = UUID(), flightNumber: String, origin: String, destination: String,
                 offBlocksPlanned: Date, times: BlockTimes, passengers: Int) {
@@ -381,6 +389,33 @@ public struct FlightLogEntry: Codable, Sendable, Identifiable, Equatable {
     /// A15: left no more than 15 minutes after the planned off-blocks time.
     public var isOnTimeA15: Bool? {
         departureDelay.map { $0 <= 15 }
+    }
+
+    /// The logbook as CSV, one flight per line, times in UTC.
+    public static func csv(_ entries: [FlightLogEntry]) -> String {
+        let formatter = ISO8601DateFormatter()
+        func time(_ date: Date?) -> String { date.map(formatter.string(from:)) ?? "" }
+        func field(_ text: String?) -> String {
+            let value = text ?? ""
+            return value.contains(",") || value.contains("\"") || value.contains("\n")
+                ? "\"" + value.replacingOccurrences(of: "\"", with: "\"\"") + "\"" : value
+        }
+        var lines = ["vuelo,origen,destino,eobt,out,off,on,in,bloque_min,vuelo_min,retraso_min,codigo_retraso,pasajeros,combustible_kg,combustible_plan_kg,toma_fpm,toma_g,notas"]
+        for entry in entries {
+            let values: [String] = [
+                field(entry.flightNumber), field(entry.origin), field(entry.destination),
+                time(entry.offBlocksPlanned), time(entry.times.outTime), time(entry.times.offTime),
+                time(entry.times.onTime), time(entry.times.inTime),
+                entry.times.blockMinutes.map(String.init) ?? "", entry.times.flightMinutes.map(String.init) ?? "",
+                entry.departureDelay.map(String.init) ?? "", entry.delayCode.map(String.init) ?? "",
+                String(entry.passengers),
+                entry.fuelUsedKg.map { String(Int($0.rounded())) } ?? "", entry.plannedFuelKg.map { String(Int($0.rounded())) } ?? "",
+                entry.landingRate.map(String.init) ?? "", entry.landingG.map { String(format: "%.2f", $0) } ?? "",
+                field(entry.notes),
+            ]
+            lines.append(values.joined(separator: ","))
+        }
+        return lines.joined(separator: "\n") + "\n"
     }
 
     /// Share of flights with an OUT time that left within 15 minutes (0…1); nil without any.

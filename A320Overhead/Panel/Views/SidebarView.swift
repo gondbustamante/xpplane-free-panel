@@ -198,6 +198,12 @@ struct SidebarView: View {
         let byPhase = proceduresByPhase
         Section {
             OFPSidebarRow()
+            Button {
+                model.inspectorPanel = .flight
+                model.showChecklist = true
+            } label: {
+                Label("Monitor de vuelo", systemImage: "gauge.with.needle")
+            }
         } header: {
             SectionHeader(title: "Plan de vuelo", detail: model.ofp?.airac.map { "AIRAC \($0)" })
         }

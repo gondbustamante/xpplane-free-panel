@@ -466,6 +466,19 @@ struct TurnaroundSheet: View {
                 blockRow("OFF", "off", run.blockTimes.offTime, explanation: "Despegue: las ruedas dejan el suelo.")
                 blockRow("ON", "on", run.blockTimes.onTime, explanation: "Aterrizaje.")
                 blockRow("IN", "in", run.blockTimes.inTime, explanation: "Freno de aparcamiento puesto tras aterrizar: en calzos.")
+                if let landing = run.landing {
+                    LabeledContent("Toma", value: "\(landing.rate) ft/min · \(String(format: "%.2f", landing.peakG)) g · \(landing.rating)")
+                }
+                if let out = run.fuelAtOut, let atIn = run.fuelAtIn, out > atIn {
+                    LabeledContent("Combustible gastado", value: "\(Int(out - atIn)) kg")
+                }
+                if run.blockTimes.inTime != nil {
+                    Button {
+                        model.planNextLeg()
+                    } label: {
+                        Label("Guardar y planificar la siguiente escala", systemImage: "arrow.triangle.turn.up.right.circle")
+                    }
+                }
                 if let block = run.blockTimes.blockMinutes {
                     LabeledContent("Tiempo de bloque", value: TurnaroundFormat.minutes(block))
                 }
@@ -709,6 +722,9 @@ struct FlightLogSheet: View {
                             }
                         }
                         ForEach(model.flightLog) { entry in
+                            NavigationLink {
+                                FlightLogDetail(entryID: entry.id)
+                            } label: {
                             VStack(alignment: .leading, spacing: 4) {
                                 HStack {
                                     Text("\(entry.flightNumber.isEmpty ? "Vuelo" : entry.flightNumber)  \(entry.origin)→\(entry.destination)")
@@ -740,6 +756,20 @@ struct FlightLogSheet: View {
                                         .font(.caption)
                                         .foregroundStyle(PanelTheme.checklistAmber)
                                 }
+                                HStack(spacing: 12) {
+                                    if let rate = entry.landingRate {
+                                        Label("\(rate) ft/min", systemImage: "airplane.arrival")
+                                    }
+                                    if let used = entry.fuelUsedKg {
+                                        Label("\(Int(used)) kg" + (entry.plannedFuelKg.map { " (plan \(Int($0)))" } ?? ""), systemImage: "fuelpump")
+                                    }
+                                    if entry.notes != nil {
+                                        Image(systemName: "note.text")
+                                    }
+                                }
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            }
                             }
                         }
                         .onDelete { model.deleteLogEntries(at: $0) }
@@ -752,9 +782,28 @@ struct FlightLogSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Cerrar") { dismiss() }
                 }
+                ToolbarItem(placement: .topBarLeading) {
+                    if let file = csvFile() {
+                        ShareLink(item: file) {
+                            Label("Exportar CSV", systemImage: "square.and.arrow.up")
+                        }
+                    }
+                }
             }
         }
         .preferredColorScheme(.dark)
+    }
+
+    /// The logbook written to a temporary .csv file, to share or save in Files.
+    private func csvFile() -> URL? {
+        guard !model.flightLog.isEmpty else { return nil }
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("diario-de-vuelos.csv")
+        do {
+            try FlightLogEntry.csv(model.flightLog).write(to: url, atomically: true, encoding: .utf8)
+            return url
+        } catch {
+            return nil
+        }
     }
 
     private func times(_ times: BlockTimes) -> String {
@@ -908,3 +957,50 @@ struct MiniTimers: View {
         .buttonStyle(.plain)
     }
 }
+
+/// One flight of the logbook: times, fuel, touchdown and the remarks (technical log).
+struct FlightLogDetail: View {
+    let entryID: UUID
+    @Environment(PanelModel.self) private var model
+    @State private var notes = ""
+
+    var body: some View {
+        if let entry = model.flightLog.first(where: { $0.id == entryID }) {
+            Form {
+                Section("Vuelo") {
+                    LabeledContent("Ruta", value: "\(entry.origin)→\(entry.destination)")
+                    LabeledContent("EOBT", value: TurnaroundFormat.utc(entry.offBlocksPlanned))
+                    LabeledContent("OUT · OFF", value: "\(entry.times.outTime.map(TurnaroundFormat.utc) ?? "--") · \(entry.times.offTime.map(TurnaroundFormat.utc) ?? "--")")
+                    LabeledContent("ON · IN", value: "\(entry.times.onTime.map(TurnaroundFormat.utc) ?? "--") · \(entry.times.inTime.map(TurnaroundFormat.utc) ?? "--")")
+                    if let block = entry.times.blockMinutes { LabeledContent("Bloque", value: TurnaroundFormat.minutes(block)) }
+                    if let delay = entry.departureDelay { LabeledContent("Retraso de salida", value: "\(delay) min") }
+                    if let code = DelayCode.named(entry.delayCode) { LabeledContent("Código IATA", value: "\(code.code) · \(code.text)") }
+                }
+                if entry.fuelUsedKg != nil || entry.landingRate != nil {
+                    Section("Combustible y toma") {
+                        if let used = entry.fuelUsedKg { LabeledContent("Gastado (OUT a IN)", value: "\(Int(used)) kg") }
+                        if let planned = entry.plannedFuelKg { LabeledContent("Plan (rodaje + viaje)", value: "\(Int(planned)) kg") }
+                        if let used = entry.fuelUsedKg, let planned = entry.plannedFuelKg {
+                            LabeledContent("Diferencia", value: MonitorFormat.signedKg(planned - used) + " frente al plan")
+                        }
+                        if let rate = entry.landingRate {
+                            LabeledContent("Toma", value: "\(rate) ft/min" + (entry.landingG.map { String(format: " · %.2f g", $0) } ?? ""))
+                        }
+                    }
+                }
+                Section {
+                    TextEditor(text: $notes)
+                        .frame(minHeight: 120)
+                } header: {
+                    Text("Notas y parte técnico")
+                } footer: {
+                    Text("Averías, tomas duras, impactos de ave, incidencias: lo que en una aerolínea iría al parte técnico (tech log) o al informe de vuelo.")
+                }
+            }
+            .navigationTitle(entry.flightNumber.isEmpty ? "Vuelo" : entry.flightNumber)
+            .onAppear { notes = entry.notes ?? "" }
+            .onDisappear { model.updateNotes(of: entryID, notes) }
+        }
+    }
+}
+

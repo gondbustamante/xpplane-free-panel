@@ -15,6 +15,26 @@ public struct SimBriefOFP: Codable, Sendable, Equatable {
         public var transitionAltitude: Int?
         public var transitionLevel: Int?
         public var metar: String?
+        public var latitude: Double? = nil
+        public var longitude: Double? = nil
+    }
+
+    /// A navlog point: where it is, how far from the previous one and the fuel planned on board.
+    public struct NavFix: Codable, Sendable, Equatable {
+        public var ident: String
+        /// "wpt", "vor", "apt", or "ltlg" for TOC/TOD.
+        public var type: String?
+        public var latitude: Double
+        public var longitude: Double
+        /// Distance from the previous point, NM.
+        public var legDistance: Double?
+        public var altitude: Int?
+        /// Fuel planned and minimum on board at the point, in the OFP's unit.
+        public var plannedFuel: Double?
+        public var minimumFuel: Double?
+        /// Seconds from take-off.
+        public var timeTotal: Int?
+        public var stage: String?
     }
 
     public struct Fuel: Codable, Sendable, Equatable {
@@ -87,6 +107,11 @@ public struct SimBriefOFP: Codable, Sendable, Equatable {
     public var weights: Weights
     public var takeoff: Takeoff?
     public var landingILSFrequency: String?
+    /// Optional so an OFP saved before the navlog was read still loads.
+    public var navlog: [NavFix]? = nil
+    public var enrouteAlternates: [Airport]? = nil
+
+    public var fixes: [NavFix] { navlog ?? [] }
 
     public var isPounds: Bool { units.lowercased().hasPrefix("lb") }
     /// "t" or "klb": the unit the MCDU takes weights in.
@@ -201,6 +226,18 @@ public struct SimBriefOFP: Codable, Sendable, Equatable {
             landingILSFrequency: nil)
         if ofp.callsign?.isEmpty == true { ofp.callsign = nil }
 
+        if let navlog = root["navlog"] as? [String: Any] {
+            ofp.navlog = runways(navlog["fix"]).compactMap { fix in
+                guard let ident = text(fix["ident"]), let latitude = number(fix["pos_lat"]),
+                      let longitude = number(fix["pos_long"]) else { return nil }
+                return NavFix(ident: ident, type: text(fix["type"]), latitude: latitude, longitude: longitude,
+                              legDistance: number(fix["distance"]), altitude: integer(fix["altitude_feet"]),
+                              plannedFuel: number(fix["fuel_plan_onboard"]), minimumFuel: number(fix["fuel_min_onboard"]),
+                              timeTotal: integer(fix["time_total"]), stage: text(fix["stage"]))
+            }
+        }
+        ofp.enrouteAlternates = runways(root["enroute_altn"]).compactMap { airport($0) }
+
         // Performance (TLR): the planned runway's take-off data and the landing runway's ILS.
         if let tlr = root["tlr"] as? [String: Any] {
             if let takeoff = tlr["takeoff"] as? [String: Any] {
@@ -225,7 +262,8 @@ public struct SimBriefOFP: Codable, Sendable, Equatable {
         guard let object = value as? [String: Any], let icao = text(object["icao_code"]) else { return nil }
         return Airport(icao: icao, name: text(object["name"]), elevation: integer(object["elevation"]),
                        runway: text(object["plan_rwy"]), transitionAltitude: integer(object["trans_alt"]),
-                       transitionLevel: integer(object["trans_level"]), metar: text(object["metar"]))
+                       transitionLevel: integer(object["trans_level"]), metar: text(object["metar"]),
+                       latitude: number(object["pos_lat"]), longitude: number(object["pos_long"]))
     }
 
     private static func runways(_ value: Any?) -> [[String: Any]] {

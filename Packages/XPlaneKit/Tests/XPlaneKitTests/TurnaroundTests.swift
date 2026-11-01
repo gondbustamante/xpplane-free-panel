@@ -137,6 +137,19 @@ final class TurnaroundTests: XCTestCase {
         XCTAssertEqual(Set(DelayCode.common.map(\.code)).count, DelayCode.common.count)
     }
 
+    func testLogbookCSV() {
+        var entry = FlightLogEntry(flightNumber: "VLG1234", origin: "LEMD", destination: "LEBL", offBlocksPlanned: offBlocks,
+                                   times: BlockTimes(outTime: at(5), offTime: at(15), onTime: at(70), inTime: at(76)), passengers: 150)
+        entry.landingRate = 180
+        entry.notes = "Bird strike, sin daños"
+        let lines = FlightLogEntry.csv([entry]).split(separator: "\n")
+        XCTAssertEqual(lines.count, 2)
+        XCTAssertTrue(lines[0].hasPrefix("vuelo,origen,destino"))
+        XCTAssertTrue(lines[1].hasPrefix("VLG1234,LEMD,LEBL,"))
+        XCTAssertTrue(lines[1].contains(",71,55,5,,150,"), String(lines[1]))
+        XCTAssertTrue(lines[1].hasSuffix(",180,,\"Bird strike, sin daños\""), String(lines[1]))
+    }
+
     func testUnknownReadingsDoNotStamp() {
         var detector = BlockTimeDetector()
         detector.update(at: at(0), parkBrake: nil, onGround: nil)

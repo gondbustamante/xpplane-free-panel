@@ -61,6 +61,14 @@ En *Práctica*, **Ejercicios** propone ocho ejercicios cronometrados, del encend
 
 **Guía del MCDU con SimBrief:** en *Vuelo → Plan de vuelo* (o en Ajustes) pon tu usuario de SimBrief o tu Pilot ID y carga tu último OFP. La columna lateral pasa a *Guía MCDU*, junto al MCDU, y te lleva en el orden de los pilotos de línea (DATA, INIT A, F-PLN, SEC F-PLN, RAD NAV, INIT B, PERF): cada paso dice la página y la tecla, el valor exacto a teclear (FROM/TO, CI, CRZ FL/TEMP con la temperatura calculada, la ruta tramo a tramo, ZFW, BLOCK, reservas, V1/VR/V2, FLEX, TRANS ALT…), dónde está ese dato en el OFP, por qué se introduce y qué afecta. El botón del teclado lo escribe en el scratchpad para que solo pulses la LSK, y con ToLiss conectado la guía comprueba lo que el MCDU ya tiene (ZFW, BLOCK, CI, nivel, número de vuelo, velocidades, FLEX, TRANS ALT). El OFP también rellena el planificador del turnaround.
 
+**Monitor de vuelo:** la tercera pestaña de la columna lateral (*Vuelo*, o *Vuelo → Monitor de vuelo* en la barra lateral) sigue el vuelo con X-Plane contra el OFP:
+- **Crucero:** siguiente punto, distancia y tiempo a destino, combustible frente al plan con el previsto en destino y los avisos escalonados de OACI (por debajo del plan, sin combustible para el alterno, MAYDAY FUEL), próximo escalón de ascenso, informes de posición automáticos en cada punto y los aeropuertos del plan más cercanos.
+- **Descenso:** punto de descenso por la regla de 3 y, ya descendiendo, cuánto vas alto o bajo del perfil.
+- **Aproximación:** briefing con pista, STAR, ILS, nivel de transición, QNH, viento y mínimos; comprobación de aproximación estabilizada a 1000 y 500 ft, y llamadas «ONE HUNDRED ABOVE» y «MINIMUM» en pantalla y por voz.
+- **Aterrizaje:** régimen de toma, g y valoración.
+
+El turnaround guarda el combustible en OUT e IN y la toma, y el diario muestra el gasto frente al plan, la toma, notas tipo parte técnico y se exporta a CSV. Tras el IN, *Guardar y planificar la siguiente escala* abre la escala corta desde el aeropuerto de llegada.
+
 **Reiniciar:** un procedimiento desde su columna (botón Reiniciar), una fase entera desde *Vuelo* (pulsación larga sobre la fase) o todos desde Opciones (⋯). Los ítems que se detectan solos siguen a los mandos, así que en modo demo el reinicio ofrece además volver el avión a Cold & Dark. Un ejercicio se reinicia desde su barra mientras se hace o con «Repetir» al acabar, también desde Cold & Dark en la demo; sus resultados se borran desde su ficha, con pulsación larga en la lista o todos desde Opciones.
 
 Los procedimientos incluyen la **preparación del MCDU como la hacen los pilotos de línea** (DATA, INIT, F-PLN, SEC F-PLN, RAD NAV, INIT B, PERF), el cierre con la hoja de carga y la preparación de la aproximación, con los pasos de cada página y el porqué de cada uno.
