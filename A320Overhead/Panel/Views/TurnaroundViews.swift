@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import XPlaneKit
 
 enum TurnaroundFormat {
@@ -148,15 +149,18 @@ struct TurnaroundPlannerSheet: View {
                     }
                 }
                 Section {
+                    Toggle("Aeropuerto A-CDM (TOBT/TSAT)", isOn: Binding(get: { plan.acdm ?? false }, set: { plan.acdm = $0 ? true : nil }))
                     Toggle("Slot ATFM (CTOT)", isOn: hasSlot)
                     if plan.ctot != nil {
                         DatePicker("CTOT", selection: ctot, displayedComponents: .hourAndMinute)
+                    }
+                    if plan.ctot != nil || plan.acdm == true {
                         Stepper("Rodaje previsto: \(Int(plan.taxi)) min", value: taxi, in: 3...40, step: 1)
                     }
                 } header: {
-                    Text("Slot")
+                    Text("Slot y A-CDM")
                 } footer: {
-                    Text("Con slot hay que despegar entre 5 minutos antes y 10 después del CTOT. La app calcula la hora límite de fuera calzos restando el rodaje.")
+                    Text("Con slot hay que despegar entre 5 minutos antes y 10 después del CTOT. La app calcula la hora límite de fuera calzos restando el rodaje. En un aeropuerto A-CDM la hora de salida es tu TOBT y el aeropuerto te da una TSAT para arrancar.")
                 }
                 Section {
                     Stepper("Pasajeros: \(plan.passengers)", value: $plan.passengers, in: 0...180, step: 5)
@@ -395,6 +399,10 @@ struct TurnaroundSheet: View {
                 }
             }
 
+            if let acdm = run.plan.acdmTimes, run.blockTimes.outTime == nil {
+                ACDMSection(acdm: acdm, now: now)
+            }
+
             if let slot = model.slotWindow {
                 Section {
                     LabeledContent("CTOT", value: "\(TurnaroundFormat.local(slot.ctot)) · \(TurnaroundFormat.utc(slot.ctot))")
@@ -477,6 +485,10 @@ struct TurnaroundSheet: View {
                 }
                 if let out = run.fuelAtOut, let atIn = run.fuelAtIn, out > atIn {
                     LabeledContent("Combustible gastado", value: "\(Int(out - atIn)) kg")
+                }
+                if let out = run.blockTimes.outTime, let off = run.blockTimes.offTime {
+                    LabeledContent("Rodaje de salida", value: "\(Int((off.timeIntervalSince(out) / 60).rounded())) min (plan \(Int(run.plan.taxi)))"
+                        + ((run.fuelAtOut).flatMap { o in run.fuelAtOff.map { " · \(Int(o - $0)) kg" } } ?? ""))
                 }
                 if run.blockTimes.inTime != nil {
                     Button {
@@ -789,9 +801,12 @@ struct FlightLogSheet: View {
                     Button("Cerrar") { dismiss() }
                 }
                 ToolbarItem(placement: .topBarLeading) {
-                    if let file = csvFile() {
-                        ShareLink(item: file) {
-                            Label("Exportar CSV", systemImage: "square.and.arrow.up")
+                    if let file = csvFile(), let pdf = FlightLogPDF.file(model.flightLog) {
+                        Menu {
+                            ShareLink(item: file) { Label("CSV (hoja de cálculo)", systemImage: "tablecells") }
+                            ShareLink(item: pdf) { Label("PDF (libro de vuelo)", systemImage: "doc.richtext") }
+                        } label: {
+                            Label("Exportar", systemImage: "square.and.arrow.up")
                         }
                     }
                 }
@@ -994,6 +1009,24 @@ struct FlightLogDetail: View {
                         }
                     }
                 }
+                if entry.taxiOutMinutes != nil || entry.taxiFuelKg != nil {
+                    Section("Rodaje") {
+                        if let minutes = entry.taxiOutMinutes { LabeledContent("OUT a OFF", value: "\(minutes) min") }
+                        if let fuel = entry.taxiFuelKg { LabeledContent("Combustible de rodaje", value: "\(Int(fuel)) kg") }
+                    }
+                }
+                Section {
+                    ForEach(MELItem.catalog) { item in
+                        let written = entry.defects?.contains(item.id) ?? false
+                        Toggle(isOn: Binding(get: { written }, set: { _ in model.toggleDefect(item.id, of: entryID) })) {
+                            Text("\(item.ata) · \(item.title)").font(.footnote)
+                        }
+                    }
+                } header: {
+                    Text("Averías anotadas")
+                } footer: {
+                    Text("Si el siguiente OFP sale de \(entry.destination), estas averías llegan diferidas a la MEL del despacho, como cuando el técnico difiere lo que anotó la tripulación anterior.")
+                }
                 Section {
                     TextEditor(text: $notes)
                         .frame(minHeight: 120)
@@ -1010,3 +1043,103 @@ struct FlightLogDetail: View {
     }
 }
 
+
+/// A-CDM during the turnaround: TOBT, the TSAT from the airport, TTOT and what to do.
+private struct ACDMSection: View {
+    let acdm: ACDMTimes
+    let now: Date
+    @Environment(PanelModel.self) private var model
+
+    var body: some View {
+        let expected = model.turnaround.map { $0.plan.offBlocks.addingTimeInterval(Double(model.turnaroundDelay(at: now)) * 60) }
+        Section {
+            LabeledContent("TOBT (tu hora de listo)", value: TurnaroundFormat.local(acdm.tobt))
+            if let tsat = acdm.tsat {
+                DatePicker("TSAT", selection: Binding(get: { tsat }, set: { model.setTSAT($0) }), displayedComponents: .hourAndMinute)
+            } else {
+                Button("El aeropuerto ha dado la TSAT") { model.setTSAT(acdm.tobt) }
+            }
+            LabeledContent("Arranque", value: "\(TurnaroundFormat.local(acdm.startupWindow.lowerBound))–\(TurnaroundFormat.local(acdm.startupWindow.upperBound))")
+            LabeledContent("TTOT (despegue previsto)", value: TurnaroundFormat.local(acdm.ttot))
+            switch acdm.status(at: now, expectedReady: expected) {
+            case .waiting(let minutes):
+                Label("Ventana de arranque en \(minutes) min", systemImage: "clock")
+                    .foregroundStyle(.secondary)
+            case .window(let minutesLeft):
+                Label("En ventana: pide puesta en marcha (quedan \(minutesLeft) min)", systemImage: "checkmark.circle")
+                    .foregroundStyle(PanelTheme.checklistGreen)
+            case .missed:
+                Label("TSAT perdida: actualiza la TOBT para recibir una nueva", systemImage: "xmark.octagon")
+                    .foregroundStyle(PanelTheme.checklistAmber)
+            case .updateTOBT(let late):
+                Label("No estarás listo a la TOBT (+\(late) min): actualízala ya", systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(PanelTheme.checklistAmber)
+                if let expected {
+                    Button("Nueva TOBT \(TurnaroundFormat.local(expected))") { model.updateTOBT(to: expected) }
+                }
+            }
+        } header: {
+            Text("A-CDM")
+        } footer: {
+            Text("Con A-CDM la TOBT es un compromiso: si no vas a estar listo dentro de 5 minutos, se actualiza (lo hace el handling o la tripulación) y el aeropuerto recalcula la TSAT. La puesta en marcha se pide en la ventana TSAT ±5 min.")
+        }
+    }
+}
+
+/// The logbook as a simple PDF, one line per flight, to keep with the pilot's logbook.
+enum FlightLogPDF {
+    static func file(_ entries: [FlightLogEntry]) -> URL? {
+        guard !entries.isEmpty else { return nil }
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("diario-de-vuelos.pdf")
+        let page = CGRect(x: 0, y: 0, width: 842, height: 595)   // A4 landscape
+        let renderer = UIGraphicsPDFRenderer(bounds: page)
+        let font = UIFont.monospacedSystemFont(ofSize: 8.5, weight: .regular)
+        let bold = UIFont.monospacedSystemFont(ofSize: 8.5, weight: .bold)
+        let header = ["Fecha", "Vuelo", "Ruta", "OUT", "OFF", "ON", "IN", "Bloque", "Vuelo", "Retraso", "Comb. kg", "Toma", "Notas"]
+        let widths: [CGFloat] = [56, 56, 72, 36, 36, 36, 36, 42, 42, 44, 52, 72, 220]
+        let day = DateFormatter()
+        day.dateFormat = "dd/MM/yy"
+        day.timeZone = TimeZone(identifier: "UTC")
+        func time(_ date: Date?) -> String { date.map(TurnaroundFormat.utc) ?? "--" }
+        func row(_ e: FlightLogEntry) -> [String] {
+            [day.string(from: e.times.outTime ?? e.offBlocksPlanned), e.flightNumber, "\(e.origin)-\(e.destination)",
+             time(e.times.outTime), time(e.times.offTime), time(e.times.onTime), time(e.times.inTime),
+             e.times.blockMinutes.map(TurnaroundFormat.minutes) ?? "", e.times.flightMinutes.map(TurnaroundFormat.minutes) ?? "",
+             e.departureDelay.map { "\($0) min" } ?? "", e.fuelUsedKg.map { "\(Int($0))" } ?? "",
+             e.landingRate.map { "\($0) fpm" } ?? "", (e.notes ?? "").replacingOccurrences(of: "\n", with: " ")]
+        }
+        do {
+            try renderer.writePDF(to: url) { context in
+                var y: CGFloat = 0
+                func draw(_ cells: [String], font: UIFont) {
+                    var x: CGFloat = 36
+                    for (cell, width) in zip(cells, widths) {
+                        (cell as NSString).draw(in: CGRect(x: x, y: y, width: width - 4, height: 12),
+                                                withAttributes: [.font: font])
+                        x += width
+                    }
+                    y += 14
+                }
+                func newPage() {
+                    context.beginPage()
+                    ("Diario de vuelos · horas UTC" as NSString).draw(at: CGPoint(x: 36, y: 30),
+                        withAttributes: [.font: UIFont.systemFont(ofSize: 14, weight: .semibold)])
+                    y = 60
+                    draw(header, font: bold)
+                }
+                newPage()
+                for entry in entries.reversed() {
+                    if y > page.height - 40 { newPage() }
+                    draw(row(entry), font: font)
+                }
+                let blocks = entries.compactMap(\.times.blockMinutes).reduce(0, +)
+                y += 8
+                ("Total: \(entries.count) vuelos · \(TurnaroundFormat.minutes(blocks)) de bloque" as NSString)
+                    .draw(at: CGPoint(x: 36, y: y), withAttributes: [.font: bold])
+            }
+            return url
+        } catch {
+            return nil
+        }
+    }
+}

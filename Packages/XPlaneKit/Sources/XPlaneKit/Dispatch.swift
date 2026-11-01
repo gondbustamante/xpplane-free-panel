@@ -27,6 +27,11 @@ public struct DispatchState: Codable, Sendable, Equatable {
     /// Sectors planned today (for the duty period) and minutes from report to off-blocks.
     public var sectorsToday: Int = 2
     public var reportMinutesBeforeOffBlocks: Int = 60
+    /// Ground and departure (optional so saved states still load): de-icing, single-engine
+    /// taxi-out, and the line-up items done.
+    public var deicing: DeicingRecord?
+    public var singleEngineTaxi: Bool?
+    public var lineupDone: [String]?
 
     public init(requestID: String? = nil) {
         self.requestID = requestID

@@ -121,6 +121,9 @@ public struct SimBriefOFP: Codable, Sendable, Equatable {
     public var enrouteAlternates: [Airport]? = nil
     /// The ICAO flight plan as filed (FPL message).
     public var atcFlightPlan: String? = nil
+    /// Landing runway from the TLR: distance available (feet) and the surface SimBrief planned with.
+    public var landingRunwayLDA: Int? = nil
+    public var landingSurface: String? = nil
 
     public var fixes: [NavFix] { navlog ?? [] }
 
@@ -264,8 +267,10 @@ public struct SimBriefOFP: Codable, Sendable, Equatable {
             }
             if let landing = tlr["landing"] as? [String: Any] {
                 let planned = text((landing["conditions"] as? [String: Any])?["planned_runway"]) ?? destination.runway
-                ofp.landingILSFrequency = runways(landing["runway"]).first { text($0["identifier"]) == planned }
-                    .flatMap { text($0["ils_frequency"]) }
+                let runway = runways(landing["runway"]).first { text($0["identifier"]) == planned }
+                ofp.landingILSFrequency = runway.flatMap { text($0["ils_frequency"]) }
+                ofp.landingRunwayLDA = runway.flatMap { integer($0["length_lda"]) ?? integer($0["length"]) }
+                ofp.landingSurface = text((landing["conditions"] as? [String: Any])?["surface_condition"])
             }
         }
         return ofp

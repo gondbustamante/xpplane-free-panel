@@ -28,8 +28,8 @@ final class SimBriefTests: XCTestCase {
                      "runway": [ { "identifier": "36R", "speeds_v1": "140" },
                                  { "identifier": "36L", "flap_setting": "1+F", "thrust_setting": "D-TO", "flex_temperature": "52",
                                    "speeds_v1": "143", "speeds_vr": "145", "speeds_v2": "149", "ils_frequency": "109.90" } ] },
-        "landing": { "conditions": { "planned_runway": "24R" },
-                     "runway": [ { "identifier": "24R", "ils_frequency": "110.30" } ] }
+        "landing": { "conditions": { "planned_runway": "24R", "surface_condition": "wet" },
+                     "runway": [ { "identifier": "24R", "ils_frequency": "110.30", "length": "10997", "length_lda": "8530" } ] }
       }
     }
     """
@@ -54,6 +54,8 @@ final class SimBriefTests: XCTestCase {
         XCTAssertEqual(ofp.takeoff?.v1, 143, "the planned runway, not the first one")
         XCTAssertEqual(ofp.takeoff?.flexTemperature, 52)
         XCTAssertEqual(ofp.landingILSFrequency, "110.30")
+        XCTAssertEqual(ofp.landingRunwayLDA, 8530)
+        XCTAssertEqual(LandingDistance.Surface(simBrief: ofp.landingSurface), .wet)
     }
 
     func testSimBriefErrorIsReported() {

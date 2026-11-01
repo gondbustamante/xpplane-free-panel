@@ -44,6 +44,7 @@ struct FlightMonitorColumn: View {
                 CruiseCard()
                 DescentCard()
                 ApproachCard()
+                LandingDistanceCard()
                 if let landing = model.lastLanding {
                     LandingCard(report: landing)
                 }
@@ -184,6 +185,22 @@ private struct CruiseCard: View {
                     Text("Pide el ascenso al pasar \(step.fix): el plan sube al aligerarse el avión. Compruébalo con el nivel óptimo de PROG.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
+                // 5.2: navigation check against the planned leg.
+                if let xtk = model.crossTrack {
+                    Row(label: "Desviación lateral", value: abs(xtk) < 0.1 ? "en ruta" : String(format: "%.1f NM ", abs(xtk)) + (xtk > 0 ? "dcha" : "izda"),
+                        colour: abs(xtk) > 2 ? PanelTheme.checklistAmber : PanelTheme.checklistGreen)
+                    Text("Compárala con la XTK del ND y la precisión de PROG (NAV ACCY HIGH). Más de 2 NM sin vectores de ATC: comprueba el modo NAV y la ruta.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                // 5.6: duty time in flight.
+                if let offBlocks = model.turnaround?.blockTimes.outTime ?? model.plannedOffBlocks,
+                   let progress = model.routeProgress, data.groundspeed > 50 {
+                    let duty = model.dutyPeriod(offBlocks: offBlocks)
+                    let arrival = Date().addingTimeInterval(progress.distanceToGo / data.groundspeed * 3600 + 10 * 60)
+                    Row(label: "Fin máximo de actividad", value: TurnaroundFormat.local(duty.maximumEnd),
+                        colour: arrival > duty.maximumEnd ? PanelTheme.checklistAmber : .white)
+                    Row(label: "IN estimado", value: TurnaroundFormat.local(arrival))
+                }
             }
         }
     }
@@ -197,14 +214,19 @@ private struct DescentCard: View {
     var body: some View {
         if let progress = model.routeProgress, let data = model.flightData, !data.onGround {
             let elevation = model.destinationElevation
-            let required = DescentProfile.requiredDistance(altitude: data.altitude, destinationElevation: elevation)
+            let wind = model.tailwind.map { DescentProfile.windCorrection(altitude: data.altitude, destinationElevation: elevation, tailwind: $0) } ?? 0
+            let required = DescentProfile.requiredDistance(altitude: data.altitude, destinationElevation: elevation) + wind
             let toTOD = progress.distanceToGo - required
             let descending = data.verticalSpeed < -500 || toTOD <= 0
             MonitorCard(title: "DESCENSO", icon: "arrow.down.right") {
                 if !descending {
                     Row(label: "TOD (regla de 3)", value: "en \(Int(toTOD.rounded())) NM"
                         + (MonitorFormat.minutes(distance: toTOD, groundspeed: data.groundspeed).map { " · \($0)" } ?? ""))
-                    Text("Altitud en miles × 3 + 10 NM para frenar y configurar. Con viento de cola, empieza antes; de cara, después.")
+                    if let tailwind = model.tailwind, abs(wind) >= 1 {
+                        Row(label: tailwind > 0 ? "Viento de cola \(Int(tailwind)) kt" : "Viento de cara \(Int(-tailwind)) kt",
+                            value: String(format: "%+.0f NM", wind))
+                    }
+                    Text("Altitud en miles × 3 + 10 NM para frenar y configurar, más el viento: el de cola te empuja durante el descenso (empieza antes) y el de cara te frena (después). Cuenta un 60 % del viento de crucero, porque abajo suele ser más flojo.")
                         .font(.caption).foregroundStyle(.secondary)
                 } else {
                     let deviation = DescentProfile.deviation(altitude: data.altitude, distanceToGo: progress.distanceToGo,
@@ -224,6 +246,68 @@ private struct DescentCard: View {
                 }
             }
         }
+    }
+}
+
+// MARK: Landing distance (6.5)
+
+private struct LandingDistanceCard: View {
+    @Environment(PanelModel.self) private var model
+    @AppStorage("monitor.braking") private var braking = LandingDistance.Braking.low.rawValue
+    @State private var surface: LandingDistance.Surface?
+
+    var body: some View {
+        if let ofp = model.ofp {
+            let runwaySurface = surface ?? LandingDistance.Surface(simBrief: ofp.landingSurface)
+            let selected = LandingDistance.Braking(rawValue: braking) ?? .low
+            let weight = landingWeight(ofp)
+            let headwind = self.headwind(ofp)
+            MonitorCard(title: "DISTANCIA DE ATERRIZAJE", icon: "ruler") {
+                Picker("Frenada", selection: $braking) {
+                    ForEach(LandingDistance.Braking.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
+                }
+                .pickerStyle(.segmented)
+                Picker("Pista", selection: Binding(get: { runwaySurface }, set: { surface = $0 })) {
+                    ForEach(LandingDistance.Surface.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                .font(.footnote)
+                if let weight {
+                    let distance = LandingDistance.estimate(weightKg: weight, elevationFt: model.destinationElevation,
+                                                            headwind: headwind ?? 0, braking: selected, surface: runwaySurface)
+                    let factored = LandingDistance.factored(distance)
+                    Row(label: "Peso de aterrizaje", value: "\(Int(weight)) kg")
+                    if let headwind { Row(label: "Viento en pista", value: headwind >= 0 ? "\(Int(headwind)) kt de cara" : "\(Int(-headwind)) kt de cola") }
+                    Row(label: "Distancia (+15 %)", value: "\(Int(factored.rounded())) m")
+                    if let lda = ofp.landingRunwayLDA {
+                        let available = Double(lda) * 0.3048
+                        Row(label: "Pista \(ofp.destination.runway ?? "") disponible", value: "\(Int(available)) m",
+                            colour: factored > available ? .red : (factored > available * 0.8 ? PanelTheme.checklistAmber : PanelTheme.checklistGreen))
+                        if factored > available {
+                            Text("No cabe: más frenada, otra pista o desvío. En la vida real lo calcula el EFB con datos certificados.")
+                                .font(.caption).foregroundStyle(.red)
+                        }
+                    }
+                }
+                Text("Estimación aproximada desde 50 ft sobre el umbral hasta parar, en CONF FULL a VAPP, sin reversas, con el 15 % de margen de EASA para la evaluación en vuelo. Orientativa: no es un cálculo de rendimiento aprobado.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    /// Weight now minus the fuel still to burn, or the OFP landing weight.
+    private func landingWeight(_ ofp: SimBriefOFP) -> Double? {
+        if let data = model.flightData, let gross = data.grossWeight, let status = model.fuelStatus {
+            return gross - max(0, data.fuelKg - status.estimatedLanding)
+        }
+        return ofp.kilograms(ofp.weights.landing)
+    }
+
+    /// Headwind on the landing runway from the destination wind in PERF APPR (positive: headwind).
+    private func headwind(_ ofp: SimBriefOFP) -> Double? {
+        guard let runway = ofp.destination.runway, let number = Int(runway.prefix(2)),
+              let direction = model.rawValues["toliss_airbus/performance/DestWindDir"]?.doubleValue,
+              let speed = model.rawValues["toliss_airbus/performance/DestWindSpd"]?.doubleValue, speed > 0 else { return nil }
+        return speed * cos((direction - Double(number * 10)) * .pi / 180)
     }
 }
 

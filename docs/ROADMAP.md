@@ -218,6 +218,19 @@ Componentes nuevos pendientes: pulsador con tirador de fuego, voltímetros de ba
 - [x] Inspección exterior guiada (12 puntos)
 - [ ] Confirmar en X-Plane: teclado del transpondedor del ToLiss (`atc.key*`) y `sim/cockpit/autopilot/altitude` como ALT del FCU
 
+## Fase G · Tierra, salida y huecos del vuelo (2026-11-01)
+
+- [x] A-CDM: TOBT, TSAT, ventana de arranque ±5 min, TTOT y aviso para actualizar la TOBT (3.1)
+- [x] Fraseología de pushback y arranque con el personal de tierra (3.2)
+- [x] Rodaje: previsto frente a real, combustible OUT→OFF, rodaje con un motor con ahorro y aviso pasivo para arrancar el segundo (3.3)
+- [x] Deshielo: tiempos de protección orientativos (tipo I y IV), cuenta atrás y avisos pasivos al mínimo y al máximo (3.4)
+- [x] Entrada en pista: repaso final y «parar y revisar» cuando cambia la pista (3.5)
+- [x] Rotación del día: la actividad empieza con el primer vuelo y cuenta los sectores del diario (1.8)
+- [x] Desviación lateral de la ruta con aviso pasivo a más de 2 NM fuera de SID/STAR (5.2); fin de actividad frente al IN estimado en vuelo (5.6)
+- [x] Viento en el TOD (60 % del viento a lo largo de la ruta) y distancia de aterrizaje aproximada frente a la LDA del OFP (6.5)
+- [x] Averías del parte técnico que pasan a la MEL del siguiente despacho (7.4); exportación del diario a PDF (7.5)
+- [ ] Confirmar en X-Plane: `true_airspeed` y `m_total` para el viento y el peso, y la LDA del TLR en pies
+
 ## Fase 3 · Pulido y distribución (continuo)
 
 - Descubrimiento automático del simulador (requiere entitlement multicast de Apple; alternativa: escaneo de la subred por el puerto del relay)

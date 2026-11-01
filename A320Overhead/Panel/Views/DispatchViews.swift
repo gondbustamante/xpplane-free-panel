@@ -54,6 +54,15 @@ struct DispatchSheet: View {
                 link("Inspección exterior", icon: "figure.walk", detail: "\(d.walkaroundDone.count)/\(WalkaroundPoint.route.count)",
                      done: d.walkaroundDone.count == WalkaroundPoint.route.count) { WalkaroundView() }
             }
+            Section("Tierra y salida") {
+                link("Pushback y arranque", icon: "arrow.uturn.backward") { PushbackView() }
+                link("Rodaje", icon: "road.lanes", detail: d.singleEngineTaxi == true ? "con un motor" : nil) { TaxiView() }
+                link("Deshielo", icon: "snowflake", detail: d.deicing.map { _ in "en curso" }) { DeicingView() }
+                link("Entrada en pista", icon: "airplane.departure",
+                     detail: LineupView.runwayChanged(ofp: ofp, clearance: d.clearance) ? "cambio de pista" : nil,
+                     done: (d.lineupDone ?? []).count == LineupView.items.count,
+                     warning: LineupView.runwayChanged(ofp: ofp, clearance: d.clearance)) { LineupView() }
+            }
         }
     }
 
@@ -83,7 +92,7 @@ struct DispatchSheet: View {
 }
 
 /// Binding into the dispatch state of the model.
-private extension PanelModel {
+extension PanelModel {
     func dispatchBinding<T>(_ path: WritableKeyPath<DispatchState, T>) -> Binding<T> {
         Binding(get: { self.dispatch[keyPath: path] }, set: { value in self.updateDispatch { $0[keyPath: path] = value } })
     }
@@ -367,7 +376,24 @@ private struct DutyView: View {
                         }
                     }
                 } footer: {
-                    Text("Tabla de EASA ORO.FTL.205 para tripulación aclimatada, simplificada: depende de la hora local de presentación y baja 30 minutos por sector a partir del tercero (mínimo 9 h).")
+                    Text("Tabla de EASA ORO.FTL.205 para tripulación aclimatada, simplificada: depende de la hora local de presentación y baja 30 minutos por sector a partir del tercero (mínimo 9 h). Los vuelos del diario de las últimas horas cuentan como sectores de la misma actividad.")
+                }
+                let flown = model.dutyFlights(before: offBlocks)
+                if !flown.isEmpty {
+                    Section {
+                        ForEach(flown) { entry in
+                            LabeledContent("\(entry.flightNumber.isEmpty ? "Vuelo" : entry.flightNumber) · \(entry.origin)→\(entry.destination)",
+                                           value: [entry.times.outTime.map(TurnaroundFormat.local), entry.times.blockMinutes.map(TurnaroundFormat.minutes)]
+                                               .compactMap { $0 }.joined(separator: " · "))
+                        }
+                        LabeledContent("Este vuelo", value: "sector \(flown.count + 1)")
+                        let block = flown.compactMap(\.times.blockMinutes).reduce(0, +)
+                        LabeledContent("Bloque acumulado", value: TurnaroundFormat.minutes(block))
+                    } header: {
+                        Text("Rotación de hoy")
+                    } footer: {
+                        Text("La actividad empieza con la presentación del primer vuelo del día, no con la de este.")
+                    }
                 }
             } else {
                 Text("Sin hora de salida: planifica el turnaround o carga un OFP con hora.").foregroundStyle(.secondary)

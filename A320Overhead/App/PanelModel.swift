@@ -81,6 +81,8 @@ struct TurnaroundRun: Codable, Equatable {
     /// Fuel on board at OUT and IN, kg, and the touchdown of this flight.
     var fuelAtOut: Double?
     var fuelAtIn: Double?
+    /// Fuel on board at OFF, for the taxi burn.
+    var fuelAtOff: Double?
     var landing: LandingReport?
     /// IATA delay code and note when the flight leaves late.
     var delayCode: Int?
@@ -346,6 +348,9 @@ final class PanelModel {
     var showDispatch = false
     @ObservationIgnored private var levelBust = LevelBustMonitor()
     @ObservationIgnored private var speedLimitWarned = false
+    /// Ground and navigation warnings already given (so each comes once).
+    @ObservationIgnored private var groundWarnings: Set<String> = []
+    @ObservationIgnored private var offTrackSince: Date?
     @ObservationIgnored private var flightTask: Task<Void, Never>?
     @ObservationIgnored private var gateTracker = GateTracker()
     @ObservationIgnored private var minimumsCallouts = MinimumsCallouts()
@@ -1308,6 +1313,7 @@ final class PanelModel {
             entry.landingRate = run.landing?.rate
             entry.landingG = run.landing?.peakG
             if let out = run.fuelAtOut, let into = run.fuelAtIn, out > into { entry.fuelUsedKg = out - into }
+            if let out = run.fuelAtOut, let off = run.fuelAtOff, out > off { entry.taxiFuelKg = out - off }
             if let ofp, ofp.origin.icao == run.plan.origin, ofp.destination.icao == run.plan.destination,
                let trip = ofp.kilograms(ofp.fuel.trip) {
                 entry.plannedFuelKg = trip + (ofp.kilograms(ofp.fuel.taxi) ?? 0)
@@ -1340,6 +1346,14 @@ final class PanelModel {
             try? await Task.sleep(for: .milliseconds(600))
             self.showTurnaroundPlanner = true
         }
+    }
+
+    /// Simulated MEL items written up in the technical log of a flight.
+    func toggleDefect(_ item: String, of id: UUID) {
+        guard let index = flightLog.firstIndex(where: { $0.id == id }) else { return }
+        var defects = flightLog[index].defects ?? []
+        if defects.contains(item) { defects.removeAll { $0 == item } } else { defects.append(item) }
+        flightLog[index].defects = defects.isEmpty ? nil : defects
     }
 
     func updateNotes(of id: UUID, _ notes: String) {
@@ -1449,6 +1463,29 @@ final class PanelModel {
         return max(0, Int((reference.timeIntervalSince(run.plan.offBlocks) / 60).rounded(.down)))
     }
 
+    /// A-CDM: the TSAT the airport gives, and a new TOBT when the flight will not be ready.
+    func setTSAT(_ tsat: Date?) {
+        guard var run = turnaround else { return }
+        run.plan.tsat = tsat
+        turnaround = run
+    }
+
+    func updateTOBT(to date: Date) {
+        guard var run = turnaround else { return }
+        run.plan.offBlocks = date
+        // A new TOBT cancels the TSAT: the airport issues another one.
+        run.plan.tsat = nil
+        turnaround = run
+    }
+
+    /// Expected take-off: A-CDM target, slot, or off-blocks plus taxi.
+    var expectedTakeoff: Date? {
+        guard let run = turnaround, run.blockTimes.offTime == nil else { return nil }
+        if let acdm = run.plan.acdmTimes { return acdm.ttot }
+        if let ctot = run.plan.ctot { return ctot }
+        return (run.blockTimes.outTime ?? run.plan.offBlocks).addingTimeInterval(run.plan.taxi * 60)
+    }
+
     func setDelay(code: Int?, note: String?) {
         guard var run = turnaround else { return }
         run.delayCode = code
@@ -1552,6 +1589,7 @@ final class PanelModel {
         }
         // Fuel on board at OUT and IN, for the burn against the plan.
         if run.blockTimes.outTime != nil, run.fuelAtOut == nil { run.fuelAtOut = flightData?.fuelKg }
+        if run.blockTimes.offTime != nil, run.fuelAtOff == nil { run.fuelAtOff = flightData?.fuelKg }
         if run.blockTimes.inTime != nil, run.fuelAtIn == nil { run.fuelAtIn = flightData?.fuelKg }
 
         for milestone in template.milestones where run.completed[milestone.id] == nil && !milestone.isManual {
@@ -1639,6 +1677,7 @@ final class PanelModel {
         "sim/flightmodel/position/latitude", "sim/flightmodel/position/longitude",
         "sim/cockpit2/gauges/indicators/altitude_ft_pilot", "sim/flightmodel/position/indicated_airspeed",
         "sim/flightmodel/position/groundspeed", "sim/flightmodel/position/vh_ind_fpm",
+        "sim/flightmodel/position/true_airspeed", "sim/flightmodel/weight/m_total",
         "sim/cockpit2/gauges/indicators/radio_altimeter_height_ft_pilot", "sim/flightmodel/weight/m_fuel_total",
         "sim/flightmodel/forces/g_nrml", "sim/cockpit2/controls/gear_handle_down",
         "sim/cockpit2/radios/indicators/nav1_hdef_dots_pilot", "sim/cockpit2/radios/indicators/nav1_vdef_dots_pilot",
@@ -1658,6 +1697,9 @@ final class PanelModel {
         var radioAltitude: Double
         var fuelKg: Double
         var g: Double
+        /// Knots; and the gross weight, kg.
+        var trueAirspeed: Double?
+        var grossWeight: Double?
         var onGround: Bool
         var gearDown: Bool?
         var localizerDots: Double?
@@ -1684,6 +1726,8 @@ final class PanelModel {
             radioAltitude: value("sim/cockpit2/gauges/indicators/radio_altimeter_height_ft_pilot") ?? 0,
             fuelKg: value("sim/flightmodel/weight/m_fuel_total") ?? 0,
             g: value("sim/flightmodel/forces/g_nrml") ?? 1,
+            trueAirspeed: positive("sim/flightmodel/position/true_airspeed").map { $0 * 1.943844 },
+            grossWeight: positive("sim/flightmodel/weight/m_total"),
             onGround: (value("sim/flightmodel/failures/onground_any") ?? 1) > 0.5,
             gearDown: value("sim/cockpit2/controls/gear_handle_down").map { $0 > 0.5 },
             localizerDots: value("sim/cockpit2/radios/indicators/nav1_hdef_dots_pilot"),
@@ -1796,6 +1840,8 @@ final class PanelModel {
         } else if data.altitude > 10500 || data.ias < 250 {
             speedLimitWarned = false
         }
+        checkGround(data, now: now)
+        checkTrack(data, ofp: ofp, now: now)
 
         // Approach: height above the destination, from the radio altimeter near the ground.
         let height = data.radioAltitude > 0 && data.radioAltitude < 2500 ? data.radioAltitude : data.altitude - destinationElevation
@@ -1825,6 +1871,59 @@ final class PanelModel {
                 postAlert(callout.rawValue, callout == .minimum ? .warning : .info, speak: true)
             }
         }
+    }
+
+    /// Before take-off: de-icing holdover and the second engine on a single-engine taxi.
+    private func checkGround(_ data: FlightData, now: Date) {
+        guard data.onGround, turnaround?.blockTimes.offTime == nil else { return }
+        func once(_ key: String, _ text: String, _ level: FlightAlert.Level, speak: Bool) {
+            guard groundWarnings.insert(key).inserted else { return }
+            postAlert(text, level, speak: speak)
+        }
+        if let deicing = dispatch.deicing, let holdover = deicing.holdover {
+            let left = Deicing.remaining(start: deicing.start, holdover: holdover, at: now)
+            let key = "deice\(deicing.start.timeIntervalSince1970)"
+            if left.toMaximum <= 0 {
+                once(key + "max", "Protección del deshielo agotada: no despegues sin deshelar otra vez", .critical, speak: true)
+            } else if left.toMinimum <= 0, holdover.lowerBound != holdover.upperBound {
+                once(key + "min", "Deshielo: pasado el tiempo mínimo. Antes de despegar, comprueba que las alas siguen limpias", .warning, speak: false)
+            }
+        }
+        if dispatch.singleEngineTaxi == true, let takeoff = expectedTakeoff, now >= Taxi.secondEngineStart(takeoff: takeoff),
+           turnaround?.blockTimes.outTime != nil {
+            once("engine2\(takeoff.timeIntervalSince1970)", "Rodaje con un motor: arranca el motor 2 para tener \(Int(Taxi.warmUpMinutes)) min de calentamiento", .info, speak: true)
+        }
+    }
+
+    /// En route: more than 2 NM off the planned track for 30 s, outside the SID and the STAR.
+    private func checkTrack(_ data: FlightData, ofp: SimBriefOFP, now: Date) {
+        guard !data.onGround, let xtk = crossTrack, abs(xtk) > 2 else {
+            offTrackSince = nil
+            return
+        }
+        let since = offTrackSince ?? now
+        offTrackSince = since
+        if now.timeIntervalSince(since) >= 30, let next = routeProgress?.next,
+           groundWarnings.insert("xtk\(next)").inserted {
+            postAlert("Fuera de ruta: \(String(format: "%.1f", abs(xtk))) NM a la \(xtk > 0 ? "derecha" : "izquierda"). Comprueba NAV y la navegación", .warning, speak: false)
+        }
+    }
+
+    /// Cross-track distance from the leg being flown, NM (positive right); nil on the SID or
+    /// STAR, where vectors and procedures leave the straight leg.
+    var crossTrack: Double? {
+        guard let ofp, let data = flightData, let progress = routeProgress, progress.lastPassed >= 0,
+              ofp.fixes.indices.contains(progress.next) else { return nil }
+        let from = ofp.fixes[progress.lastPassed], to = ofp.fixes[progress.next]
+        guard !(to.isProcedure ?? false), !(from.isProcedure ?? false) else { return nil }
+        return Geo.crossTrack(latitude: data.latitude, longitude: data.longitude,
+                              from: (from.latitude, from.longitude), to: (to.latitude, to.longitude))
+    }
+
+    /// Along-track wind now, kt (positive tailwind): groundspeed minus true airspeed.
+    var tailwind: Double? {
+        guard let data = flightData, let tas = data.trueAirspeed, !data.onGround else { return nil }
+        return data.groundspeed - tas
     }
 
     private func announce(fuel status: FuelStatus) {
@@ -1873,7 +1972,8 @@ final class PanelModel {
                 // A new flight: its position reports and its dispatch start empty.
                 positionReports = []
                 reportBaseline = nil
-                dispatch = Self.newDispatch(for: loaded)
+                groundWarnings = []
+                dispatch = Self.newDispatch(for: loaded, log: flightLog)
             }
             ofp = loaded
         } catch SimBriefOFP.ParseError.simBrief(let message) {
@@ -1906,8 +2006,12 @@ final class PanelModel {
     // MARK: Dispatch and briefing
 
     /// A dispatch for a new OFP, with the clearance and ATIS prefilled from it.
-    static func newDispatch(for ofp: SimBriefOFP) -> DispatchState {
+    static func newDispatch(for ofp: SimBriefOFP, log: [FlightLogEntry] = []) -> DispatchState {
         var state = DispatchState(requestID: ofp.requestID)
+        // Defects written up on the flight that brought the aircraft here go to the MEL.
+        if let last = log.first, last.destination.uppercased() == ofp.origin.icao.uppercased() {
+            state.melItems = last.defects ?? []
+        }
         state.clearance.sid = ofp.sid ?? ""
         state.clearance.runway = ofp.origin.runway ?? ""
         state.atisText = ofp.origin.atis?.first ?? ""
@@ -1916,7 +2020,7 @@ final class PanelModel {
 
     func updateDispatch(_ change: (inout DispatchState) -> Void) {
         var state = dispatch
-        if let ofp, state.requestID != ofp.requestID { state = Self.newDispatch(for: ofp) }
+        if let ofp, state.requestID != ofp.requestID { state = Self.newDispatch(for: ofp, log: flightLog) }
         change(&state)
         dispatch = state
     }
@@ -1957,11 +2061,25 @@ final class PanelModel {
     }
 
     /// Report time and the maximum end of the flight duty period for the planned off-blocks.
+    /// Flights of the logbook in the current duty: those that left off-blocks in the 14 hours
+    /// before `date`, oldest first.
+    func dutyFlights(before date: Date) -> [FlightLogEntry] {
+        flightLog.filter { entry in
+            guard let out = entry.times.outTime else { return false }
+            return out < date && date.timeIntervalSince(out) < 14 * 3600
+        }
+        .sorted { ($0.times.outTime ?? .distantPast) < ($1.times.outTime ?? .distantPast) }
+    }
+
+    /// The duty period of a rotation: it starts at the report time of the first flight of the
+    /// day, and counts the sectors already flown plus the ones still planned.
     func dutyPeriod(offBlocks: Date) -> (report: Date, maximumEnd: Date, maximumMinutes: Int) {
-        let report = offBlocks.addingTimeInterval(-Double(dispatch.reportMinutesBeforeOffBlocks) * 60)
+        let flown = dutyFlights(before: offBlocks)
+        let firstOut = flown.first?.times.outTime ?? offBlocks
+        let report = firstOut.addingTimeInterval(-Double(dispatch.reportMinutesBeforeOffBlocks) * 60)
         let parts = Calendar.current.dateComponents([.hour, .minute], from: report)
         let minutes = DutyPeriod.maximumMinutes(reportMinuteOfDay: (parts.hour ?? 0) * 60 + (parts.minute ?? 0),
-                                                sectors: dispatch.sectorsToday)
+                                                sectors: max(dispatch.sectorsToday, flown.count + 1))
         return (report, report.addingTimeInterval(Double(minutes) * 60), minutes)
     }
 

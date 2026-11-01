@@ -164,7 +164,7 @@ final class TurnaroundTests: XCTestCase {
         XCTAssertTrue(lines[0].hasPrefix("vuelo,origen,destino"))
         XCTAssertTrue(lines[1].hasPrefix("VLG1234,LEMD,LEBL,"))
         XCTAssertTrue(lines[1].contains(",71,55,5,,150,"), String(lines[1]))
-        XCTAssertTrue(lines[1].hasSuffix(",180,,\"Bird strike, sin daños\""), String(lines[1]))
+        XCTAssertTrue(lines[1].hasSuffix(",180,,10,,,\"Bird strike, sin daños\""), String(lines[1]))
     }
 
     func testUnknownReadingsDoNotStamp() {

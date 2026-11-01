@@ -76,8 +76,16 @@ public struct TurnaroundPlan: Codable, Sendable, Equatable {
     /// Passengers arriving on the inbound flight (short turns), for deboarding.
     public var arrivingPassengers: Int? = nil
     public var deboardingMinutes: Double? = nil
+    /// Airport CDM: the off-blocks time is the TOBT, and the airport gives a TSAT.
+    public var acdm: Bool? = nil
+    public var tsat: Date? = nil
 
     public var taxi: Double { taxiMinutes ?? 10 }
+
+    /// A-CDM times of this plan, when the airport uses it.
+    public var acdmTimes: ACDMTimes? {
+        (acdm ?? false) ? ACDMTimes(tobt: offBlocks, tsat: tsat, taxiMinutes: taxi) : nil
+    }
 
     public init(templateID: String, offBlocks: Date, flightNumber: String = "", origin: String = "",
                 destination: String = "", passengers: Int = 150, blockFuelKg: Double = 6000,
@@ -411,6 +419,16 @@ public struct FlightLogEntry: Codable, Sendable, Identifiable, Equatable {
     public var plannedFuelKg: Double? = nil
     /// Remarks, technical log style.
     public var notes: String? = nil
+    /// Fuel burnt from OUT to OFF, kg.
+    public var taxiFuelKg: Double? = nil
+    /// Simulated MEL items written up in the technical log: they carry to the next flight.
+    public var defects: [String]? = nil
+
+    /// Minutes from OUT to OFF.
+    public var taxiOutMinutes: Int? {
+        guard let out = times.outTime, let off = times.offTime else { return nil }
+        return Int((off.timeIntervalSince(out) / 60).rounded())
+    }
 
     public init(id: UUID = UUID(), flightNumber: String, origin: String, destination: String,
                 offBlocksPlanned: Date, times: BlockTimes, passengers: Int) {
@@ -442,7 +460,7 @@ public struct FlightLogEntry: Codable, Sendable, Identifiable, Equatable {
             return value.contains(",") || value.contains("\"") || value.contains("\n")
                 ? "\"" + value.replacingOccurrences(of: "\"", with: "\"\"") + "\"" : value
         }
-        var lines = ["vuelo,origen,destino,eobt,out,off,on,in,bloque_min,vuelo_min,retraso_min,codigo_retraso,pasajeros,combustible_kg,combustible_plan_kg,toma_fpm,toma_g,notas"]
+        var lines = ["vuelo,origen,destino,eobt,out,off,on,in,bloque_min,vuelo_min,retraso_min,codigo_retraso,pasajeros,combustible_kg,combustible_plan_kg,toma_fpm,toma_g,rodaje_min,combustible_rodaje_kg,averias,notas"]
         for entry in entries {
             let values: [String] = [
                 field(entry.flightNumber), field(entry.origin), field(entry.destination),
@@ -453,6 +471,8 @@ public struct FlightLogEntry: Codable, Sendable, Identifiable, Equatable {
                 String(entry.passengers),
                 entry.fuelUsedKg.map { String(Int($0.rounded())) } ?? "", entry.plannedFuelKg.map { String(Int($0.rounded())) } ?? "",
                 entry.landingRate.map(String.init) ?? "", entry.landingG.map { String(format: "%.2f", $0) } ?? "",
+                entry.taxiOutMinutes.map(String.init) ?? "", entry.taxiFuelKg.map { String(Int($0.rounded())) } ?? "",
+                field(entry.defects?.joined(separator: " ")),
                 field(entry.notes),
             ]
             lines.append(values.joined(separator: ","))
