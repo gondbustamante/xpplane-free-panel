@@ -48,6 +48,7 @@ struct RootView: View {
                 TurnaroundBar()
                 ExerciseBar()
                 PanelCanvas()
+                    .tutorialTarget(.canvas)
                     .overlay { MiniTimers() }
                     .overlay(alignment: .top) { FlightAlertBanner() }
             }
@@ -62,6 +63,7 @@ struct RootView: View {
                         withAnimation { model.learnMode.toggle() }
                     } label: {
                         Label("Aprender", systemImage: model.learnMode ? "graduationcap.fill" : "graduationcap")
+                            .tutorialTarget(.learnButton)
                     }
                     .tint(model.learnMode ? PanelTheme.checklistCyan : nil)
                     .help("Tocar un mando explica qué hace")
@@ -71,6 +73,7 @@ struct RootView: View {
                         if let baro = model.baroPanels.first { model.openBaroSheet(baro) }
                     } label: {
                         Label("BARO", systemImage: "gauge.with.dots.needle.33percent")
+                            .tutorialTarget(.baroButton)
                     }
                     .disabled(model.baroPanels.isEmpty)
                 }
@@ -79,6 +82,7 @@ struct RootView: View {
                         if let radio = model.radioPanels.first { model.openTuner(radio) }
                     } label: {
                         Label("Radio", systemImage: "dot.radiowaves.left.and.right")
+                            .tutorialTarget(.radioButton)
                     }
                     .disabled(model.radioPanels.isEmpty)
                 }
@@ -94,6 +98,7 @@ struct RootView: View {
                         }
                     } label: {
                         Label("Checklist", systemImage: model.showChecklist ? "checklist.checked" : "checklist")
+                            .tutorialTarget(.checklistButton)
                     }
                     // In an exam the checklist would give the answers away.
                     .disabled(model.procedures.isEmpty || model.isExamRunning)
@@ -102,10 +107,30 @@ struct RootView: View {
             // Checklist beside the panels; a sheet when the window is narrow.
             .inspector(isPresented: showChecklist) {
                 InspectorColumn()
+                    .tutorialTarget(.inspector)
                     .inspectorColumnWidth(min: 320, ideal: 380, max: 480)
             }
         }
         .navigationSplitViewStyle(.balanced)
+        // The guided tour covers the whole window, columns and toolbars included.
+        .overlay { TutorialOverlay() }
+        .onChange(of: TutorialCenter.shared.step) { _, step in
+            if step != nil { withAnimation { columnVisibility = .all } }
+        }
+        .onAppear {
+            // First launch: the tour. After an update: what changed.
+            let defaults = UserDefaults.standard
+            if !defaults.bool(forKey: TutorialCenter.seenKey) {
+                defaults.set(Changelog.currentVersion, forKey: Changelog.seenKey)
+                TutorialCenter.shared.start()
+            } else if defaults.string(forKey: Changelog.seenKey) != Changelog.currentVersion {
+                defaults.set(Changelog.currentVersion, forKey: Changelog.seenKey)
+                model.showChangelog = true
+            }
+        }
+        .sheet(isPresented: Bindable(model).showChangelog) {
+            ChangelogSheet()
+        }
         .sheet(isPresented: $showSettings) {
             ConnectionSettingsView()
         }

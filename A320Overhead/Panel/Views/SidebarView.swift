@@ -96,6 +96,7 @@ struct SidebarView: View {
         List(selection: selection) {
             Section {
                 SidebarHeader()
+                    .tutorialTarget(.sidebarHeader)
                 if let active = model.activeProcedure {
                     ActiveChecklistRow(procedure: active)
                 }
@@ -107,6 +108,7 @@ struct SidebarView: View {
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
+                    .tutorialTarget(.sidebarTabs)
                     .listRowSeparator(.hidden)
                 }
             }
@@ -121,6 +123,7 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
+        .tutorialTarget(.sidebar)
         .environment(\.editMode, $editMode)
         .searchable(text: $query, placement: .sidebar, prompt: "Buscar paneles, procedimientos y ejercicios")
         .navigationTitle("A320")
@@ -148,8 +151,12 @@ struct SidebarView: View {
                             confirmDeleteResults = true
                         }
                         .disabled(model.exerciseResults.isEmpty)
+                        Divider()
+                        Button("Tutorial", systemImage: "questionmark.circle") { TutorialCenter.shared.start() }
+                        Button("Novedades", systemImage: "sparkles") { model.showChangelog = true }
                     } label: {
                         Label("Opciones", systemImage: "ellipsis.circle")
+                            .tutorialTarget(.sidebarMenu)
                     }
                 }
             }
@@ -212,12 +219,14 @@ struct SidebarView: View {
             }
         } header: {
             SectionHeader(title: "Plan de vuelo", detail: model.ofp?.airac.map { "AIRAC \($0)" })
+                .tutorialTarget(.flightPlan)
         }
         // The turnaround is part of flying, with X-Plane as much as in the demo.
         Section {
             TurnaroundList()
         } header: {
             SectionHeader(title: "Turnaround", detail: model.flightLog.isEmpty ? nil : "\(model.flightLog.count) vuelos")
+                .tutorialTarget(.turnaround)
         }
         Section {
             ForEach(model.layout.phases) { phase in
@@ -241,6 +250,7 @@ struct SidebarView: View {
         } header: {
             let done = model.procedures.filter { model.isComplete($0) }.count
             SectionHeader(title: "Fases de vuelo", detail: model.procedures.isEmpty ? nil : "\(done)/\(model.procedures.count)")
+                .tutorialTarget(.phases)
         } footer: {
             Text("Toca una fase para ver sus paneles; despliégala para sus procedimientos.")
         }
@@ -316,6 +326,7 @@ struct SidebarView: View {
                 .tag(PanelSelection.all)
         } header: {
             SectionHeader(title: "Zonas de cabina", detail: nil)
+                .tutorialTarget(.cockpitZones)
         } footer: {
             Text("Toca una zona para verla entera; despliégala para ir a una sección.")
         }
@@ -377,6 +388,7 @@ struct SidebarView: View {
             }
         } header: {
             SectionHeader(title: "Aprender", detail: nil)
+                .tutorialTarget(.practice)
         }
         Section {
             ExerciseList()

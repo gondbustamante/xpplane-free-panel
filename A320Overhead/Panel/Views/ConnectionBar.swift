@@ -12,6 +12,7 @@ struct ConnectionBar: View {
     var body: some View {
         HStack(spacing: compact ? 8 : 12) {
             ConnectionStatusMenu(showSettings: $showSettings, showDiagnostics: $showDiagnostics)
+                .tutorialTarget(.connection)
                 .layoutPriority(1)
             // Only the action you need right now: connecting. Disconnecting lives in the menu.
             if !model.status.isActive {
@@ -27,6 +28,7 @@ struct ConnectionBar: View {
             }
             Spacer(minLength: 8)
             ZoomControls(compact: compact)
+                .tutorialTarget(.zoom)
         }
     }
 }

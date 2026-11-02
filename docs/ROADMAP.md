@@ -231,6 +231,12 @@ Componentes nuevos pendientes: pulsador con tirador de fuego, voltímetros de ba
 - [x] Averías del parte técnico que pasan a la MEL del siguiente despacho (7.4); exportación del diario a PDF (7.5)
 - [ ] Confirmar en X-Plane: `true_airspeed` y `m_total` para el viento y el peso, y la LDA del TLR en pies
 
+## Fase H · Ayuda (2026-11-02)
+
+- [x] Tutorial guiado con foco, anillo y flecha sobre cada elemento; abre solo la primera vez y desde Opciones
+- [x] Registro de cambios en la app (Novedades, al actualizar) y en CHANGELOG.md; versión 0.9.0
+- [ ] Revisar en el iPad la colocación de la tarjeta en vertical y con la ventana partida
+
 ## Fase 3 · Pulido y distribución (continuo)
 
 - Descubrimiento automático del simulador (requiere entitlement multicast de Apple; alternativa: escaneo de la subred por el puerto del relay)

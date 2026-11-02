@@ -346,6 +346,8 @@ final class PanelModel {
         didSet { UserDefaults.standard.set(try? JSONEncoder().encode(dispatch), forKey: Keys.dispatch) }
     }
     var showDispatch = false
+    /// The changelog sheet (Novedades).
+    var showChangelog = false
     @ObservationIgnored private var levelBust = LevelBustMonitor()
     @ObservationIgnored private var speedLimitWarned = false
     /// Ground and navigation warnings already given (so each comes once).
