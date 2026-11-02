@@ -28,6 +28,8 @@ X-Plane 12.1.4+ expone una Web API local (REST + WebSocket) con todos los datare
 python3 tools/xp_relay.py
 ```
 
+**En Windows sin Python:** descarga `XPRelay-windows.zip` de la release *Enlace X-Plane para Windows* (la genera GitHub Actions con `.github/workflows/relay-windows.yml` cada vez que cambia el enlace en main), descomprímelo y abre `XPRelay.exe` con doble clic. El `LEEME.txt` del zip explica el aviso de SmartScreen y el permiso del firewall.
+
 Imprime la IP y el puerto que debes usar en el iPad (por defecto `IP_DEL_PC:8087`). Permite el puerto en el firewall de Windows o macOS la primera vez.
 
 **2. En el Mac**

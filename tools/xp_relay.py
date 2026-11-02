@@ -14,8 +14,14 @@ Then point the iPad app at <IP of this PC>:8087. Allow the port in the Windows/m
 """
 import argparse
 import asyncio
+import os
 import re
 import socket
+import sys
+
+# Built as XPRelay.exe (PyInstaller) the window opens with a double click: keep it open on
+# errors so the message can be read.
+FROZEN = getattr(sys, "frozen", False)
 
 HTTP_METHODS = (b"GET ", b"POST ", b"PATCH ", b"PUT ", b"DELETE ", b"OPTIONS ", b"HEAD ")
 HOST_HEADER = re.compile(rb"\r\nHost: [^\r\n]*", re.IGNORECASE)
@@ -91,18 +97,32 @@ async def main():
                         help="forward the Host header untouched")
     args = parser.parse_args()
 
-    server = await asyncio.start_server(lambda r, w: handle(r, w, args), args.listen, args.port)
+    try:
+        server = await asyncio.start_server(lambda r, w: handle(r, w, args), args.listen, args.port)
+    except OSError as error:
+        print(f"[relay] No puedo usar el puerto {args.port} ({error}).")
+        print("[relay] ¿Hay otra ventana del enlace abierta? Ciérrala y vuelve a abrir esta.")
+        raise SystemExit(1)
     ips = local_ips() or ["<IP de este PC>"]
-    print(f"[relay] escuchando en {args.listen}:{args.port} -> {args.xplane_host}:{args.xplane_port}")
+    print("=" * 60)
+    print("  Enlace X-Plane -> iPad (A320 Overhead)")
+    print("=" * 60)
+    print(f"[relay] escuchando en {args.listen}:{args.port} -> X-Plane {args.xplane_host}:{args.xplane_port}")
     for ip in ips:
-        print(f"[relay] en el iPad usa: {ip}:{args.port}")
-    print("[relay] Ctrl+C para salir")
+        print(f"[relay] en el iPad pon:  {ip}   puerto {args.port}")
+    print("[relay] Deja esta ventana abierta mientras vuelas. Para salir, ciérrala o pulsa Ctrl+C.")
     async with server:
         await server.serve_forever()
 
 
 if __name__ == "__main__":
+    if os.name == "nt":
+        os.system("title Enlace X-Plane - A320 Overhead")
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
         pass
+    except SystemExit:
+        if FROZEN:
+            input("Pulsa Intro para cerrar...")
+        raise

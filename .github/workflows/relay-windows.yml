@@ -1,0 +1,65 @@
+# Builds the X-Plane -> iPad link as a single Windows .exe (no Python needed on the PC).
+# On main it also publishes it in the "relay-latest" release as XPRelay-windows.zip.
+name: Enlace para Windows
+
+on:
+  push:
+    branches: [main, "claude/**"]
+    paths:
+      - tools/xp_relay.py
+      - tools/windows/**
+      - .github/workflows/relay-windows.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build XPRelay.exe
+        run: |
+          python -m pip install --upgrade pip pyinstaller
+          pyinstaller --onefile --console --name XPRelay tools/xp_relay.py
+
+      - name: Smoke test
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist/XPRelay.exe -ArgumentList "--port","18087" -PassThru -NoNewWindow
+          Start-Sleep -Seconds 5
+          if ($p.HasExited) { throw "XPRelay.exe se cerró al arrancar" }
+          $ok = (Test-NetConnection -ComputerName 127.0.0.1 -Port 18087).TcpTestSucceeded
+          Stop-Process -Id $p.Id
+          if (-not $ok) { throw "XPRelay.exe no escucha en el puerto" }
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path package | Out-Null
+          Copy-Item dist/XPRelay.exe package/
+          Copy-Item tools/windows/LEEME.txt package/
+          Compress-Archive -Path package/* -DestinationPath XPRelay-windows.zip -Force
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: XPRelay-windows
+          path: XPRelay-windows.zip
+
+      - name: Publish release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: relay-latest
+          name: Enlace X-Plane para Windows
+          body: |
+            XPRelay.exe: el enlace entre X-Plane y el iPad, sin instalar Python.
+            Descarga XPRelay-windows.zip, descomprímelo y sigue LEEME.txt.
+          files: XPRelay-windows.zip
+          make_latest: true

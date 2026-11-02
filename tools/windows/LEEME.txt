@@ -1,0 +1,34 @@
+ENLACE X-PLANE -> iPAD (A320 Overhead)
+======================================
+
+X-Plane solo deja conectarse al propio ordenador. Este programa hace de puente
+para que el iPad pueda hablar con X-Plane por la wifi de casa. No se instala:
+es un único archivo.
+
+PRIMERA VEZ
+1. Descomprime este zip donde quieras (por ejemplo, en el Escritorio).
+2. Abre X-Plane 12 (versión 12.1.4 o posterior) con el ToLiss A320.
+3. Haz doble clic en XPRelay.exe.
+   - Si Windows dice "Windows protegió su PC": pulsa "Más información"
+     y luego "Ejecutar de todas formas". Sale porque el programa no está
+     firmado por un fabricante; solo pasa la primera vez.
+   - Si el Firewall de Windows pregunta: marca "Redes privadas" y pulsa
+     "Permitir acceso". Sin esto el iPad no puede conectar.
+4. La ventana negra muestra una línea como:
+       en el iPad pon:  192.168.1.35   puerto 8087
+5. En el iPad, en la app: toca el estado de conexión (arriba a la izquierda)
+   -> Ajustes, escribe esa IP y el puerto 8087, y pulsa Conectar.
+
+CADA VEZ QUE VUELES
+- Abre X-Plane y haz doble clic en XPRelay.exe. Deja la ventana abierta
+  (puedes minimizarla). Al cerrarla, el iPad se desconecta.
+
+SI NO CONECTA
+- El iPad y el ordenador tienen que estar en la misma wifi/red.
+- La ventana dice "X-Plane no responde": X-Plane no está abierto o es
+  anterior a la 12.1.4.
+- La IP del ordenador puede cambiar de un día a otro: mira la que muestra
+  la ventana.
+- Si al principio pulsaste "Cancelar" en el firewall: Panel de control ->
+  Firewall de Windows -> "Permitir una aplicación" -> marca XPRelay en
+  "Privada".

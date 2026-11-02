@@ -52,7 +52,7 @@ struct ConnectionSettingsView: View {
                     if model.demoMode {
                         Text("Simula el avión en el iPad, sin X-Plane ni red: los interruptores, el FCU, las radios y el MCDU responden como si hubiera simulador. Empieza siempre en Cold & Dark al conectar. \(model.demoTiming.explanation)")
                     } else {
-                        Text("Ejecuta tools/xp_relay.py en el PC. Por defecto escucha en el puerto 8087 y reenvía a la Web API de X-Plane (8086), que solo acepta conexiones locales.")
+                        Text("En el PC de X-Plane abre el enlace: XPRelay.exe en Windows (doble clic, sin instalar nada) o tools/xp_relay.py con Python. Escucha en el puerto 8087 y reenvía a la Web API de X-Plane (8086), que solo acepta conexiones locales. La ventana del enlace muestra la IP que hay que poner aquí.")
                     }
                 }
                 Section {
