@@ -13,6 +13,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 - Plan de combustible sin X-Plane: en la columna Vuelo, el combustible previsto en cada punto del OFP, el destino con el extra del despacho y un «¿y si gasto un X % más?», y el margen antes de perder el alterno o llegar a MAYDAY FUEL.
 
 ### Mejorado
+- Botón Cámaras en la barra superior: las vistas de X-Plane, las vistas rápidas, el mando de cámara y X-Camera en una ventana flotante, sin dejar el panel en el que estás.
 - Ruedas: solo el RMP tiene aro de MHz y centro de kHz. El BARO es una rueda única que muestra el QNH mientras gira, y el trim de timón muestra NOSE L o NOSE R.
 
 ## [0.9.0] · 2026-11-02 · Tutorial y novedades

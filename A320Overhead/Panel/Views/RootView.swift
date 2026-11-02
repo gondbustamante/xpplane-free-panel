@@ -5,6 +5,7 @@ struct RootView: View {
     @Environment(PanelModel.self) private var model
     @State private var showSettings = false
     @State private var showDiagnostics = false
+    @State private var showCameras = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     private var baroPresented: Binding<Bool> {
@@ -85,6 +86,26 @@ struct RootView: View {
                             .tutorialTarget(.radioButton)
                     }
                     .disabled(model.radioPanels.isEmpty)
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    // Cameras float over whatever panel is open: change the view and carry on.
+                    Button {
+                        showCameras.toggle()
+                    } label: {
+                        Label("Cámaras", systemImage: showCameras ? "video.fill" : "video")
+                            .tutorialTarget(.cameraButton)
+                    }
+                    .disabled(!model.hasCamera)
+                    .help("Vistas de X-Plane y X-Camera sin dejar el panel")
+                    .popover(isPresented: $showCameras, arrowEdge: .top) {
+                        ScrollView {
+                            CameraView()
+                                .padding(8)
+                        }
+                        .frame(width: 750, height: 660)
+                        .presentationCompactAdaptation(.popover)
+                        .preferredColorScheme(.dark)
+                    }
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button {

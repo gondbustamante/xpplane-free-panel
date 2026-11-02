@@ -8,7 +8,7 @@ import SwiftUI
 enum TutorialTarget: String, Hashable {
     case sidebar, sidebarHeader, sidebarTabs, flightPlan, turnaround, phases, cockpitZones, practice, sidebarMenu
     case connection, zoom, canvas
-    case learnButton, baroButton, radioButton, checklistButton
+    case learnButton, baroButton, radioButton, cameraButton, checklistButton
     case inspector
 }
 
@@ -139,6 +139,10 @@ enum TutorialSteps {
         TutorialStep(target: .radioButton, icon: "dot.radiowaves.left.and.right",
                      title: "Radio",
                      text: "Sintoniza la frecuencia del RMP con un teclado numérico en lugar de girar la rueda."),
+        TutorialStep(target: .cameraButton, icon: "video",
+                     title: "Cámaras",
+                     text: "Las vistas de X-Plane (cabina, exterior, torre…), tus vistas rápidas, un mando para mover la cámara y las vistas de X-Camera, en una ventana flotante: cambias de vista sin dejar el panel en el que estás.",
+                     tip: "También están en Cabina → Cámaras, a pantalla completa."),
         TutorialStep(target: .checklistButton, icon: "checklist",
                      title: "Columna derecha",
                      text: "Abre y cierra la columna de trabajo, al lado de los paneles. Tiene tres pestañas: Checklist, Guía MCDU y Vuelo.",
