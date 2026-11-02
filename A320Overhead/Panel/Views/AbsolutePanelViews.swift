@@ -228,6 +228,24 @@ struct AbsoluteControlView: View {
     }
 
     /// Tapping a radio or BARO knob opens its sheet; other dual knobs click towards the tap.
+    /// How a wheel is drawn and what it shows while turned: the RMP has a MHz ring and a kHz
+    /// centre; the BARO shows the QNH it is setting; the others show the side they turn to.
+    private func knobFace(_ control: ControlDefinition) -> DualKnobView.Face {
+        let commands = control.commands
+        let concentric = commands?.upSmall != nil && commands?.upSmall != commands?.up
+        if model.radio(containing: control) != nil || concentric {
+            return DualKnobView.Face(concentric: true, outerHint: "MHz", innerHint: "kHz")
+        }
+        if let baro = model.baroPanel(containing: control) {
+            let value = model.displayText(of: baro.window)
+            let unit = model.isStandard(baro) ? "" : (model.isHectopascal(baro) ? " hPa" : " inHg")
+            return DualKnobView.Face(concentric: false, valueHint: model.isStandard(baro) ? "STD" : "QNH \(value)\(unit)")
+        }
+        let sides = control.label.components(separatedBy: " · ")
+        return DualKnobView.Face(concentric: false,
+                                 sideHints: sides.count == 2 ? (sides[0], sides[1]) : nil)
+    }
+
     private func knobTap(_ control: ControlDefinition) -> (() -> Void)? {
         if let radio = model.radio(containing: control) {
             return { model.openTuner(radio) }
@@ -293,6 +311,7 @@ struct AbsoluteControlView: View {
         case .dualKnob:
             DualKnobView(label: control.label, enabled: enabled, dimmed: dimmed,
                          diameter: PanelMetrics.pt(control.size ?? 22),
+                         face: knobFace(control),
                          onTap: knobTap(control)) { small, delta in
                 model.turn(control, small: small, delta: delta)
             }
@@ -652,10 +671,23 @@ struct LeverView: View {
 /// Concentric frequency knob (RMP): the outer ring changes the large step, the inner cap the
 /// small step. Tap the right or left half to turn one click, or drag horizontally.
 struct DualKnobView: View {
+    /// What the wheel is: two concentric parts (RMP: MHz ring, kHz centre) or a single knob
+    /// (BARO, rudder trim), and the hint shown above it while it turns.
+    struct Face {
+        var concentric: Bool = true
+        var outerHint: String? = nil
+        var innerHint: String? = nil
+        /// Live value (BARO: the QNH being set).
+        var valueHint: String? = nil
+        /// Decrease and increase sides (rudder trim: NOSE L, NOSE R).
+        var sideHints: (String, String)? = nil
+    }
+
     let label: String
     let enabled: Bool
     let dimmed: Bool
     let diameter: CGFloat
+    var face = Face()
     /// Tap: opens the radio tuner when set; otherwise one click towards the tapped side.
     var onTap: (() -> Void)? = nil
     let onTurn: (_ small: Bool, _ delta: Int) -> Void
@@ -666,6 +698,8 @@ struct DualKnobView: View {
     /// Drawn rotation of each part, so a click is seen as well as heard in the sim.
     @State private var outerAngle: Double = 0
     @State private var innerAngle: Double = 0
+    /// Direction of the last click (+1 / -1), for the side hint.
+    @State private var lastDirection = 0
 
     /// Finger travel per click. Right or up turns clockwise (increase), left or down decreases.
     private let clickDistance: CGFloat = 12
@@ -676,7 +710,7 @@ struct DualKnobView: View {
             Circle()
                 .fill(RadialGradient(colors: [Color(white: 0.30), Color(white: 0.10)],
                                      center: .center, startRadius: diameter * 0.2, endRadius: diameter * 0.55))
-                .overlay(Circle().stroke(dragging && !dragIsInner ? PanelTheme.checklistCyan : Color.black.opacity(0.8),
+                .overlay(Circle().stroke(dragging && (!dragIsInner || !face.concentric) ? PanelTheme.checklistCyan : Color.black.opacity(0.8),
                                          lineWidth: dragging && !dragIsInner ? 1.5 : 1))
             ZStack {
                 ForEach(0..<24, id: \.self) { index in
@@ -685,7 +719,7 @@ struct DualKnobView: View {
                 }
             }
             .rotationEffect(.degrees(outerAngle))
-            // Inner cap with its index mark.
+            // Inner cap with its index mark (on a single knob it turns with the whole knob).
             Circle()
                 .fill(RadialGradient(colors: [Color(white: 0.92), Color(white: 0.66)],
                                      center: UnitPoint(x: 0.4, y: 0.35), startRadius: 1, endRadius: diameter * 0.32))
@@ -693,9 +727,9 @@ struct DualKnobView: View {
                     Capsule().fill(Color(white: 0.35)).frame(width: max(diameter * 0.04, 1), height: diameter * 0.14)
                         .padding(.top, diameter * 0.04)
                 }
-                .rotationEffect(.degrees(innerAngle))
+                .rotationEffect(.degrees(face.concentric ? innerAngle : outerAngle))
                 .overlay(Circle().stroke(dragging && dragIsInner ? PanelTheme.checklistCyan : .clear, lineWidth: 1.5))
-                .frame(width: diameter * 0.56, height: diameter * 0.56)
+                .frame(width: diameter * (face.concentric ? 0.56 : 0.72), height: diameter * (face.concentric ? 0.56 : 0.72))
                 .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
         }
         .frame(width: diameter, height: diameter)
@@ -708,7 +742,7 @@ struct DualKnobView: View {
                         let center = CGPoint(x: diameter / 2, y: diameter / 2)
                         let dx = value.startLocation.x - center.x, dy = value.startLocation.y - center.y
                         // A little more than the drawn cap: on a small knob the centre is hard to hit.
-                        dragIsInner = (dx * dx + dy * dy).squareRoot() < diameter * 0.32
+                        dragIsInner = face.concentric && (dx * dx + dy * dy).squareRoot() < diameter * 0.32
                         lastStep = 0
                         dragging = true
                     }
@@ -733,8 +767,8 @@ struct DualKnobView: View {
                 }
         )
         .overlay(alignment: .top) {
-            if dragging {
-                Text(dragIsInner ? "kHz" : "MHz")
+            if dragging, let hint {
+                Text(hint)
                     .font(.system(size: 9, weight: .bold))
                     .foregroundStyle(.black)
                     .padding(.horizontal, 5)
@@ -752,14 +786,21 @@ struct DualKnobView: View {
         .disabled(!enabled)
         .sensoryFeedback(.selection, trigger: outerAngle + innerAngle)
         .accessibilityElement()
-        .accessibilityLabel(label.isEmpty ? "Selector de frecuencia" : label)
+        .accessibilityLabel(label.isEmpty ? (face.concentric ? "Selector de frecuencia" : "Rueda") : label)
         .accessibilityAdjustableAction { direction in
             click(direction == .increment ? 1 : -1)
         }
     }
 
+    private var hint: String? {
+        if let value = face.valueHint { return value }
+        if let sides = face.sideHints { return lastDirection < 0 ? sides.0 : (lastDirection > 0 ? sides.1 : nil) }
+        return dragIsInner ? face.innerHint : face.outerHint
+    }
+
     private func click(_ delta: Int) {
         guard delta != 0 else { return }
+        lastDirection = delta > 0 ? 1 : -1
         if dragIsInner { innerAngle += Double(delta) * 15 } else { outerAngle += Double(delta) * 15 }
         onTurn(dragIsInner, delta)
     }

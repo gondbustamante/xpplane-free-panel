@@ -11,6 +11,9 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 - Indicador «EN PAUSA» en las barras y en los cronómetros minimizados, y un aviso pasivo al pausar y al reanudar.
 - Enlace para Windows sin instalar nada (XPRelay.exe) y guía de instalación en PDF.
 
+### Mejorado
+- Ruedas: solo el RMP tiene aro de MHz y centro de kHz. El BARO es una rueda única que muestra el QNH mientras gira, y el trim de timón muestra NOSE L o NOSE R.
+
 ## [0.9.0] · 2026-11-02 · Tutorial y novedades
 
 ### Nuevo

@@ -41,6 +41,7 @@ enum Changelog {
             new("Al pausar X-Plane se detienen los tiempos: cuenta atrás y hitos del turnaround, embarque y repostaje, slot y TSAT, deshielo y cronómetro de los ejercicios. Al reanudar siguen donde estaban."),
             new("Indicador «EN PAUSA» en las barras y en los cronómetros minimizados, y un aviso pasivo al pausar y al reanudar."),
             new("Enlace para Windows sin instalar nada (XPRelay.exe) y guía de instalación en PDF."),
+            improved("Ruedas: solo el RMP tiene aro de MHz y centro de kHz. El BARO es una rueda única que muestra el QNH mientras gira, y el trim de timón muestra NOSE L o NOSE R."),
         ]),
         ChangelogRelease(version: "0.9.0", date: "2026-11-02", title: "Tutorial y novedades", changes: [
             new("Tutorial guiado: resalta cada parte de la pantalla, la señala con una flecha y explica cómo funciona. Se abre solo la primera vez y desde Opciones (⋯) → Tutorial."),
