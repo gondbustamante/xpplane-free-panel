@@ -236,6 +236,7 @@ struct ExerciseBar: View {
                         .padding(.horizontal, 5)
                         .padding(.vertical, 1)
                         .overlay(Capsule().strokeBorder(PanelTheme.checklistCyan.opacity(0.6), lineWidth: 1))
+                    if model.simPaused { SimPausedBadge() }
                     Spacer(minLength: 8)
                     TimelineView(.periodic(from: run.startedAt, by: 1)) { context in
                         let elapsed = model.exerciseElapsed(at: context.date)
@@ -412,5 +413,17 @@ enum ExerciseFormat {
     static func time(_ seconds: Double) -> String {
         let total = max(0, Int(seconds.rounded(.down)))
         return String(format: "%d:%02d", total / 60, total % 60)
+    }
+}
+
+/// "EN PAUSA" while X-Plane is paused: the bar's times are held.
+struct SimPausedBadge: View {
+    var body: some View {
+        Label("EN PAUSA", systemImage: "pause.fill")
+            .font(.caption2.weight(.bold))
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .foregroundStyle(.black)
+            .background(Capsule().fill(PanelTheme.checklistAmber))
     }
 }

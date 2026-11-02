@@ -4,6 +4,13 @@ Registro de cambios de A320 Overhead. La app muestra lo mismo en *Opciones (⋯)
 
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y las versiones, [SemVer](https://semver.org/lang/es/).
 
+## [0.9.1] · 2026-11-02 · Pausa del simulador
+
+### Nuevo
+- Al pausar X-Plane se detienen los tiempos: cuenta atrás y hitos del turnaround, embarque y repostaje, slot y TSAT, deshielo y cronómetro de los ejercicios. Al reanudar siguen donde estaban.
+- Indicador «EN PAUSA» en las barras y en los cronómetros minimizados, y un aviso pasivo al pausar y al reanudar.
+- Enlace para Windows sin instalar nada (XPRelay.exe) y guía de instalación en PDF.
+
 ## [0.9.0] · 2026-11-02 · Tutorial y novedades
 
 ### Nuevo

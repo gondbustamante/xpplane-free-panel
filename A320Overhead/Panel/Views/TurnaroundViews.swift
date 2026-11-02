@@ -267,6 +267,7 @@ struct TurnaroundBar: View {
                         .lineLimit(1)
                     Text(TurnaroundFormat.countdown(to: run.plan.offBlocks, now: now))
                         .font(.footnote.monospacedDigit().weight(.semibold))
+                    if model.simPaused { SimPausedBadge() }
                     if let next = model.nextMilestone {
                         Text("Próximo: \(next.title) · \(TurnaroundFormat.local(TurnaroundSchedule.due(next, offBlocks: run.plan.offBlocks)))")
                             .font(.footnote)
@@ -914,7 +915,7 @@ struct MiniTimers: View {
                 let delay = model.turnaroundDelay(at: context.date)
                 let warning = !model.refuelWithPassengersIssues(at: context.date).isEmpty
                 pill(colour: delay > 0 || warning ? PanelTheme.checklistAmber : PanelTheme.checklistCyan) {
-                    Image(systemName: "clock.badge")
+                    Image(systemName: model.simPaused ? "pause.fill" : "clock.badge")
                     Text(TurnaroundFormat.countdown(to: run.plan.offBlocks, now: context.date))
                         .monospacedDigit()
                     Circle()
@@ -943,7 +944,7 @@ struct MiniTimers: View {
                 let elapsed = model.exerciseElapsed(at: context.date)
                 let target = Double(run.tracker.definition.targetSeconds)
                 pill(colour: elapsed > target ? PanelTheme.checklistAmber : PanelTheme.checklistCyan) {
-                    Image(systemName: "stopwatch.fill")
+                    Image(systemName: model.simPaused ? "pause.fill" : "stopwatch.fill")
                     Text(ExerciseFormat.time(elapsed))
                         .monospacedDigit()
                     Text("\(run.tracker.doneCount)/\(run.tracker.steps.count)")

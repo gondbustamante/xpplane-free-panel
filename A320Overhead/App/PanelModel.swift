@@ -57,7 +57,8 @@ enum BacklightMode: String, CaseIterable, Identifiable {
 /// One run of an exercise: the tracker while it is flown, then its result.
 struct ExerciseRun {
     var tracker: ExerciseTracker
-    let startedAt: Date
+    /// Moves forward while the simulator is paused, so the pause does not count.
+    var startedAt: Date
     /// Set when the run ends; the result sheet shows it.
     var result: ExerciseResult?
     /// Exam mode: steps revealed with the hint button.
@@ -1543,7 +1544,8 @@ final class PanelModel {
     /// closed, writes passengers and fuel to the simulator, stamps block times and marks the
     /// milestones that are done.
     private func tickTurnaround(now: Date = Date()) {
-        guard var run = turnaround, let template = turnaroundTemplate else { return }
+        // While X-Plane is paused nothing advances: tickPause holds the clocks.
+        guard !simPaused, var run = turnaround, let template = turnaroundTemplate else { return }
         let fuel = fuelOnBoard
         for milestone in template.milestones {
             guard let service = milestone.service, run.plan.autoServices, !run.clock(service).started,
@@ -1680,6 +1682,7 @@ final class PanelModel {
         "sim/cockpit2/gauges/indicators/altitude_ft_pilot", "sim/flightmodel/position/indicated_airspeed",
         "sim/flightmodel/position/groundspeed", "sim/flightmodel/position/vh_ind_fpm",
         "sim/flightmodel/position/true_airspeed", "sim/flightmodel/weight/m_total",
+        "sim/time/paused",
         "sim/cockpit2/gauges/indicators/radio_altimeter_height_ft_pilot", "sim/flightmodel/weight/m_fuel_total",
         "sim/flightmodel/forces/g_nrml", "sim/cockpit2/controls/gear_handle_down",
         "sim/cockpit2/radios/indicators/nav1_hdef_dots_pilot", "sim/cockpit2/radios/indicators/nav1_vdef_dots_pilot",
@@ -1772,11 +1775,88 @@ final class PanelModel {
         .map { (airport: $0.0, distance: $0.1) }
     }
 
+    // MARK: Simulator pause
+
+    /// X-Plane is paused (sim/time/paused). The demo has no pause of its own.
+    var simPaused: Bool {
+        status == .connected && !demoMode && (rawValues["sim/time/paused"]?.doubleValue ?? 0) > 0.5
+    }
+
+    /// Ground services that were running when the pause began, to restart them after it.
+    @ObservationIgnored private var servicesHeldByPause: [TurnaroundService] = []
+    @ObservationIgnored private var lastPauseTick: Date?
+
+    /// Once a second: while the simulator is paused, the turnaround schedule (off-blocks, CTOT,
+    /// TSAT), the de-icing holdover and the exercise clock move forward with the pause, and the
+    /// ground services stop; when it resumes, they carry on where they were.
+    private func tickPause(now: Date = Date()) {
+        let paused = simPaused
+        if paused {
+            if lastPauseTick == nil {
+                holdServices(at: now)
+                postAlert("X-Plane en pausa: tiempos del turnaround y de los ejercicios detenidos", .info, speak: false)
+            } else if let last = lastPauseTick {
+                shiftClocks(by: now.timeIntervalSince(last))
+            }
+            lastPauseTick = now
+        } else if let last = lastPauseTick {
+            shiftClocks(by: now.timeIntervalSince(last))
+            lastPauseTick = nil
+            releaseServices(at: now)
+            postAlert("X-Plane en marcha: los tiempos siguen", .info, speak: false)
+        }
+    }
+
+    private func holdServices(at now: Date) {
+        guard var run = turnaround else { return }
+        servicesHeldByPause = TurnaroundService.allCases.filter { run.clock($0).isRunning }
+        for service in servicesHeldByPause {
+            var clock = run.clock(service)
+            clock.pause(at: now)
+            run.setClock(service, clock)
+        }
+        turnaround = run
+    }
+
+    private func releaseServices(at now: Date) {
+        defer { servicesHeldByPause = [] }
+        guard var run = turnaround else { return }
+        for service in servicesHeldByPause {
+            var clock = run.clock(service)
+            clock.start(at: now)
+            run.setClock(service, clock)
+        }
+        turnaround = run
+    }
+
+    private func shiftClocks(by interval: TimeInterval) {
+        guard interval > 0 else { return }
+        if var run = turnaround {
+            // Before OUT the whole schedule waits; after it the plan is history.
+            if run.blockTimes.outTime == nil {
+                run.plan.offBlocks.addTimeInterval(interval)
+                run.plan.ctot?.addTimeInterval(interval)
+                run.plan.tsat?.addTimeInterval(interval)
+            }
+            turnaround = run
+        }
+        if dispatch.deicing != nil, turnaround?.blockTimes.offTime == nil {
+            var state = dispatch
+            state.deicing?.start.addTimeInterval(interval)
+            dispatch = state
+        }
+        if var run = exerciseRun, run.isRunning {
+            run.startedAt.addTimeInterval(interval)
+            exerciseRun = run
+        }
+    }
+
     private func startFlightMonitor() {
         flightTask?.cancel()
         flightTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
+                self?.tickPause()
                 self?.tickFlightMonitor()
             }
         }
@@ -1785,7 +1865,7 @@ final class PanelModel {
     /// Once a second with X-Plane: route progress and position reports, fuel state, approach
     /// gates, minimums callouts and the touchdown.
     private func tickFlightMonitor(now: Date = Date()) {
-        guard let data = flightData else { return }
+        guard !simPaused, let data = flightData else { return }
 
         if let report = landingDetector.update(onGround: data.onGround, verticalSpeed: data.verticalSpeed,
                                                g: data.g, speed: data.ias, at: now) {
