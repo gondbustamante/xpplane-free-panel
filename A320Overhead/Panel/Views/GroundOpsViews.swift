@@ -12,7 +12,7 @@ struct PushbackView: View {
         let id = UUID()
         let who: String
         let text: String
-        let note: String?
+        var note: String? = nil
     }
 
     private let lines: [Line] = [
