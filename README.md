@@ -67,6 +67,7 @@ En *Práctica*, **Ejercicios** propone ocho ejercicios cronometrados, del encend
 
 **Monitor de vuelo:** la tercera pestaña de la columna lateral (*Vuelo*, o *Vuelo → Monitor de vuelo* en la barra lateral) sigue el vuelo con X-Plane contra el OFP:
 - **Crucero:** siguiente punto, distancia y tiempo a destino, combustible frente al plan con el previsto en destino y los avisos escalonados de OACI (por debajo del plan, sin combustible para el alterno, MAYDAY FUEL), próximo escalón de ascenso, informes de posición automáticos en cada punto y los aeropuertos del plan más cercanos.
+- **Plan de combustible (también sin X-Plane):** combustible previsto en cada punto, en destino con el extra del despacho, un «¿y si gasto un X % más?» y el margen antes de perder el alterno o llegar a MAYDAY FUEL. Sin simulador, la columna Vuelo muestra esto junto al briefing de aproximación y la distancia de aterrizaje.
 - **Descenso:** punto de descenso por la regla de 3 y, ya descendiendo, cuánto vas alto o bajo del perfil.
 - **Aproximación:** briefing con pista, STAR, ILS, nivel de transición, QNH, viento y mínimos; comprobación de aproximación estabilizada a 1000 y 500 ft, y llamadas «ONE HUNDRED ABOVE» y «MINIMUM» en pantalla y por voz.
 - **Aterrizaje:** régimen de toma, g y valoración.

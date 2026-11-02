@@ -10,6 +10,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 - Al pausar X-Plane se detienen los tiempos: cuenta atrás y hitos del turnaround, embarque y repostaje, slot y TSAT, deshielo y cronómetro de los ejercicios. Al reanudar siguen donde estaban.
 - Indicador «EN PAUSA» en las barras y en los cronómetros minimizados, y un aviso pasivo al pausar y al reanudar.
 - Enlace para Windows sin instalar nada (XPRelay.exe) y guía de instalación en PDF.
+- Plan de combustible sin X-Plane: en la columna Vuelo, el combustible previsto en cada punto del OFP, el destino con el extra del despacho y un «¿y si gasto un X % más?», y el margen antes de perder el alterno o llegar a MAYDAY FUEL.
 
 ### Mejorado
 - Ruedas: solo el RMP tiene aro de MHz y centro de kHz. El BARO es una rueda única que muestra el QNH mientras gira, y el trim de timón muestra NOSE L o NOSE R.

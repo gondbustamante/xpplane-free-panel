@@ -13,10 +13,21 @@ struct FlightMonitorColumn: View {
                     .buttonStyle(.bordered)
             }
         } else if model.flightData == nil {
-            emptyState("Conecta con X-Plane", detail: model.demoMode
-                       ? "En el modo demo el avión no vuela: el monitor necesita la posición, la altitud y el combustible del simulador."
-                       : "El monitor lee la posición, la altitud, la velocidad y el combustible del avión.",
-                       icon: "antenna.radiowaves.left.and.right") { EmptyView() }
+            // Without the simulator: the plan itself, its fuel estimates and the briefings.
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    Label(model.demoMode
+                          ? "Modo demo: el avión no vuela. Aquí tienes el plan del OFP; el seguimiento en vivo necesita X-Plane."
+                          : "Sin X-Plane: estimaciones del plan del OFP. Al conectar, el monitor sigue el vuelo en vivo.",
+                          systemImage: "antenna.radiowaves.left.and.right.slash")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    FuelPlanCard(startExpanded: true)
+                    ApproachCard()
+                    LandingDistanceCard()
+                }
+                .padding(12)
+            }
         } else {
             TimelineView(.periodic(from: .now, by: 2)) { _ in
                 monitor
@@ -40,6 +51,7 @@ struct FlightMonitorColumn: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 RouteFuelCard()
+                FuelPlanCard(startExpanded: false)
                 DepartureCard()
                 CruiseCard()
                 DescentCard()
@@ -94,6 +106,11 @@ private struct Row: View {
 }
 
 enum MonitorFormat {
+    /// Seconds as h:mm.
+    static func clock(_ seconds: Int) -> String {
+        String(format: "%d:%02d", seconds / 3600, (seconds % 3600) / 60)
+    }
+
     static func minutes(distance: Double, groundspeed: Double) -> String? {
         guard groundspeed > 60 else { return nil }
         let minutes = Int((distance / groundspeed * 60).rounded())
@@ -140,6 +157,85 @@ private struct RouteFuelCard: View {
                 }
             }
         }
+    }
+}
+
+// MARK: Fuel plan and estimates, with or without the simulator (5.1)
+
+private struct FuelPlanCard: View {
+    let startExpanded: Bool
+    @Environment(PanelModel.self) private var model
+    @State private var burnPercent = 0
+    @State private var showPoints: Bool?
+
+    var body: some View {
+        if let ofp = model.ofp {
+            let extra = model.dispatch.requestID == ofp.requestID ? model.dispatch.extraFuelKg : 0
+            if let plan = FuelPlan(ofp: ofp, extra: extra, burnDeviation: Double(burnPercent) / 100) {
+                MonitorCard(title: "PLAN DE COMBUSTIBLE", icon: "chart.line.downtrend.xyaxis") {
+                    if let takeoff = ofp.kilograms(ofp.fuel.takeoff) {
+                        Row(label: "Al despegue", value: MonitorFormat.kg(takeoff + extra))
+                    }
+                    if extra > 0 {
+                        Row(label: "Extra del comandante", value: "+\(Int(extra)) kg")
+                    }
+                    Row(label: "En destino (plan)", value: MonitorFormat.kg(plan.plannedLanding))
+                    Row(label: burnPercent == 0 && extra == 0 ? "En destino (estimado)" : "En destino con estos supuestos",
+                        value: MonitorFormat.kg(plan.estimatedLanding),
+                        colour: plan.level == .onPlan ? PanelTheme.checklistGreen : (plan.level == .mayday ? .red : PanelTheme.checklistAmber))
+                    Row(label: "Reserva final · + alterno", value: "\(Int(plan.finalReserve)) · \(Int(plan.finalReserve + plan.alternate)) kg")
+
+                    Stepper(value: $burnPercent, in: -10...30, step: 1) {
+                        Text(burnPercent == 0 ? "Consumo según el plan" : "Consumo \(burnPercent > 0 ? "+" : "")\(burnPercent) % sobre el plan")
+                            .font(.footnote)
+                    }
+                    if burnPercent != 0 || extra > 0 { FuelLevelLabel(level: plan.level) }
+
+                    Row(label: "Margen antes de perder el alterno", value: margin(plan.marginToAlternate, trip: plan.trip / (1 + Double(burnPercent) / 100)),
+                        colour: plan.marginToAlternate < 0.05 ? PanelTheme.checklistAmber : PanelTheme.checklistGreen)
+                    Row(label: "Margen antes de MAYDAY FUEL", value: margin(plan.marginToReserve, trip: plan.trip / (1 + Double(burnPercent) / 100)))
+                    Text("Cuánto más de lo previsto puedes gastar (viento, nivel más bajo, esperas, vectores) antes de llegar sin combustible para el alterno o por debajo de la reserva final. Con el extra del despacho incluido; llevar combustible cuesta un 3,5 % de él por hora.")
+                        .font(.caption).foregroundStyle(.secondary)
+
+                    if let point = plan.firstBelowMinimum {
+                        Label("Con estos supuestos bajarías del mínimo del OFP en \(point.ident)\(point.time.map { " (\(MonitorFormat.clock($0)) tras despegar)" } ?? "")",
+                              systemImage: "exclamationmark.triangle.fill")
+                            .font(.caption).foregroundStyle(PanelTheme.checklistAmber)
+                    }
+
+                    DisclosureGroup(isExpanded: Binding(get: { showPoints ?? startExpanded }, set: { showPoints = $0 })) {
+                        VStack(spacing: 4) {
+                            HStack {
+                                Text("Punto").frame(maxWidth: .infinity, alignment: .leading)
+                                Text("Tiempo").frame(width: 44, alignment: .trailing)
+                                Text("Plan").frame(width: 56, alignment: .trailing)
+                                Text("Estim.").frame(width: 56, alignment: .trailing)
+                            }
+                            .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                            ForEach(plan.points) { point in
+                                HStack {
+                                    Text(point.ident).font(.caption.monospaced())
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    Text(point.time.map(MonitorFormat.clock) ?? "").frame(width: 44, alignment: .trailing)
+                                    Text("\(Int(point.planned))").frame(width: 56, alignment: .trailing)
+                                        .foregroundStyle(.secondary)
+                                    Text("\(Int(point.estimated))").frame(width: 56, alignment: .trailing)
+                                        .foregroundStyle(point.belowMinimum ? PanelTheme.checklistAmber : .white)
+                                }
+                                .font(.caption.monospacedDigit())
+                            }
+                        }
+                    } label: {
+                        Text("Punto a punto (\(plan.points.count))").font(.footnote.weight(.semibold))
+                    }
+                }
+            }
+        }
+    }
+
+    private func margin(_ fraction: Double, trip: Double) -> String {
+        guard fraction > 0 else { return "ninguno" }
+        return "+\(Int((fraction * 100).rounded())) % · \(Int(fraction * trip)) kg"
     }
 }
 

@@ -291,3 +291,89 @@ public struct PositionReport: Codable, Sendable, Equatable, Identifiable {
         return actualFuel - plannedFuel
     }
 }
+
+// MARK: Fuel plan without the simulator
+
+/// The OFP's fuel along the route as an estimate that needs no simulator: what should be on
+/// board at each point, with the captain's extra fuel and a burn deviation ("what if we burn
+/// 5 % more"), and how much more than planned the flight can burn before losing the
+/// alternate or the final reserve.
+public struct FuelPlan: Sendable, Equatable {
+    public struct Point: Sendable, Equatable, Identifiable {
+        public let index: Int
+        public let ident: String
+        /// Seconds from take-off.
+        public let time: Int?
+        public let altitude: Int?
+        /// OFP plan, kg.
+        public let planned: Double
+        /// With the extra fuel and the burn deviation, kg.
+        public let estimated: Double
+        /// OFP minimum on board here, kg.
+        public let minimum: Double?
+        public let level: FuelStatus.Level
+
+        public var id: Int { index }
+        public var belowMinimum: Bool { minimum.map { estimated < $0 } ?? false }
+    }
+
+    /// Share of the extra fuel burnt per hour just to carry it (about 3.5 % per hour on the A320).
+    public static let carryCostPerHour = 0.035
+
+    public let points: [Point]
+    /// At the destination, kg: OFP plan and the estimate.
+    public let plannedLanding: Double
+    public let estimatedLanding: Double
+    public let finalReserve: Double
+    public let alternate: Double
+    /// Trip fuel with the deviation applied, kg.
+    public let trip: Double
+    /// Extra burn the flight can absorb, as a fraction of the trip: before landing below
+    /// reserve + alternate, and before landing below the final reserve.
+    public let marginToAlternate: Double
+    public let marginToReserve: Double
+    public let level: FuelStatus.Level
+
+    /// `extra` in kg; `burnDeviation` 0.05 means 5 % more than planned.
+    public init?(ofp: SimBriefOFP, extra: Double = 0, burnDeviation: Double = 0) {
+        guard let takeoff = ofp.kilograms(ofp.fuel.takeoff), let landing = ofp.kilograms(ofp.fuel.landing),
+              let reserve = ofp.kilograms(ofp.fuel.finalReserve) else { return nil }
+        let alternate = ofp.kilograms(ofp.fuel.alternate) ?? 0
+        let tripPlanned = ofp.kilograms(ofp.fuel.trip) ?? max(0, takeoff - landing)
+        let totalHours = Double(ofp.timeEnroute ?? 0) / 3600
+
+        func estimate(planned: Double, hours: Double) -> Double {
+            let burnt = max(0, takeoff - planned)
+            let carried = extra * max(0, 1 - Self.carryCostPerHour * hours)
+            return takeoff + extra - burnt * (1 + burnDeviation) - (extra - carried)
+        }
+
+        var points: [Point] = []
+        for (index, fix) in ofp.fixes.enumerated() {
+            guard let planned = ofp.kilograms(fix.plannedFuel) else { continue }
+            let hours = Double(fix.timeTotal ?? 0) / 3600
+            let value = estimate(planned: planned, hours: hours)
+            let status = FuelStatus.evaluate(actual: value, plannedNow: planned, plannedLanding: landing,
+                                             finalReserve: reserve, alternate: alternate)
+            points.append(Point(index: index, ident: fix.ident, time: fix.timeTotal, altitude: fix.altitude,
+                                planned: planned, estimated: value, minimum: ofp.kilograms(fix.minimumFuel),
+                                level: status.level))
+        }
+        let landingEstimate = estimate(planned: landing, hours: totalHours)
+        self.points = points
+        self.plannedLanding = landing
+        self.estimatedLanding = landingEstimate
+        self.finalReserve = reserve
+        self.alternate = alternate
+        self.trip = tripPlanned * (1 + burnDeviation)
+        // Spare fuel at landing (with the extra still carried) over the trip, before any deviation.
+        let spare = landing + extra * max(0, 1 - Self.carryCostPerHour * totalHours)
+        marginToAlternate = tripPlanned > 0 ? (spare - reserve - alternate) / tripPlanned : 0
+        marginToReserve = tripPlanned > 0 ? (spare - reserve) / tripPlanned : 0
+        level = FuelStatus.evaluate(actual: landingEstimate, plannedNow: landing, plannedLanding: landing,
+                                    finalReserve: reserve, alternate: alternate).level
+    }
+
+    /// First point where the estimate falls below the OFP minimum on board.
+    public var firstBelowMinimum: Point? { points.first { $0.belowMinimum } }
+}
