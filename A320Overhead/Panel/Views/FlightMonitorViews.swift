@@ -12,7 +12,7 @@ struct FlightMonitorColumn: View {
                 Button("Abrir la guía para cargarlo") { model.inspectorPanel = .mcduGuide }
                     .buttonStyle(.bordered)
             }
-        } else if model.flightData == nil {
+        } else if model.liveFlight == nil {
             // Without the simulator: the plan itself, its fuel estimates and the briefings.
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
@@ -133,7 +133,7 @@ private struct RouteFuelCard: View {
 
     var body: some View {
         MonitorCard(title: "RUTA Y COMBUSTIBLE", icon: "fuelpump") {
-            if let ofp = model.ofp, let data = model.flightData {
+            if let ofp = model.ofp, let data = model.liveFlight {
                 if let progress = model.routeProgress, ofp.fixes.indices.contains(progress.next) {
                     let next = ofp.fixes[progress.next]
                     Row(label: "Siguiente punto", value: "\(next.ident) · \(Int(progress.distanceToNext.rounded())) NM"
@@ -266,7 +266,7 @@ private struct CruiseCard: View {
     @Environment(PanelModel.self) private var model
 
     var body: some View {
-        if let ofp = model.ofp, let data = model.flightData, !data.onGround {
+        if let ofp = model.ofp, let data = model.liveFlight, !data.onGround {
             let passed = model.routeProgress?.lastPassed ?? -1
             let nextStep = ofp.stepClimbList.first { step in
                 (ofp.fixes.firstIndex { $0.ident == step.fix } ?? Int.max) > passed
@@ -308,7 +308,7 @@ private struct DescentCard: View {
     @Environment(PanelModel.self) private var model
 
     var body: some View {
-        if let progress = model.routeProgress, let data = model.flightData, !data.onGround {
+        if let progress = model.routeProgress, let data = model.liveFlight, !data.onGround {
             let elevation = model.destinationElevation
             let wind = model.tailwind.map { DescentProfile.windCorrection(altitude: data.altitude, destinationElevation: elevation, tailwind: $0) } ?? 0
             let required = DescentProfile.requiredDistance(altitude: data.altitude, destinationElevation: elevation) + wind
@@ -392,7 +392,7 @@ private struct LandingDistanceCard: View {
 
     /// Weight now minus the fuel still to burn, or the OFP landing weight.
     private func landingWeight(_ ofp: SimBriefOFP) -> Double? {
-        if let data = model.flightData, let gross = data.grossWeight, let status = model.fuelStatus {
+        if let data = model.liveFlight, let gross = data.grossWeight, let status = model.fuelStatus {
             return gross - max(0, data.fuelKg - status.estimatedLanding)
         }
         return ofp.kilograms(ofp.weights.landing)
@@ -444,7 +444,7 @@ private struct ApproachCard: View {
     private func briefing(_ ofp: SimBriefOFP) -> some View {
         let raw = model.rawValues
         func value(_ name: String) -> Double? { raw[name]?.doubleValue.flatMap { $0 != 0 ? $0 : nil } }
-        let data = model.flightData
+        let data = model.liveFlight
         return VStack(alignment: .leading, spacing: 4) {
             Row(label: "Destino · pista", value: "\(ofp.destination.icao) · \(ofp.destination.runway ?? "—")")
             if let star = ofp.star { Row(label: "STAR", value: star + (ofp.starTransition.map { " (\($0))" } ?? "")) }

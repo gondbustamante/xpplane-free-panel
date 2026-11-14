@@ -267,11 +267,7 @@ final class PanelModel {
     private(set) var exerciseRun: ExerciseRun?
     /// Results by exercise id, newest first.
     private(set) var exerciseResults: [String: [ExerciseResult]] = [:] {
-        didSet {
-            if let data = try? JSONEncoder().encode(exerciseResults) {
-                UserDefaults.standard.set(data, forKey: Keys.exerciseResults)
-            }
-        }
+        didSet { scheduleSave(Keys.exerciseResults) { [value = self.exerciseResults] in try? JSONEncoder().encode(value) } }
     }
     /// Exercise whose briefing sheet is open.
     var exerciseBriefingID: String?
@@ -287,15 +283,11 @@ final class PanelModel {
     private(set) var turnaroundTemplates: [TurnaroundTemplate] = []
     /// The turnaround being flown, if any.
     private(set) var turnaround: TurnaroundRun? {
-        didSet {
-            UserDefaults.standard.set(turnaround.flatMap { try? JSONEncoder().encode($0) }, forKey: Keys.turnaround)
-        }
+        didSet { scheduleSave(Keys.turnaround) { [value = self.turnaround] in value.flatMap { try? JSONEncoder().encode($0) } } }
     }
     /// Finished flights, newest first.
     private(set) var flightLog: [FlightLogEntry] = [] {
-        didSet {
-            UserDefaults.standard.set(try? JSONEncoder().encode(flightLog), forKey: Keys.flightLog)
-        }
+        didSet { scheduleSave(Keys.flightLog) { [value = self.flightLog] in try? JSONEncoder().encode(value) } }
     }
     var showTurnaroundPlanner = false
     /// SimBrief user name or numeric pilot ID.
@@ -323,7 +315,7 @@ final class PanelModel {
     }
     /// Position reports of the current OFP's flight.
     private(set) var positionReports: [PositionReport] = [] {
-        didSet { UserDefaults.standard.set(try? JSONEncoder().encode(positionReports), forKey: Keys.positionReports) }
+        didSet { scheduleSave(Keys.positionReports) { [value = self.positionReports] in try? JSONEncoder().encode(value) } }
     }
     /// Stabilised approach gates of the approach in progress.
     private(set) var gateResults: [GateResult] = []
@@ -349,7 +341,7 @@ final class PanelModel {
     var nextLegDraft: TurnaroundPlan?
     /// Dispatch and departure briefing of the current OFP.
     private(set) var dispatch = DispatchState() {
-        didSet { UserDefaults.standard.set(try? JSONEncoder().encode(dispatch), forKey: Keys.dispatch) }
+        didSet { scheduleSave(Keys.dispatch) { [value = self.dispatch] in try? JSONEncoder().encode(value) } }
     }
     var showDispatch = false
     /// The changelog sheet (Novedades).
@@ -492,13 +484,22 @@ final class PanelModel {
     /// Flight Control Unit mapping (`mapping/fcu/fcu.json`), nil when the file is missing.
     private(set) var fcu: FCUDefinition?
     /// Control id → current position index (0 = bottom).
-    private(set) var positions: [String: Int] = [:]
+    @ObservationIgnored let positions = KeyedStore<String, Int>()
     /// Latest raw value for each lamp binding.
-    private(set) var lampValues: [DatarefKey: XPValue] = [:]
+    @ObservationIgnored let lampValues = KeyedStore<DatarefKey, XPValue>()
     /// Latest raw value of every subscribed dataref, keyed by name.
-    private(set) var rawValues: [String: XPValue] = [:]
+    @ObservationIgnored let rawValues = KeyedStore<String, XPValue>()
     /// When each dataref element last changed, keyed by "name" or "name[index]".
-    private(set) var changeStamps: [String: Date] = [:]
+    /// Only the diagnostics screen reads it, and it refreshes itself every second.
+    @ObservationIgnored private(set) var changeStamps: [String: Date] = [:]
+    /// Change stamps are only kept while the diagnostics screen is open: comparing every
+    /// element of the big switch arrays on each update is wasted work otherwise.
+    @ObservationIgnored var diagnosticsVisible = false
+    @ObservationIgnored private var exerciseRefreshPending = false
+    /// Stored state that changes often (turnaround clocks, notes typed key by key, the
+    /// dispatch while paused) is written at most once a second instead of on every change.
+    @ObservationIgnored private var pendingSaves: [String: () -> Data?] = [:]
+    @ObservationIgnored private var saveTask: Task<Void, Never>?
     /// Datarefs the simulator did not recognise on the last connect.
     private(set) var unresolved: Set<String> = []
     private(set) var lastError: String?
@@ -1228,6 +1229,16 @@ final class PanelModel {
         updateTracker { $0.useHint() }
     }
 
+    /// Re-reads the run once per burst of simulator updates instead of once per dataref.
+    private func scheduleExerciseRefresh() {
+        guard isExerciseRunning, !exerciseRefreshPending else { return }
+        exerciseRefreshPending = true
+        Task { @MainActor [weak self] in
+            self?.exerciseRefreshPending = false
+            self?.refreshExercise()
+        }
+    }
+
     /// Re-reads the run after the simulator or a hand tick changed something, and twice a second.
     private func refreshExercise() {
         let elapsed = exerciseElapsed()
@@ -1629,6 +1640,28 @@ final class PanelModel {
         if run != turnaround { turnaround = run }
     }
 
+    // MARK: Storage
+
+    private func scheduleSave(_ key: String, _ encode: @escaping () -> Data?) {
+        pendingSaves[key] = encode
+        guard saveTask == nil else { return }
+        saveTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            self?.flushSaves()
+        }
+    }
+
+    /// Writes what is pending now. Also called when the app goes to the background.
+    func flushSaves() {
+        saveTask?.cancel()
+        saveTask = nil
+        let saves = pendingSaves
+        pendingSaves.removeAll()
+        for (key, encode) in saves {
+            UserDefaults.standard.set(encode(), forKey: key)
+        }
+    }
+
     // MARK: Integral lighting
 
     /// Level (0…1) of the integral lighting for a panel group or built-in panel id.
@@ -1716,7 +1749,7 @@ final class PanelModel {
         "toliss_airbus/performance/DestWindDir", "toliss_airbus/performance/DestWindSpd",
     ]
 
-    struct FlightData {
+    struct FlightData: Equatable {
         var latitude: Double
         var longitude: Double
         var altitude: Double
@@ -1737,6 +1770,15 @@ final class PanelModel {
         var targetSpeed: Double?
         var decisionHeight: Double?
         var minimumAltitude: Double?
+    }
+
+    /// `flightData` as of the last monitor tick, for the views: they redraw once a second
+    /// instead of on every position update (several a second in flight).
+    private(set) var liveFlight: FlightData?
+
+    private func refreshLiveFlight() {
+        let data = flightData
+        if data != liveFlight { liveFlight = data }
     }
 
     /// The aircraft now, from X-Plane; nil in the demo (it does not fly) or before a position.
@@ -1769,7 +1811,7 @@ final class PanelModel {
 
     /// Fuel against the OFP at this point of the route, kg.
     var fuelStatus: FuelStatus? {
-        guard let ofp, let data = flightData, let planned = ofp.kilograms(routeProgress?.plannedFuelNow),
+        guard let ofp, let data = liveFlight, let planned = ofp.kilograms(routeProgress?.plannedFuelNow),
               let landing = ofp.kilograms(ofp.fuel.landing), let reserve = ofp.kilograms(ofp.fuel.finalReserve) else { return nil }
         return FuelStatus.evaluate(actual: data.fuelKg, plannedNow: planned, plannedLanding: landing,
                                    finalReserve: reserve, alternate: ofp.kilograms(ofp.fuel.alternate) ?? 0)
@@ -1881,6 +1923,7 @@ final class PanelModel {
         flightTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
+                self?.refreshLiveFlight()
                 self?.tickPause()
                 self?.tickFlightMonitor()
             }
@@ -2239,7 +2282,8 @@ final class PanelModel {
                 self?.pressMCDU(key)
                 try? await Task.sleep(for: .milliseconds(90))
             }
-            self?.typingEntryID = nil
+            // A newer entry cancelled this one and is typing now: leave its id in place.
+            if !Task.isCancelled { self?.typingEntryID = nil }
         }
     }
 
@@ -2529,28 +2573,26 @@ final class PanelModel {
             return
         }
         stampChanges(for: update)
-        // Writing an equal value still notifies observers, so only write real changes.
-        if rawValues[update.name] != update.value { rawValues[update.name] = update.value }
+        rawValues[update.name] = update.value
 
         for control in controlsByDataref[update.name] ?? [] {
             if let state = control.state, state.dataref == update.name,
                let element = update.value.element(at: state.index),
-               let position = state.position(for: element, count: control.positions.count),
-               positions[control.id] != position {
+               let position = state.position(for: element, count: control.positions.count) {
                 positions[control.id] = position
             }
             for lamp in [control.lamps?.top, control.lamps?.bottom].compactMap({ $0 })
             where lamp.dataref == update.name {
-                if let key = lamp.key, let element = update.value.element(at: key.index),
-                   lampValues[key] != element {
+                if let key = lamp.key, let element = update.value.element(at: key.index) {
                     lampValues[key] = element
                 }
             }
         }
-        refreshExercise()
+        scheduleExerciseRefresh()
     }
 
     private func stampChanges(for update: DatarefUpdate) {
+        guard diagnosticsVisible else { return }
         let now = Date()
         let previous = rawValues[update.name]
         if let newArray = update.value.arrayValue {

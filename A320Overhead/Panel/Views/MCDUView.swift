@@ -418,11 +418,9 @@ struct MCDUScreenView: View {
                                        startPoint: .top, endPoint: .bottom), lineWidth: 4)
             VStack(spacing: 0) {
                 ForEach(0..<MCDUScreen.rows, id: \.self) { row in
-                    HStack(spacing: 0) {
-                        ForEach(0..<MCDUScreen.columns, id: \.self) { column in
-                            cell(screen.cells[row][column])
-                        }
-                    }
+                    // Equatable rows: when a page updates a few values, only those rows redraw.
+                    MCDURowView(cells: screen.cells[row])
+                        .equatable()
                 }
             }
             .padding(MCDUMetrics.screenPadding)
@@ -448,6 +446,19 @@ struct MCDUScreenView: View {
             }
         }
         .frame(width: MCDUMetrics.screenWidth, height: MCDUMetrics.screenHeight)
+    }
+}
+
+/// One line of the MCDU screen.
+private struct MCDURowView: View, Equatable {
+    let cells: [MCDUCell]
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(cells.indices, id: \.self) { column in
+                cell(cells[column])
+            }
+        }
     }
 
     /// Each character sits in a fixed cell, so a proportional sans-serif (closer to the MCDU's

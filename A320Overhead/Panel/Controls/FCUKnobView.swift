@@ -105,6 +105,9 @@ struct RepeatButton: View {
     @State private var pressed = false
     @State private var repeater: Task<Void, Never>?
     @State private var firedWhileHeld = false
+    /// Resets by itself when the touch ends or is cancelled (a scroll, a sheet, another gesture
+    /// taking over), cases where `onEnded` never runs and the repeat would go on forever.
+    @GestureState private var touching = false
 
     var body: some View {
         Image(systemName: systemImage)
@@ -116,6 +119,7 @@ struct RepeatButton: View {
             .contentShape(Circle())
             .gesture(
                 DragGesture(minimumDistance: 0)
+                    .updating($touching) { _, state, _ in state = true }
                     .onChanged { _ in
                         guard !pressed else { return }
                         pressed = true
@@ -136,7 +140,18 @@ struct RepeatButton: View {
                         if !firedWhileHeld { action() }
                     }
             )
+            .onChange(of: touching) { _, touching in
+                if !touching { stopRepeating() }
+            }
+            .onDisappear { stopRepeating() }
             .disabled(!enabled)
+    }
+
+    /// Cancelled touch: stop without the extra single step `onEnded` fires for a tap.
+    private func stopRepeating() {
+        repeater?.cancel()
+        repeater = nil
+        pressed = false
     }
 }
 

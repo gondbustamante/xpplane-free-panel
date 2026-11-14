@@ -58,6 +58,8 @@ struct DiagnosticsView: View {
                 }
             }
             .navigationTitle("Diagnóstico")
+            .onAppear { model.diagnosticsVisible = true }
+            .onDisappear { model.diagnosticsVisible = false }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cerrar") { dismiss() }

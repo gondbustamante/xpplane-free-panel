@@ -257,6 +257,7 @@ struct FCUPushButtonView: View {
     let onPress: () -> Void
 
     @State private var pressed = false
+    @GestureState private var touching = false
 
     var body: some View {
         VStack(spacing: 5) {
@@ -295,12 +296,17 @@ struct FCUPushButtonView: View {
         .contentShape(Rectangle())
         .gesture(
             DragGesture(minimumDistance: 0)
+                .updating($touching) { _, state, _ in state = true }
                 .onChanged { _ in if !pressed { pressed = true } }
                 .onEnded { _ in
                     pressed = false
                     onPress()
                 }
         )
+        // A cancelled touch never reaches onEnded: release the key without pressing it.
+        .onChange(of: touching) { _, touching in
+            if !touching { pressed = false }
+        }
         .disabled(!enabled)
         .opacity(enabled ? 1 : 0.45)
     }

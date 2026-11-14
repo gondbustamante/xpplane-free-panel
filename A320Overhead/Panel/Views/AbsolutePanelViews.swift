@@ -695,6 +695,9 @@ struct DualKnobView: View {
     @State private var lastStep: Int = 0
     @State private var dragIsInner = false
     @State private var dragging = false
+    /// Resets by itself when the touch is cancelled (`onEnded` does not run), so a later drag
+    /// does not start from a stale step and turn the knob by several clicks.
+    @GestureState private var touching = false
     /// Drawn rotation of each part, so a click is seen as well as heard in the sim.
     @State private var outerAngle: Double = 0
     @State private var innerAngle: Double = 0
@@ -737,6 +740,7 @@ struct DualKnobView: View {
         .contentShape(Circle())
         .gesture(
             DragGesture(minimumDistance: 0)
+                .updating($touching) { _, state, _ in state = true }
                 .onChanged { value in
                     if !dragging {
                         let center = CGPoint(x: diameter / 2, y: diameter / 2)
@@ -766,6 +770,12 @@ struct DualKnobView: View {
                     dragging = false
                 }
         )
+        .onChange(of: touching) { _, touching in
+            if !touching {
+                lastStep = 0
+                dragging = false
+            }
+        }
         .overlay(alignment: .top) {
             if dragging, let hint {
                 Text(hint)

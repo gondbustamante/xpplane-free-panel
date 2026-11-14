@@ -37,6 +37,11 @@ public actor XPlaneClient {
     private var commandCache: [String: CommandInfo] = [:]
     private var subscribedNames: [Int64: String] = [:]
     private var latest: [String: XPValue] = [:]
+    /// WebSocket messages in arrival order. One `Task` per message would hop onto the actor in
+    /// no guaranteed order, so an older value could land after a newer one and stay on screen.
+    private nonisolated let inbox: AsyncStream<WSIncoming>
+    private let inboxContinuation: AsyncStream<WSIncoming>.Continuation
+    private var inboxTask: Task<Void, Never>?
 
     public init(host: String, port: Int = 8086) {
         self.host = host
@@ -62,6 +67,13 @@ public actor XPlaneClient {
         let (states, stateContinuation) = AsyncStream.makeStream(of: State.self, bufferingPolicy: .bufferingNewest(16))
         self.stateChanges = states
         self.stateContinuation = stateContinuation
+        let (inbox, inboxContinuation) = AsyncStream.makeStream(of: WSIncoming.self, bufferingPolicy: .unbounded)
+        self.inbox = inbox
+        self.inboxContinuation = inboxContinuation
+    }
+
+    deinit {
+        inboxContinuation.finish()
     }
 
     // MARK: Connection
@@ -74,9 +86,15 @@ public actor XPlaneClient {
             _ = try await rest.datarefs(named: "sim/time/total_running_time_sec")
 
             let socket = WebSocketClient(url: webSocketURL, session: session)
+            if inboxTask == nil {
+                let inbox = self.inbox
+                inboxTask = Task { [weak self] in
+                    for await incoming in inbox { await self?.handle(incoming) }
+                }
+            }
             await socket.setHandlers(
-                incoming: { [weak self] incoming in
-                    Task { await self?.handle(incoming) }
+                incoming: { [inboxContinuation] incoming in
+                    inboxContinuation.yield(incoming)
                 },
                 close: { [weak self] error in
                     Task { await self?.socketClosed(error) }
@@ -122,12 +140,30 @@ public actor XPlaneClient {
         guard let socket else { throw XPlaneError.notConnected }
         var refs: [WSDatarefRef] = []
         var unresolved: [String] = []
-        for name in names where !subscribedNames.values.contains(name) {
-            do {
-                let info = try await dataref(named: name)
+        let already = Set(subscribedNames.values)
+        let wanted = Array(Set(names).subtracting(already))
+        // Each name is one REST lookup: a few hundred in a row made connecting take seconds,
+        // and every reconnect too. Eight at a time keeps the relay and X-Plane comfortable.
+        let found = try await withThrowingTaskGroup(of: (String, DatarefInfo?).self) { group in
+            var results: [(String, DatarefInfo?)] = []
+            for (offset, name) in wanted.enumerated() {
+                if offset >= 8, let result = try await group.next() { results.append(result) }
+                group.addTask {
+                    do {
+                        return (name, try await self.dataref(named: name))
+                    } catch XPlaneError.notFound {
+                        return (name, nil)
+                    }
+                }
+            }
+            while let result = try await group.next() { results.append(result) }
+            return results
+        }
+        for (name, info) in found {
+            if let info {
                 subscribedNames[info.id] = name
                 refs.append(WSDatarefRef(id: info.id, index: nil))
-            } catch XPlaneError.notFound {
+            } else {
                 unresolved.append(name)
             }
         }

@@ -225,6 +225,9 @@ private struct HoldButton: View {
     let icon: String
     let onHold: (Bool) -> Void
     @State private var pressed = false
+    /// Resets when the touch is cancelled, where `onEnded` never runs: the camera would keep
+    /// panning in X-Plane until the view went away.
+    @GestureState private var touching = false
 
     var body: some View {
         HStack(spacing: 6) {
@@ -237,24 +240,29 @@ private struct HoldButton: View {
         .contentShape(Rectangle())
         .gesture(
             DragGesture(minimumDistance: 0)
+                .updating($touching) { _, state, _ in state = true }
                 .onChanged { _ in
                     guard !pressed else { return }
                     pressed = true
                     onHold(true)
                 }
-                .onEnded { _ in
-                    pressed = false
-                    onHold(false)
-                }
+                .onEnded { _ in release() }
         )
-        .onDisappear {
-            if pressed { onHold(false) }
+        .onChange(of: touching) { _, touching in
+            if !touching { release() }
         }
+        .onDisappear { release() }
         .accessibilityElement()
         .accessibilityLabel(title ?? icon)
         .accessibilityAction {
             onHold(true)
             onHold(false)
         }
+    }
+
+    private func release() {
+        guard pressed else { return }
+        pressed = false
+        onHold(false)
     }
 }
