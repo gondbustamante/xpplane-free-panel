@@ -145,6 +145,8 @@ enum PanelSelection: Hashable {
     case all
     case group(String)
     case phase(String)
+    /// A fixed region of a group from `layout.json` (the overhead's centre column).
+    case area(String)
     /// One subpanel on its own, fitted to the screen.
     case subpanel(String)
     /// A panel built by the user.
@@ -157,6 +159,7 @@ enum PanelSelection: Hashable {
         case .all: return "all"
         case .group(let id): return "group:\(id)"
         case .phase(let id): return "phase:\(id)"
+        case .area(let id): return "area:\(id)"
         case .subpanel(let id): return "subpanel:\(id)"
         case .custom(let id): return "custom:\(id)"
         case .procedure(let id): return "procedure:\(id)"
@@ -173,6 +176,8 @@ enum PanelSelection: Hashable {
             self = .group(String(storageValue.dropFirst(6)))
         } else if storageValue.hasPrefix("phase:") {
             self = .phase(String(storageValue.dropFirst(6)))
+        } else if storageValue.hasPrefix("area:") {
+            self = .area(String(storageValue.dropFirst(5)))
         } else if storageValue.hasPrefix("subpanel:") {
             self = .subpanel(String(storageValue.dropFirst(9)))
         } else if storageValue.hasPrefix("custom:") {
@@ -439,8 +444,12 @@ final class PanelModel {
         didSet { UserDefaults.standard.set(mcduUnit, forKey: Keys.mcduUnit) }
     }
     /// Raw MCDU screen datarefs, kept apart from `rawValues` so ~150 text updates per page change
-    /// do not re-render every switch on the overhead.
-    private(set) var mcduRaw: [String: XPValue] = [:]
+    /// do not re-render every switch on the overhead. Not observed: views read `mcduScreen`.
+    @ObservationIgnored private var mcduRaw: [String: XPValue] = [:]
+    @ObservationIgnored private var mcduDecodePending = false
+    /// Decoded screen of the selected MCDU. Decoded once per burst of updates (a page change
+    /// sends dozens of datarefs) and only reassigned when it really changes.
+    private(set) var mcduScreen: MCDUScreen = .empty
     /// Datarefs added from the diagnostics screen, on top of the ones the mapping needs.
     private(set) var extraDatarefs: [String] {
         didSet { UserDefaults.standard.set(extraDatarefs, forKey: Keys.extras) }
@@ -474,6 +483,8 @@ final class PanelModel {
     /// Control id → definition and → subpanel id, built once from the mapping.
     @ObservationIgnored private var controlsByID: [String: ControlDefinition] = [:]
     @ObservationIgnored private var panelOfControl: [String: String] = [:]
+    /// Dataref name → controls whose position or lamps read it, so an update only visits those.
+    @ObservationIgnored private var controlsByDataref: [String: [ControlDefinition]] = [:]
 
     private(set) var status: Status = .disconnected
     private(set) var subpanels: [SubpanelDefinition] = []
@@ -608,6 +619,8 @@ final class PanelModel {
             for control in panel.controls {
                 controlsByID[control.id] = control
                 panelOfControl[control.id] = panel.id
+                let names = Set([control.state?.dataref, control.lamps?.top?.dataref, control.lamps?.bottom?.dataref].compactMap { $0 })
+                for name in names { controlsByDataref[name, default: []].append(control) }
             }
         }
         let proceduresDirectory = directory.appendingPathComponent("procedures", isDirectory: true)
@@ -680,6 +693,9 @@ final class PanelModel {
                 if let items = special(wanted) { return items }
                 return subpanels.first { $0.id == wanted }.map { [.subpanel($0)] } ?? []
             }
+        case .area(let id):
+            guard let area = layout.areas?.first(where: { $0.id == id }) else { return [] }
+            return area.subpanels.compactMap { wanted in subpanels.first { $0.id == wanted }.map { PanelItem.subpanel($0) } }
         case .subpanel(let id):
             if let items = special(id) { return items }
             return subpanels.first { $0.id == id }.map { [.subpanel($0)] } ?? []
@@ -1669,9 +1685,18 @@ final class PanelModel {
         layout.groups.contains { $0.id == "mcdu" }
     }
 
-    /// Decoded screen of the selected MCDU.
-    var mcduScreen: MCDUScreen {
-        MCDUScreen.decode(unit: mcduUnit, values: mcduRaw)
+    private func scheduleMCDUDecode() {
+        guard !mcduDecodePending else { return }
+        mcduDecodePending = true
+        Task { @MainActor [weak self] in
+            self?.decodeMCDU()
+        }
+    }
+
+    private func decodeMCDU() {
+        mcduDecodePending = false
+        let screen = MCDUScreen.decode(unit: mcduUnit, values: mcduRaw)
+        if screen != mcduScreen { mcduScreen = screen }
     }
 
     // MARK: Flight monitor
@@ -2241,6 +2266,7 @@ final class PanelModel {
     func setMCDUUnit(_ unit: Int) {
         guard unit == 1 || unit == 2, unit != mcduUnit else { return }
         mcduUnit = unit
+        decodeMCDU()
         guard let client, status == .connected else { return }
         Task {
             do {
@@ -2330,6 +2356,7 @@ final class PanelModel {
         case .all: return "Todos los paneles"
         case .group(let id): return layout.groups.first { $0.id == id }?.title ?? id
         case .phase(let id): return layout.phases.first { $0.id == id }?.title ?? id
+        case .area(let id): return layout.areas?.first { $0.id == id }?.title ?? id
         case .subpanel(let id):
             return title(ofItem: id)
         case .custom(let id):
@@ -2408,6 +2435,11 @@ final class PanelModel {
         guard generation == connectGeneration else { return }
         status = reconnectAttempt == 0 ? .connecting : .reconnecting(attempt: reconnectAttempt)
         lastError = nil
+
+        // The new session sends every MCDU line again; leftovers from the last one would mix
+        // two pages on screen.
+        mcduRaw.removeAll()
+        decodeMCDU()
 
         // A fresh demo per connection: its update stream ends with the listeners that read it.
         demoSystems = nil
@@ -2493,20 +2525,24 @@ final class PanelModel {
         }
         if update.name.hasPrefix("AirbusFBW/MCDU1") || update.name.hasPrefix("AirbusFBW/MCDU2") {
             mcduRaw[update.name] = update.value
+            scheduleMCDUDecode()
             return
         }
         stampChanges(for: update)
-        rawValues[update.name] = update.value
+        // Writing an equal value still notifies observers, so only write real changes.
+        if rawValues[update.name] != update.value { rawValues[update.name] = update.value }
 
-        for control in allControls {
+        for control in controlsByDataref[update.name] ?? [] {
             if let state = control.state, state.dataref == update.name,
                let element = update.value.element(at: state.index),
-               let position = state.position(for: element, count: control.positions.count) {
+               let position = state.position(for: element, count: control.positions.count),
+               positions[control.id] != position {
                 positions[control.id] = position
             }
             for lamp in [control.lamps?.top, control.lamps?.bottom].compactMap({ $0 })
             where lamp.dataref == update.name {
-                if let key = lamp.key, let element = update.value.element(at: key.index) {
+                if let key = lamp.key, let element = update.value.element(at: key.index),
+                   lampValues[key] != element {
                     lampValues[key] = element
                 }
             }

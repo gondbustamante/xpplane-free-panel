@@ -64,4 +64,16 @@ final class MCDUScreenTests: XCTestCase {
         XCTAssertEqual(screen.cells[0][0].color, .green)
         XCTAssertTrue(MCDUScreen.decode(unit: 1, values: [:]).isBlank)
     }
+
+    func testIgnoresControlAndHighBytes() {
+        var bytes = Array(pad("FROM").utf8)
+        bytes[5] = 0x07
+        bytes[6] = 0xC3
+        bytes[7] = 0x01
+        let values: [String: XPValue] = [
+            "AirbusFBW/MCDU1cont1w": .string(Data(bytes).base64EncodedString()),
+        ]
+        let screen = MCDUScreen.decode(unit: 1, values: values)
+        XCTAssertEqual(screen.text(row: 2), pad("FROM"))
+    }
 }

@@ -82,7 +82,10 @@ public actor DemoSimulator: SimulatorConnection {
         aircraft.timing = timing
         self.aircraft = aircraft
 
-        let (updates, updatesContinuation) = AsyncStream.makeStream(of: DatarefUpdate.self, bufferingPolicy: .bufferingNewest(1024))
+        // Unbounded: X-Plane only sends values that change, so a dropped update leaves that
+        // dataref wrong until it changes again (an MCDU line stuck on an old page). A busy main
+        // thread only delays updates; it must never lose them.
+        let (updates, updatesContinuation) = AsyncStream.makeStream(of: DatarefUpdate.self, bufferingPolicy: .unbounded)
         self.updates = updates
         self.updatesContinuation = updatesContinuation
         let (states, stateContinuation) = AsyncStream.makeStream(of: XPlaneClient.State.self, bufferingPolicy: .bufferingNewest(16))

@@ -70,6 +70,7 @@ Tipos de control añadidos para la geometría real:
 - `display` con `"format": "text"` muestra un dataref `data` como texto (ventanas del RMP, código del transpondedor).
 - `display` con `"format": "baro"` es una ventana BARO: `state` es el reglaje en inHg y `"baro": { "std": …, "unit": … }` los flags de STD y hPa. Muestra «Std», «1013» o «29.92». Tocarla abre el ajuste del QNH.
 - Paneles con vista propia en `layout.json`: `fcu`, `mcdu` y `camera` (cámaras de X-Plane y X-Camera).
+- `areas` (opcional): zonas fijas de un grupo, como el panel central del overhead (`overhead_center`). Cada una lleva `id`, `title`, `icon`, `group` y `subpanels`; se dibuja con los subpaneles en su `frame` real, recortada a esa zona, y aparece en la barra lateral al desplegar su grupo.
 
 Los subpaneles sin `frame` siguen usando `col`/`row` en rejilla y la disposición por columnas de `arrangements`.
 

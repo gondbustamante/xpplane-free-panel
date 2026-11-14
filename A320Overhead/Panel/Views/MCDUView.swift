@@ -429,10 +429,22 @@ struct MCDUScreenView: View {
             // One soft glow for the whole text layer (cheap) gives the emissive look of the LCD.
             .compositingGroup()
             .shadow(color: .white.opacity(0.18), radius: 1.2)
-            if !connected && screen.isBlank {
-                Text("SIN CONEXIÓN")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Color(white: 0.35))
+            if !connected {
+                if screen.isBlank {
+                    Text("SIN CONEXIÓN")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Color(white: 0.35))
+                } else {
+                    // Last page received: dimmed and labelled, so it is not read as current.
+                    Color.black.opacity(0.55)
+                        .clipShape(RoundedRectangle(cornerRadius: 7))
+                    Label("SIN DATOS · ÚLTIMA PÁGINA RECIBIDA", systemImage: "antenna.radiowaves.left.and.right.slash")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Color(red: 1.00, green: 0.62, blue: 0.12))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.black.opacity(0.85), in: Capsule())
+                }
             }
         }
         .frame(width: MCDUMetrics.screenWidth, height: MCDUMetrics.screenHeight)
@@ -444,6 +456,9 @@ struct MCDUScreenView: View {
     private func cell(_ cell: MCDUCell) -> some View {
         Text(String(cell.character))
             .font(.system(size: cell.small ? 18 : 24, weight: cell.small ? .medium : .semibold))
+            // Wide glyphs (☐, ←, M, W) shrink to their cell instead of spilling into the next one.
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
             .foregroundStyle(color(cell.color))
             .frame(width: MCDUMetrics.cellWidth, height: MCDUMetrics.rowHeight,
                    alignment: cell.small ? .bottom : .center)

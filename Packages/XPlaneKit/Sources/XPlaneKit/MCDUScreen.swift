@@ -94,7 +94,7 @@ public struct MCDUScreen: Equatable, Sendable {
 
         func place(_ suffix: String, row: Int, small: Bool, colorCode: String) {
             guard let value = values[p + suffix], let bytes = bytes(of: value) else { return }
-            for (column, byte) in bytes.prefix(columns).enumerated() where byte != 0 && byte != 0x20 {
+            for (column, byte) in bytes.prefix(columns).enumerated() where isPrintable(byte) {
                 let (character, color) = glyph(byte, colorCode: colorCode)
                 screen.cells[row][column] = MCDUCell(character: character, color: color, small: small)
             }
@@ -115,7 +115,7 @@ public struct MCDUScreen: Equatable, Sendable {
             guard let value = values[p + suffix], let bytes = bytes(of: value) else { continue }
             for (column, byte) in bytes.prefix(columns - 2).enumerated() {
                 if byte == 0 { break }
-                if byte == 0x20 { continue }
+                guard isPrintable(byte) else { continue }
                 let (character, color) = glyph(byte, colorCode: code)
                 screen.cells[13][column] = MCDUCell(character: character, color: color, small: false)
             }
@@ -146,6 +146,12 @@ public struct MCDUScreen: Equatable, Sendable {
         default:
             return nil
         }
+    }
+
+    /// Visible ASCII only. Spaces are gaps; control bytes and anything above 0x7E would draw as
+    /// stray symbols, so they stay blank too.
+    static func isPrintable(_ byte: UInt8) -> Bool {
+        (0x21...0x7E).contains(byte)
     }
 
     static func glyph(_ byte: UInt8, colorCode: String) -> (Character, MCDUColor) {

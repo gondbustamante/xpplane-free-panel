@@ -257,6 +257,25 @@ public struct FlightPhase: Codable, Identifiable, Sendable, Hashable {
     public let subpanels: [String]
 }
 
+/// A fixed region of a group, such as the overhead's centre column: its subpanels drawn at their
+/// true frames, cropped to that region, so it reads like the real panel but larger.
+public struct PanelArea: Codable, Identifiable, Sendable, Hashable {
+    public let id: String
+    public let title: String
+    public let icon: String?
+    /// Group the area belongs to; the sidebar lists it under that group.
+    public let group: String
+    public let subpanels: [String]
+
+    public init(id: String, title: String, icon: String? = nil, group: String, subpanels: [String]) {
+        self.id = id
+        self.title = title
+        self.icon = icon
+        self.group = group
+        self.subpanels = subpanels
+    }
+}
+
 /// Physical arrangement of a group's subpanels: columns (left → right), each a list of rows
 /// (top → bottom), each a list of subpanel ids drawn side by side.
 public struct PanelArrangement: Codable, Sendable {
@@ -287,15 +306,22 @@ public struct PanelLayout: Codable, Sendable {
     /// Optional canvas per group id. Subpanels of that group with a `frame` are drawn at
     /// their true position on it.
     public let canvases: [String: CanvasSize]?
+    /// Optional fixed regions of a group (e.g. the overhead's centre column).
+    public let areas: [PanelArea]?
 
     public static let empty = PanelLayout(groups: [], phases: [], arrangements: nil, canvases: nil)
 
     public init(groups: [PanelGroup], phases: [FlightPhase], arrangements: [String: PanelArrangement]? = nil,
-                canvases: [String: CanvasSize]? = nil) {
+                canvases: [String: CanvasSize]? = nil, areas: [PanelArea]? = nil) {
         self.groups = groups
         self.phases = phases
         self.arrangements = arrangements
         self.canvases = canvases
+        self.areas = areas
+    }
+
+    public func areas(in group: String) -> [PanelArea] {
+        (areas ?? []).filter { $0.group == group }
     }
 
     public func arrangement(for group: String) -> PanelArrangement? {

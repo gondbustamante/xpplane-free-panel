@@ -273,6 +273,15 @@
       ]
     }
   },
+  "areas": [
+    {
+      "id": "overhead_center",
+      "title": "Panel central",
+      "icon": "rectangle.center.inset.filled",
+      "group": "overhead",
+      "subpanels": ["fire", "hyd", "fuel", "elec", "air_cond", "anti_ice", "probe_window", "cabin_press", "ext_lt", "apu", "int_lt", "signs"]
+    }
+  ],
   "canvases": {
     "overhead": {
       "width": 828,

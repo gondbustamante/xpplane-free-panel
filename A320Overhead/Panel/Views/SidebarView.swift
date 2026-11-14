@@ -302,6 +302,12 @@ struct SidebarView: View {
                 let sections = model.sections(of: group.id)
                 if sections.count > 1 {
                     DisclosureGroup(isExpanded: disclosureExpanded("zones:\(group.id)")) {
+                        ForEach(model.layout.areas(in: group.id)) { area in
+                            Label(area.title, systemImage: area.icon ?? "rectangle.center.inset.filled")
+                                .font(.callout.weight(.medium))
+                                .lineLimit(1)
+                                .tag(PanelSelection.area(area.id))
+                        }
                         ForEach(sections) { panel in
                             Text(model.displayTitle(of: panel))
                                 .font(.callout)
