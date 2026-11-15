@@ -363,6 +363,14 @@ final class PanelModel {
         didSet { UserDefaults.standard.set(autoParking, forKey: Keys.autoParking) }
     }
     @ObservationIgnored private var automationTriggers = AutomationTriggers()
+    /// The flight being recorded for its report, from the first movement to the stand.
+    @ObservationIgnored private var recording: FlightRecording?
+    /// Reports of past flights, newest first (the traces live in files).
+    private(set) var debriefIndex: [DebriefIndexEntry] = [] {
+        didSet { scheduleSave(Keys.debriefIndex) { [value = self.debriefIndex] in try? JSONEncoder().encode(value) } }
+    }
+    /// Report open in its sheet.
+    var presentedDebrief: FlightDebrief?
     /// Flow being run by the app, control by control.
     private(set) var runningFlowID: String?
     @ObservationIgnored private var flowTask: Task<Void, Never>?
@@ -569,6 +577,7 @@ final class PanelModel {
         static let afterLandingAPU = "automation.afterLandingAPU"
         static let autoFL100 = "automation.fl100"
         static let autoParking = "automation.parking"
+        static let debriefIndex = "debrief.index"
         static let dispatch = "dispatch.state"
         static let flightLog = "turnaround.flightLog"
         static let extras = "diag.extraDatarefs"
@@ -607,6 +616,8 @@ final class PanelModel {
         afterLandingAPU = defaults.bool(forKey: Keys.afterLandingAPU)
         autoFL100 = defaults.bool(forKey: Keys.autoFL100)
         autoParking = defaults.bool(forKey: Keys.autoParking)
+        debriefIndex = defaults.data(forKey: Keys.debriefIndex)
+            .flatMap { try? JSONDecoder().decode([DebriefIndexEntry].self, from: $0) } ?? []
         positionReports = defaults.data(forKey: Keys.positionReports)
             .flatMap { try? JSONDecoder().decode([PositionReport].self, from: $0) } ?? []
         lastLanding = defaults.data(forKey: Keys.lastLanding).flatMap { try? JSONDecoder().decode(LandingReport.self, from: $0) }
@@ -1105,7 +1116,9 @@ final class PanelModel {
             altitude: data.altitude, onGround: data.onGround, groundspeed: data.groundspeed,
             parkingBrakeOn: positionName(ofControl: "park.brake").map { $0 == "ON" },
             enginesOff: engines.contains(nil) ? nil : engines.allSatisfy { $0 == "OFF" })
-        for event in automationTriggers.update(snapshot, at: now) {
+        let triggered = automationTriggers.update(snapshot, at: now)
+        if triggered.contains(.parked) { finishRecording() }
+        for event in triggered {
             switch event {
             case .climbThroughFL100 where autoFL100:
                 runAutomatically("climb_flow", notice: "FL100: flujo de ascenso en marcha")
@@ -1471,6 +1484,7 @@ final class PanelModel {
 
     /// Ends the turnaround, keeping the flight in the logbook when asked.
     func finishTurnaround(saveToLog: Bool) {
+        if liveFlight?.onGround != false { finishRecording() }
         if saveToLog, let run = turnaround {
             var entry = FlightLogEntry(flightNumber: run.plan.flightNumber, origin: run.plan.origin,
                                        destination: run.plan.destination, offBlocksPlanned: run.plan.offBlocks,
@@ -1485,6 +1499,11 @@ final class PanelModel {
             if let ofp, ofp.origin.icao == run.plan.origin, ofp.destination.icao == run.plan.destination,
                let trip = ofp.kilograms(ofp.fuel.trip) {
                 entry.plannedFuelKg = trip + (ofp.kilograms(ofp.fuel.taxi) ?? 0)
+            }
+            // The report of this flight: finished at the stand within the last hours.
+            if let latest = debriefIndex.first, Date().timeIntervalSince(latest.end) < 3 * 3600,
+               !flightLog.contains(where: { $0.debriefID == latest.id }) {
+                entry.debriefID = latest.id
             }
             flightLog.insert(entry, at: 0)
         }
@@ -1776,6 +1795,91 @@ final class PanelModel {
             if done { run.completed[milestone.id] = now }
         }
         if run != turnaround { turnaround = run }
+    }
+
+    // MARK: Flight report
+
+    struct FlightRecording {
+        var start: Date
+        var detector = FlightEventDetector()
+        var samples: [FlightSample] = []
+        var events: [FlightEvent] = []
+        var lastSample: TimeInterval = -.infinity
+        var landing: LandingReport?
+    }
+
+    private func recordingTime(_ date: Date) -> TimeInterval {
+        recording.map { date.timeIntervalSince($0.start) } ?? 0
+    }
+
+    /// Once a second with X-Plane: starts at the first movement, feeds the event detector and
+    /// keeps a sample every 2 s near the ground and every 10 s above 3000 ft.
+    private func tickRecorder(now: Date = Date()) {
+        guard !simPaused, let data = flightData else { return }
+        if recording == nil {
+            guard !data.onGround || data.groundspeed > 3 else { return }
+            recording = FlightRecording(start: now)
+        }
+        guard var run = recording else { return }
+        let time = now.timeIntervalSince(run.start)
+        let height = data.radioAltitude > 0 && data.radioAltitude < 2500 ? data.radioAltitude : data.altitude - destinationElevation
+        let bank = rawValues["sim/flightmodel/position/phi"]?.doubleValue ?? 0
+        let pitch = rawValues["sim/flightmodel/position/theta"]?.doubleValue ?? 0
+        let reading = FlightEventDetector.Reading(
+            time: time, altitude: data.altitude, heightAboveField: height, ias: data.ias, groundspeed: data.groundspeed,
+            verticalSpeed: data.verticalSpeed, bank: bank, pitch: pitch, onGround: data.onGround, radioAltitude: data.radioAltitude)
+        run.events += run.detector.update(reading)
+        let interval: TimeInterval = height < 3000 ? 2 : 10
+        if time - run.lastSample >= interval, run.samples.count < 8000 {
+            run.samples.append(FlightSample(time: time, altitude: data.altitude, heightAboveField: height, ias: data.ias,
+                                            groundspeed: data.groundspeed, verticalSpeed: data.verticalSpeed, bank: bank,
+                                            pitch: pitch, onGround: data.onGround, latitude: data.latitude, longitude: data.longitude))
+            run.lastSample = time
+        }
+        recording = run
+    }
+
+    private func recordEvent(_ event: FlightEvent) {
+        recording?.events.append(event)
+    }
+
+    private func recordLanding(_ report: LandingReport) {
+        guard recording != nil else { return }
+        recording?.landing = report
+        if let event = FlightEventDetector.landing(rate: report.rate, g: report.peakG, at: recordingTime(report.date)) {
+            recordEvent(event)
+        }
+    }
+
+    /// At the stand (or when the turnaround is closed on the ground): saves the report if the
+    /// aircraft flew, and offers it.
+    private func finishRecording(now: Date = Date()) {
+        guard let run = recording else { return }
+        recording = nil
+        guard run.samples.contains(where: { !$0.onGround }) else { return }
+        let debrief = FlightDebrief(
+            start: run.start, end: now,
+            origin: turnaround?.plan.origin ?? ofp?.origin.icao,
+            destination: turnaround?.plan.destination ?? ofp?.destination.icao,
+            flightNumber: turnaround?.plan.flightNumber ?? ofp?.callsign,
+            samples: run.samples, events: run.events.sorted { $0.time < $1.time },
+            landingRate: run.landing?.rate, landingG: run.landing?.peakG)
+        guard DebriefStore.save(debrief) else {
+            postAlert("No se pudo guardar el informe del vuelo", .warning, speak: false)
+            return
+        }
+        debriefIndex.insert(DebriefIndexEntry(debrief), at: 0)
+        postAlert("Informe del vuelo listo: \(debrief.score)/100 · \(debrief.grade)", .good, speak: false)
+    }
+
+    func showDebrief(_ id: UUID) {
+        presentedDebrief = DebriefStore.load(id)
+        if presentedDebrief == nil { postAlert("No se encontró el informe de ese vuelo", .warning, speak: false) }
+    }
+
+    func deleteDebrief(_ id: UUID) {
+        DebriefStore.delete(id)
+        debriefIndex.removeAll { $0.id == id }
     }
 
     // MARK: Storage
@@ -2081,6 +2185,7 @@ final class PanelModel {
                 self?.tickPause()
                 self?.tickFlightMonitor()
                 self?.tickAutomation()
+                self?.tickRecorder()
             }
         }
     }
@@ -2093,6 +2198,7 @@ final class PanelModel {
         if let report = landingDetector.update(onGround: data.onGround, verticalSpeed: data.verticalSpeed,
                                                g: data.g, speed: data.ias, at: now) {
             lastLanding = report
+            recordLanding(report)
             if var run = turnaround, run.blockTimes.outTime != nil, run.landing == nil {
                 run.landing = report
                 turnaround = run
@@ -2160,6 +2266,7 @@ final class PanelModel {
             if gate.isStable {
                 postAlert("Estable a \(gate.gate) ft", .good, speak: true)
             } else {
+                recordEvent(FlightEventDetector.unstable(gate: gate.gate, failures: gate.failures, at: recordingTime(now)))
                 postAlert("No estable a \(gate.gate) ft: \(gate.failures.joined(separator: ", "))\(gate.gate == 500 ? ". Motor y al aire" : "")",
                       gate.gate == 500 ? .critical : .warning, speak: true)
             }

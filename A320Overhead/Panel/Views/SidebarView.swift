@@ -221,6 +221,11 @@ struct SidebarView: View {
             SectionHeader(title: "Plan de vuelo", detail: model.ofp?.airac.map { "AIRAC \($0)" })
                 .tutorialTarget(.flightPlan)
         }
+        Section {
+            DebriefList()
+        } header: {
+            SectionHeader(title: "Informes de vuelo", detail: model.debriefIndex.isEmpty ? nil : "\(model.debriefIndex.count)")
+        }
         // The turnaround is part of flying, with X-Plane as much as in the demo.
         Section {
             TurnaroundList()

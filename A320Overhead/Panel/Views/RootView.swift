@@ -27,6 +27,10 @@ struct RootView: View {
         Binding(get: { model.exerciseRun?.result != nil }, set: { if !$0 { model.closeExerciseResult() } })
     }
 
+    private var presentedDebrief: Binding<FlightDebrief?> {
+        Binding(get: { model.presentedDebrief }, set: { model.presentedDebrief = $0 })
+    }
+
     private var showChecklist: Binding<Bool> {
         Binding(get: { model.showChecklist }, set: { model.showChecklist = $0 })
     }
@@ -136,6 +140,9 @@ struct RootView: View {
         }
         .sheet(isPresented: $showDiagnostics) {
             DiagnosticsView()
+        }
+        .sheet(item: presentedDebrief) { debrief in
+            DebriefSheet(debrief: debrief)
         }
         .sheet(isPresented: tunerPresented) {
             RadioTunerView()

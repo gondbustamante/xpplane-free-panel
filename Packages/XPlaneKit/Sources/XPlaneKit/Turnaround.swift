@@ -423,6 +423,8 @@ public struct FlightLogEntry: Codable, Sendable, Identifiable, Equatable {
     public var taxiFuelKg: Double? = nil
     /// Simulated MEL items written up in the technical log: they carry to the next flight.
     public var defects: [String]? = nil
+    /// Post-flight report of this flight, if one was recorded.
+    public var debriefID: UUID? = nil
 
     /// Minutes from OUT to OFF.
     public var taxiOutMinutes: Int? {

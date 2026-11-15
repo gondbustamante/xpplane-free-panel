@@ -985,6 +985,7 @@ struct FlightLogDetail: View {
     let entryID: UUID
     @Environment(PanelModel.self) private var model
     @State private var notes = ""
+    @State private var debrief: FlightDebrief?
 
     var body: some View {
         if let entry = model.flightLog.first(where: { $0.id == entryID }) {
@@ -1007,6 +1008,16 @@ struct FlightLogDetail: View {
                         }
                         if let rate = entry.landingRate {
                             LabeledContent("Toma", value: "\(rate) ft/min" + (entry.landingG.map { String(format: " · %.2f g", $0) } ?? ""))
+                        }
+                    }
+                }
+                if let debriefID = entry.debriefID {
+                    Section {
+                        Button {
+                            // This view is already in a sheet: present the report from here.
+                            debrief = DebriefStore.load(debriefID)
+                        } label: {
+                            Label("Ver el informe del vuelo", systemImage: "chart.xyaxis.line")
                         }
                     }
                 }
@@ -1038,6 +1049,7 @@ struct FlightLogDetail: View {
                 }
             }
             .navigationTitle(entry.flightNumber.isEmpty ? "Vuelo" : entry.flightNumber)
+            .sheet(item: $debrief) { DebriefSheet(debrief: $0) }
             .onAppear { notes = entry.notes ?? "" }
             .onDisappear { model.updateNotes(of: entryID, notes) }
         }
