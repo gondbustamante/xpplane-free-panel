@@ -341,6 +341,11 @@ final class PanelModel {
     var pmCallouts: Bool {
         didSet { UserDefaults.standard.set(pmCallouts, forKey: Keys.pmCallouts) }
     }
+    /// Deviation calls on final (SPEED, SINK RATE, BANK…) and altitude calls (1000 to go,
+    /// FL100, transition).
+    var advisoryCallouts: Bool {
+        didSet { UserDefaults.standard.set(advisoryCallouts, forKey: Keys.advisoryCallouts) }
+    }
     /// A plan prepared from the flight just finished, for the next leg.
     var nextLegDraft: TurnaroundPlan?
     /// Dispatch and departure briefing of the current OFP.
@@ -359,6 +364,8 @@ final class PanelModel {
     @ObservationIgnored private var gateTracker = GateTracker()
     @ObservationIgnored private var minimumsCallouts = MinimumsCallouts()
     @ObservationIgnored private var pilotMonitoring = PilotMonitoringCallouts()
+    @ObservationIgnored private var deviationCallouts = DeviationCallouts()
+    @ObservationIgnored private var altitudeCallouts = AltitudeCallouts()
     @ObservationIgnored private var pmCheckPending = false
     @ObservationIgnored private var landingDetector = LandingDetector()
     @ObservationIgnored private var reportBaseline: Int?
@@ -536,6 +543,7 @@ final class PanelModel {
         static let lastLanding = "flight.lastLanding"
         static let voiceCallouts = "flight.voiceCallouts"
         static let pmCallouts = "flight.pmCallouts"
+        static let advisoryCallouts = "flight.advisoryCallouts"
         static let dispatch = "dispatch.state"
         static let flightLog = "turnaround.flightLog"
         static let extras = "diag.extraDatarefs"
@@ -568,6 +576,7 @@ final class PanelModel {
         inspectorPanel = InspectorPanel(rawValue: defaults.string(forKey: Keys.inspectorPanel) ?? "") ?? .checklist
         voiceCallouts = defaults.object(forKey: Keys.voiceCallouts) as? Bool ?? true
         pmCallouts = defaults.object(forKey: Keys.pmCallouts) as? Bool ?? true
+        advisoryCallouts = defaults.object(forKey: Keys.advisoryCallouts) as? Bool ?? true
         positionReports = defaults.data(forKey: Keys.positionReports)
             .flatMap { try? JSONDecoder().decode([PositionReport].self, from: $0) } ?? []
         lastLanding = defaults.data(forKey: Keys.lastLanding).flatMap { try? JSONDecoder().decode(LandingReport.self, from: $0) }
@@ -1757,14 +1766,19 @@ final class PanelModel {
         "toliss_airbus/performance/DestWindDir", "toliss_airbus/performance/DestWindSpd",
         "toliss_airbus/performance/V1", "toliss_airbus/performance/VR",
         "AirbusFBW/SpoilerPositionArray", "AirbusFBW/EngineReverserDeloymentArray",
+        "sim/flightmodel/position/phi", "sim/flightmodel/position/theta",
+        "toliss_airbus/performance/DeptTrans", "toliss_airbus/performance/DestTrans",
     ]
 
-    /// Datarefs that can trigger a pilot monitoring call: checked on every update of these,
-    /// not on the once-a-second monitor tick.
+    /// Datarefs that can trigger a callout (take-off and landing, deviations, altitudes):
+    /// checked on every update of these, not on the once-a-second monitor tick.
     static let pmCalloutDatarefs: Set<String> = [
         "sim/flightmodel/position/indicated_airspeed", "sim/flightmodel/failures/onground_any",
         "sim/flightmodel/position/vh_ind_fpm", "sim/cockpit2/gauges/indicators/radio_altimeter_height_ft_pilot",
         "AirbusFBW/SpoilerPositionArray", "AirbusFBW/EngineReverserDeloymentArray",
+        "sim/cockpit2/gauges/indicators/altitude_ft_pilot", "sim/flightmodel/position/phi",
+        "sim/flightmodel/position/theta", "sim/cockpit2/radios/indicators/nav1_hdef_dots_pilot",
+        "sim/cockpit2/radios/indicators/nav1_vdef_dots_pilot",
     ]
 
     struct FlightData: Equatable {
@@ -2131,6 +2145,11 @@ final class PanelModel {
     /// Runs even with the calls switched off, so turning them on mid-flight does not replay
     /// the take-off.
     private func checkPMCallouts() {
+        checkTakeoffAndLandingCallouts()
+        checkAdvisoryCallouts()
+    }
+
+    private func checkTakeoffAndLandingCallouts() {
         guard status == .connected, !demoMode,
               let ias = rawValues["sim/flightmodel/position/indicated_airspeed"]?.doubleValue,
               let ground = rawValues["sim/flightmodel/failures/onground_any"]?.doubleValue else { return }
@@ -2148,6 +2167,55 @@ final class PanelModel {
         for callout in pilotMonitoring.update(snapshot) where pmCallouts {
             postAlert(callout.rawValue, .info, speak: true, interrupt: true)
         }
+    }
+
+    private func checkAdvisoryCallouts(now: Date = Date()) {
+        guard status == .connected, !demoMode,
+              let altitude = rawValues["sim/cockpit2/gauges/indicators/altitude_ft_pilot"]?.doubleValue,
+              let ground = rawValues["sim/flightmodel/failures/onground_any"]?.doubleValue else { return }
+        func value(_ name: String) -> Double? { rawValues[name]?.doubleValue }
+        let onGround = ground > 0.5
+        let verticalSpeed = value("sim/flightmodel/position/vh_ind_fpm") ?? 0
+        let radioAltitude = value("sim/cockpit2/gauges/indicators/radio_altimeter_height_ft_pilot") ?? 0
+
+        // Same height as the approach monitor: radio altimeter near the ground, else the
+        // destination elevation from the OFP.
+        let height = radioAltitude > 0 && radioAltitude < 2500 ? radioAltitude : altitude - destinationElevation
+        let deviation = DeviationCallouts.Snapshot(
+            heightAboveField: height, onGround: onGround,
+            ias: value("sim/flightmodel/position/indicated_airspeed") ?? 0,
+            targetSpeed: value("toliss_airbus/pfdoutputs/general/ap_speed_value"),
+            verticalSpeed: verticalSpeed,
+            bank: value("sim/flightmodel/position/phi") ?? 0,
+            pitch: value("sim/flightmodel/position/theta") ?? 0,
+            localizerDots: value("sim/cockpit2/radios/indicators/nav1_hdef_dots_pilot"),
+            glideslopeDots: value("sim/cockpit2/radios/indicators/nav1_vdef_dots_pilot"))
+        for callout in deviationCallouts.update(deviation, at: now) where advisoryCallouts {
+            postAlert(callout.rawValue, .warning, speak: true, interrupt: true)
+        }
+
+        let levels = AltitudeCallouts.Snapshot(
+            altitude: altitude, verticalSpeed: verticalSpeed, onGround: onGround,
+            selectedAltitude: value("sim/cockpit/autopilot/altitude"),
+            transitionAltitude: transitionAltitude, transitionLevel: transitionLevel)
+        for callout in altitudeCallouts.update(levels) where advisoryCallouts {
+            postAlert(callout.rawValue, .info, speak: true)
+        }
+    }
+
+    /// Departure transition altitude: PERF CLB in the MCDU, else the OFP. Feet.
+    private var transitionAltitude: Double? {
+        if let entered = rawValues["toliss_airbus/performance/DeptTrans"]?.doubleValue, entered > 0 { return entered }
+        return ofp?.origin.transitionAltitude.map(Double.init)
+    }
+
+    /// Arrival transition level: PERF APPR in the MCDU, else the OFP. Feet; a flight level
+    /// (e.g. 70) is turned into feet.
+    private var transitionLevel: Double? {
+        let entered = rawValues["toliss_airbus/performance/DestTrans"]?.doubleValue ?? 0
+        let level = entered > 0 ? entered : ofp?.destination.transitionLevel.map(Double.init) ?? 0
+        guard level > 0 else { return nil }
+        return level < 1000 ? level * 100 : level
     }
 
     func clearPositionReports() {

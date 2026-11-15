@@ -442,6 +442,11 @@ private struct ApproachCard: View {
                     .disabled(!model.voiceCallouts)
                 Text("100 KNOTS, V1 y ROTATE con las velocidades de PERF TAKE OFF, POSITIVE CLIMB; en la carrera de aterrizaje SPOILERS, REVERSE GREEN y 70 KNOTS. Las alturas de radioaltímetro y RETARD ya las canta ToLiss.")
                     .font(.caption).foregroundStyle(.secondary)
+                Toggle("Desviaciones en final y altitudes", isOn: $model.advisoryCallouts)
+                    .font(.footnote)
+                    .disabled(!model.voiceCallouts)
+                Text("Por debajo de 1000 ft en final: SPEED (−5/+10 kt), SINK RATE (más de 1000 ft/min), BANK (más de 7°), PITCH (más de 10° o menos de −2,5°), LOCALIZER (½ punto) y GLIDESLOPE (1 punto). En ruta: ONE THOUSAND TO GO antes de la altitud del FCU, TEN THOUSAND, TRANSITION ALTITUDE y TRANSITION LEVEL.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
         }
     }

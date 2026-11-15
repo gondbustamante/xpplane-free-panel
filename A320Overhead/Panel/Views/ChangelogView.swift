@@ -39,6 +39,7 @@ enum Changelog {
     static let releases: [ChangelogRelease] = [
         ChangelogRelease(version: "0.9.2", date: "2026-11-15", title: "Callouts y rendimiento", changes: [
             new("Callouts del piloto que monitoriza: ONE HUNDRED KNOTS, V1 y ROTATE con las velocidades de PERF TAKE OFF, POSITIVE CLIMB, y en la carrera de aterrizaje SPOILERS, REVERSE GREEN y SEVENTY KNOTS. Se activan en la columna Vuelo; las alturas de radioaltímetro y RETARD las sigue cantando ToLiss."),
+            new("Desviaciones en final: SPEED, SINK RATE, BANK, PITCH, LOCALIZER y GLIDESLOPE con los límites del FCOM por debajo de 1000 ft. Y altitudes: ONE THOUSAND TO GO antes de la altitud del FCU, TEN THOUSAND, TRANSITION ALTITUDE y TRANSITION LEVEL (del MCDU o del OFP). Con su propio interruptor."),
             new("Panel central del overhead: FIRE, HYD, FUEL, ELEC, AIR COND, ANTI ICE, EXT LT, APU, INT LT y SIGNS en su disposición real y más grandes. Al desplegar Overhead en la barra lateral."),
             improved("Rendimiento: cada mando se redibuja solo cuando cambia su dato, no con cada dato del vuelo; el iPad va más fluido y se calienta menos en vuelos largos."),
             improved("Conexión y reconexión más rápidas con X-Plane."),
