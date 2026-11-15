@@ -17,7 +17,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.9.1</string>
+	<string>0.9.2</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
@@ -27,6 +27,10 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>El copiloto por voz escucha solo cuando tocas el micrófono para darle una orden.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>El copiloto por voz convierte tus órdenes en texto para ejecutarlas en el avión.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>La app se conecta a X-Plane en tu red local para leer y mover los controles del avión.</string>
 	<key>UILaunchScreen</key>

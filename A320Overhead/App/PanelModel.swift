@@ -369,6 +369,15 @@ final class PanelModel {
         didSet { UserDefaults.standard.set(cabinAnnouncements, forKey: Keys.cabinAnnouncements) }
     }
     @ObservationIgnored private var cabinTimeline = CabinTimeline()
+    /// Orders to the pilot monitoring by voice, push to talk.
+    var voiceCopilotEnabled: Bool {
+        didSet { UserDefaults.standard.set(voiceCopilotEnabled, forKey: Keys.voiceCopilot) }
+    }
+    /// Language of the orders: "en-US" (standard phraseology) or "es-ES".
+    var voiceCopilotLanguage: String {
+        didSet { UserDefaults.standard.set(voiceCopilotLanguage, forKey: Keys.voiceCopilotLanguage) }
+    }
+    @ObservationIgnored let voice = VoiceCopilot()
     /// The flight being recorded for its report, from the first movement to the stand.
     @ObservationIgnored private var recording: FlightRecording?
     /// Reports of past flights, newest first (the traces live in files).
@@ -587,6 +596,8 @@ final class PanelModel {
         static let autoParking = "automation.parking"
         static let debriefIndex = "debrief.index"
         static let cabinAnnouncements = "cabin.announcements"
+        static let voiceCopilot = "voice.enabled"
+        static let voiceCopilotLanguage = "voice.language"
         static let dispatch = "dispatch.state"
         static let flightLog = "turnaround.flightLog"
         static let extras = "diag.extraDatarefs"
@@ -626,6 +637,8 @@ final class PanelModel {
         autoFL100 = defaults.bool(forKey: Keys.autoFL100)
         autoParking = defaults.bool(forKey: Keys.autoParking)
         cabinAnnouncements = defaults.object(forKey: Keys.cabinAnnouncements) as? Bool ?? true
+        voiceCopilotEnabled = defaults.bool(forKey: Keys.voiceCopilot)
+        voiceCopilotLanguage = defaults.string(forKey: Keys.voiceCopilotLanguage) ?? "en-US"
         debriefIndex = defaults.data(forKey: Keys.debriefIndex)
             .flatMap { try? JSONDecoder().decode([DebriefIndexEntry].self, from: $0) } ?? []
         positionReports = defaults.data(forKey: Keys.positionReports)
@@ -1960,6 +1973,69 @@ final class PanelModel {
         // A little lower and quieter than the callouts: it comes from the cabin.
         utterance.pitchMultiplier = 1.08
         utterance.volume = 0.85
+        speech.speak(utterance)
+    }
+
+    // MARK: Voice copilot
+
+    func listenForOrder() {
+        voice.onOrder = { [weak self] text in self?.handleVoiceOrder(text) }
+        voice.toggle(language: voiceCopilotLanguage)
+    }
+
+    /// What the pilot said: understood, done and read back, or shown as not understood.
+    func handleVoiceOrder(_ text: String) {
+        guard let command = VoiceCommandParser.parse(text) else {
+            flightAlert = FlightAlert(text: "No entendido: «\(text)»", level: .warning, date: Date())
+            return
+        }
+        guard status == .connected else {
+            flightAlert = FlightAlert(text: "«\(text)»: sin conexión con el simulador", level: .warning, date: Date())
+            return
+        }
+        switch command.action {
+        case .set(let targets):
+            let missing = targets.filter { target in controlsByID[target.control].map { !isAvailable($0) } ?? true }
+            guard missing.isEmpty else {
+                flightAlert = FlightAlert(text: "«\(text)»: ese mando no está disponible", level: .warning, date: Date())
+                return
+            }
+            Task {
+                for target in targets { await setControl(target.control, to: [target.position]) }
+            }
+        case .gear(let down):
+            guard let client else { return }
+            Task {
+                try? await client.fire(command: down ? "sim/flight_controls/landing_gear_down" : "sim/flight_controls/landing_gear_up")
+            }
+        case .fcu(let id):
+            guard let button = fcu?.buttons.first(where: { $0.id == id }) else { return }
+            press(button)
+        case .apuStart:
+            Task {
+                await setControl("apu.master", to: ["ON"])
+                try? await Task.sleep(for: .milliseconds(800))
+                await startAPUIfNeeded()
+            }
+        case .flow(let id):
+            guard let flow = procedure(id) else { return }
+            guard !isExamRunning else {
+                flightAlert = FlightAlert(text: "En un examen los flujos los haces tú", level: .warning, date: Date())
+                return
+            }
+            open(procedure: flow.id)
+            runFlow(flow)
+        }
+        readBack(command.readback, heard: text)
+    }
+
+    /// The pilot monitoring's answer: on screen with what was heard, and spoken.
+    private func readBack(_ answer: String, heard: String) {
+        flightAlert = FlightAlert(text: "«\(heard)» → \(answer)", level: .good, date: Date())
+        if speech.isSpeaking { speech.stopSpeaking(at: .immediate) }
+        let utterance = AVSpeechUtterance(string: answer)
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        utterance.rate = 0.52
         speech.speak(utterance)
     }
 

@@ -52,6 +52,7 @@ struct RootView: View {
                 TurnaroundBar()
                 ExerciseBar()
                 PanelCanvas()
+                    .overlay(alignment: .bottom) { VoiceListeningBanner() }
                     .tutorialTarget(.canvas)
                     .overlay { MiniTimers() }
                     .overlay(alignment: .top) { FlightAlertBanner() }
@@ -62,6 +63,17 @@ struct RootView: View {
             .toolbarBackground(PanelTheme.cockpitBackground, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
+                if model.voiceCopilotEnabled {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            model.listenForOrder()
+                        } label: {
+                            Label("Copiloto", systemImage: model.voice.isListening ? "mic.fill" : "mic")
+                        }
+                        .tint(model.voice.isListening ? .red : nil)
+                        .help("Toca y di una orden: «gear up», «flaps one», «after takeoff flow»…")
+                    }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         withAnimation { model.learnMode.toggle() }
@@ -287,5 +299,33 @@ struct ControlView: View {
         return KorryLamp(text: definition.text,
                          color: PanelTheme.lamp(definition.color),
                          lit: model.isLit(definition))
+    }
+}
+
+/// What the copilot is hearing, while it listens.
+private struct VoiceListeningBanner: View {
+    @Environment(PanelModel.self) private var model
+
+    var body: some View {
+        switch model.voice.state {
+        case .listening:
+            Label(model.voice.heard.isEmpty ? "Escuchando…" : model.voice.heard, systemImage: "waveform")
+                .font(.callout.weight(.medium))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(.ultraThinMaterial, in: Capsule())
+                .padding(.bottom, 20)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+        case .unavailable(let reason):
+            Label(reason, systemImage: "mic.slash")
+                .font(.footnote)
+                .foregroundStyle(PanelTheme.checklistAmber)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(.ultraThinMaterial, in: Capsule())
+                .padding(.bottom, 20)
+        case .idle:
+            EmptyView()
+        }
     }
 }

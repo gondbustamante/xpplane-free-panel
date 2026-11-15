@@ -37,7 +37,11 @@ enum Changelog {
     private static func fixed(_ text: String) -> ChangelogRelease.Change { .init(kind: .fixed, text: text) }
 
     static let releases: [ChangelogRelease] = [
-        ChangelogRelease(version: "0.9.2", date: "2026-11-15", title: "Callouts y rendimiento", changes: [
+        ChangelogRelease(version: "0.9.2", date: "2026-11-15", title: "Copiloto, informe de vuelo y mapa", changes: [
+            new("Copiloto por voz: toca el micrófono y di la orden («gear up», «flaps one», «landing lights on», «after takeoff flow»…, también en español). El copiloto la ejecuta y la repite como un PM. Se activa en Ajustes."),
+            new("Informe post-vuelo estilo FOQA: cada vuelo con X-Plane queda grabado con su perfil, la aproximación final y los eventos que marcaría una aerolínea (aproximación no estabilizada, alabeo, régimen, golpe de cola, toma dura, 250 kt bajo FL100, flotada larga, rodaje rápido), con nota sobre 100. En Vuelo → Informes de vuelo y en el diario."),
+            new("Mapa en movimiento: ruta del OFP, trayectoria volada, avión, TOC/TOD y aeropuertos de la ruta, en la columna o a pantalla completa."),
+            new("Anuncios de cabina: bienvenida, CABIN SECURE antes del despegue y del aterrizaje, «seats for take-off», cinturones, anuncio del comandante en crucero, descenso, llegada y desembarque."),
             new("Callouts del piloto que monitoriza: ONE HUNDRED KNOTS, V1 y ROTATE con las velocidades de PERF TAKE OFF, POSITIVE CLIMB, y en la carrera de aterrizaje SPOILERS, REVERSE GREEN y SEVENTY KNOTS. Se activan en la columna Vuelo; las alturas de radioaltímetro y RETARD las sigue cantando ToLiss."),
             new("Automatizar flujos: «Ejecutar flujo» en el checklist pone en orden cada mando que la app detecta y te deja lo que no puede leer. Opcional en Ajustes: el after landing se hace solo al girar fuera de la pista, con o sin arrancar el APU."),
             new("Más automatización (en Ajustes): flujo de ascenso al cruzar FL100 subiendo y de descenso al cruzarlo bajando, y flujo de parking cuando cortas los motores con el freno de parking puesto."),

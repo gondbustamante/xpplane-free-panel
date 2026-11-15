@@ -71,3 +71,6 @@ targets:
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
         ITSAppUsesNonExemptEncryption: false
+        # Voice copilot: push to talk, recognised on the device when it can.
+        NSMicrophoneUsageDescription: "El copiloto por voz escucha solo cuando tocas el micrófono para darle una orden."
+        NSSpeechRecognitionUsageDescription: "El copiloto por voz convierte tus órdenes en texto para ejecutarlas en el avión."

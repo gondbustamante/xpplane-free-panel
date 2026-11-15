@@ -95,6 +95,18 @@ struct ConnectionSettingsView: View {
                     Text("Con X-Plane. After landing al girar fuera de la pista: ground spoilers, flaps 0, strobe, luces de aterrizaje y de rodaje, TCAS y modo de motor. FL100 subiendo: luces de aterrizaje recogidas; bajando: luces de aterrizaje y cinturones. Parking cuando tú cortas los motores con el freno puesto: cinturones, beacon, luces, bombas de combustible, transpondedor y, con el APU en marcha, su sangrado. Cualquier flujo se puede ejecutar también con «Ejecutar flujo» en el checklist. Nunca durante un examen.")
                 }
                 Section {
+                    Toggle("Copiloto por voz", isOn: $model.voiceCopilotEnabled)
+                    Picker("Idioma de las órdenes", selection: $model.voiceCopilotLanguage) {
+                        Text("Inglés").tag("en-US")
+                        Text("Español").tag("es-ES")
+                    }
+                    .disabled(!model.voiceCopilotEnabled)
+                } header: {
+                    Text("Copiloto por voz")
+                } footer: {
+                    Text("Toca el micrófono de la barra y di la orden; el copiloto la ejecuta y la repite. «gear up/down», «flaps one/two/three/full/up», «landing lights on/off/retract», «nose light taxi/takeoff/off», «strobe on/auto/off», «beacon», «seat belts», «arm/disarm spoilers», «autopilot one/two», «autothrust», «APU start/off», «APU bleed», «TCAS TA RA», «engine/wing anti ice», «ignition», y flujos: «after takeoff», «after landing», «after start», «before start», «line up», «parking», «climb/descent flow». En español también: «tren arriba», «flaps uno», «luces de aterrizaje encendidas»…")
+                }
+                Section {
                     Toggle("Anuncios de cabina", isOn: $model.cabinAnnouncements)
                 } header: {
                     Text("Cabina")
