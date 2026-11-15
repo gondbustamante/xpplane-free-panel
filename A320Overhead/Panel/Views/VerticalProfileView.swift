@@ -4,8 +4,10 @@ import XPlaneKit
 
 /// Vertical display under the map, after the A350's VD: the OFP profile (magenta), what has been
 /// flown (green), where the present vertical speed takes the aircraft and where it levels off at
-/// the FCU altitude (white, dashed), the FCU altitude (cyan), the 3:1 descent path into the
-/// destination, TOC/TOD and the airports. "Adelante" follows the aircraft; "Ruta" shows it all.
+/// the altitude the autopilot is flying to (white, dashed), the FCU altitude (cyan), the FMS
+/// target when a constraint holds it elsewhere (magenta), the FMS descent path as flown, the 3:1
+/// path into the destination, TOC/TOD and the airports. "Adelante" follows the aircraft; "Ruta"
+/// shows it all.
 struct VerticalProfileView: View {
     var large = false
     @Environment(PanelModel.self) private var model
@@ -35,8 +37,10 @@ struct VerticalProfileView: View {
         let data = model.liveFlight
         let along = data.flatMap { profile.distanceAlong(latitude: $0.latitude, longitude: $0.longitude) }
         let projection = data.flatMap { data in
+            // Level off where the autopilot will: a constraint before the FCU altitude counts.
             along.map { VerticalProfile.projection(distance: $0, altitude: data.altitude, groundspeed: data.groundspeed,
-                                                   verticalSpeed: data.verticalSpeed, selectedAltitude: selectedAltitude,
+                                                   verticalSpeed: data.verticalSpeed,
+                                                   selectedAltitude: model.liveFMS.targetAltitude ?? selectedAltitude,
                                                    ahead: ahead) }
         } ?? []
         let start = profile.planned.first?.distance ?? 0
@@ -75,6 +79,18 @@ struct VerticalProfileView: View {
                     .font(.system(size: 11).monospacedDigit())
                     .foregroundStyle(.white.opacity(0.8))
             }
+            // VDEV as on the PFD: above (+) or below the managed descent path.
+            if let data = model.liveFlight, let path = model.liveFMS.descentPathAltitude, !data.onGround {
+                let vdev = data.altitude - path
+                Text("VDEV \(vdev >= 0 ? "+" : "−")\(Int(abs(vdev)).formatted())")
+                    .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                    .foregroundStyle(Color(red: 1.0, green: 0.4, blue: 1.0))
+            }
+            if let distance = model.liveFMS.distanceToDestination {
+                Text("FMS \(Int(distance.rounded())) NM")
+                    .font(.system(size: 11).monospacedDigit())
+                    .foregroundStyle(.white.opacity(0.7))
+            }
             Spacer(minLength: 0)
             Picker("Alcance", selection: $wholeRoute) {
                 Text("Adelante").tag(false)
@@ -106,6 +122,11 @@ struct VerticalProfileView: View {
                     .foregroundStyle(PanelTheme.checklistGreen)
                     .lineStyle(StrokeStyle(lineWidth: 2.5))
             }
+            ForEach(Array(model.fmsDescentProfile.enumerated()), id: \.offset) { _, point in
+                LineMark(x: .value("NM", point.distance), y: .value("ft", point.altitude), series: .value("Serie", "Senda FMS"))
+                    .foregroundStyle(Color(red: 1.0, green: 0.4, blue: 1.0).opacity(0.8))
+                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [1, 3]))
+            }
             ForEach(Array(projection.enumerated()), id: \.offset) { _, point in
                 LineMark(x: .value("NM", point.distance), y: .value("ft", point.altitude), series: .value("Serie", "Proyección"))
                     .foregroundStyle(.white)
@@ -119,6 +140,17 @@ struct VerticalProfileView: View {
                         Text("FCU \(Int(selected).formatted())")
                             .font(.system(size: 9, weight: .semibold).monospacedDigit())
                             .foregroundStyle(PanelTheme.checklistCyan)
+                    }
+            }
+            // The FMS target when a constraint holds the aircraft short of the FCU altitude.
+            if let target = model.liveFMS.targetAltitude, abs(target - (selectedAltitude ?? -1000)) > 50 {
+                RuleMark(y: .value("FMS", target))
+                    .foregroundStyle(Color(red: 1.0, green: 0.4, blue: 1.0).opacity(0.8))
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                    .annotation(position: .bottom, alignment: .trailing) {
+                        Text("FMS \(Int(target).formatted())")
+                            .font(.system(size: 9, weight: .semibold).monospacedDigit())
+                            .foregroundStyle(Color(red: 1.0, green: 0.4, blue: 1.0))
                     }
             }
             ForEach(Array(profile.landmarks.enumerated()), id: \.offset) { _, point in

@@ -301,10 +301,37 @@ final class PanelModel {
             verticalProfile = ofp.map(VerticalProfile.init(ofp:))
         }
     }
+    /// What the ToLiss FMS publishes about the vertical path. Values the FMS has not computed
+    /// read 0 and come back as nil.
+    struct FMSVertical: Equatable {
+        /// Altitude of the managed descent path at the present position.
+        var descentPathAltitude: Double?
+        /// Altitude the autopilot is flying to: a constraint or the FCU altitude.
+        var targetAltitude: Double?
+        var constraintAltitude: Double?
+        /// NM along the FMS route.
+        var distanceToDestination: Double?
+        var cruiseAltitude: Double?
+    }
+
+    var fms: FMSVertical {
+        func positive(_ name: String) -> Double? { rawValues[name]?.doubleValue.flatMap { $0 > 0 ? $0 : nil } }
+        // INIT shows the cruise as a flight level (350) or in feet.
+        let cruise = positive("toliss_airbus/init/cruise_alt").map { $0 < 1000 ? $0 * 100 : $0 }
+        return FMSVertical(descentPathAltitude: positive("AirbusFBW/DescentProfileAlt_FMS1"),
+                           targetAltitude: positive("toliss_airbus/pfdoutputs/general/ap_alt_target_value"),
+                           constraintAltitude: positive("AirbusFBW/ConstraintAlt"),
+                           distanceToDestination: positive("AirbusFBW/DistToDest"),
+                           cruiseAltitude: cruise)
+    }
+
     /// The OFP seen from the side, for the vertical display under the map.
     private(set) var verticalProfile: VerticalProfile?
     /// Altitude flown against distance along the route, one point per report sample.
     private(set) var flownProfile: [VerticalProfile.Point] = []
+    /// The FMS descent path as it was at each point flown (ToLiss computes it for the present
+    /// position only, so it is drawn behind the aircraft as the flight goes on).
+    private(set) var fmsDescentProfile: [VerticalProfile.Point] = []
     private(set) var ofpLoading = false
     private(set) var ofpError: String?
     /// MCDU guide steps ticked by hand, keyed "requestID#stepID".
@@ -1854,6 +1881,7 @@ final class PanelModel {
             recording = FlightRecording(start: now)
             flownTrack = []
             flownProfile = []
+            fmsDescentProfile = []
         }
         guard var run = recording else { return }
         let time = now.timeIntervalSince(run.start)
@@ -1873,6 +1901,9 @@ final class PanelModel {
             if !data.onGround || flownTrack.isEmpty { flownTrack.append(run.samples[run.samples.count - 1]) }
             if !data.onGround, let along = verticalProfile?.distanceAlong(latitude: data.latitude, longitude: data.longitude) {
                 flownProfile.append(VerticalProfile.Point(distance: along, altitude: data.altitude))
+                if let path = fms.descentPathAltitude {
+                    fmsDescentProfile.append(VerticalProfile.Point(distance: along, altitude: path))
+                }
             }
         }
         recording = run
@@ -2165,6 +2196,10 @@ final class PanelModel {
         "sim/flightmodel/position/phi", "sim/flightmodel/position/theta",
         "toliss_airbus/performance/DeptTrans", "toliss_airbus/performance/DestTrans",
         "sim/flightmodel/position/psi",
+        // FMS (ToLiss): descent path at the present position, altitude the AP is flying to,
+        // active constraint, distance to destination along the FMS route, cruise level.
+        "AirbusFBW/DescentProfileAlt_FMS1", "toliss_airbus/pfdoutputs/general/ap_alt_target_value",
+        "AirbusFBW/ConstraintAlt", "AirbusFBW/DistToDest", "toliss_airbus/init/cruise_alt",
     ]
 
     /// Datarefs that can trigger a callout (take-off and landing, deviations, altitudes):
@@ -2207,9 +2242,14 @@ final class PanelModel {
     /// instead of on every position update (several a second in flight).
     private(set) var liveFlight: FlightData?
 
+    /// `fms` as of the last monitor tick, for the views (the descent path changes constantly).
+    private(set) var liveFMS = FMSVertical()
+
     private func refreshLiveFlight() {
         let data = flightData
         if data != liveFlight { liveFlight = data }
+        let vertical = status == .connected && !demoMode ? fms : FMSVertical()
+        if vertical != liveFMS { liveFMS = vertical }
     }
 
     /// The aircraft now, from X-Plane; nil in the demo (it does not fly) or before a position.

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import XPlaneKit
 
 /// The A320 MCDU: screen mirrored from ToLiss (`MCDUScreen`) and the full keyboard, laid out
@@ -36,6 +37,16 @@ struct MCDUView: View {
                     .toggleStyle(.button)
                     .controlSize(.small)
             }
+            // Text of the screen with colours and sizes, to report a page that reads wrong or to
+            // capture pages (F-PLN) for new features.
+            Button {
+                UIPasteboard.general.string = model.mcduScreen.dump()
+            } label: {
+                Label("Copiar pantalla", systemImage: "doc.on.doc")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .disabled(model.mcduScreen.isBlank)
         }
     }
 

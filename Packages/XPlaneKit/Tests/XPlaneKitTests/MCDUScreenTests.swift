@@ -76,4 +76,14 @@ final class MCDUScreenTests: XCTestCase {
         let screen = MCDUScreen.decode(unit: 1, values: values)
         XCTAssertEqual(screen.text(row: 2), pad("FROM"))
     }
+
+    func testDumpShowsTextColoursAndSizes() {
+        let values: [String: XPValue] = ["AirbusFBW/MCDU1titlew": b64(pad("F-PLN"))]
+        let dump = MCDUScreen.decode(unit: 1, values: values).dump()
+        let lines = dump.split(separator: "\n", omittingEmptySubsequences: false)
+        XCTAssertEqual(lines.count, MCDUScreen.rows * 3)
+        XCTAssertEqual(lines[0], "00 |\(pad("F-PLN"))|")
+        XCTAssertTrue(lines[1].hasPrefix("   |wwwww "))
+        XCTAssertTrue(lines[2].hasPrefix("   |LLLLL "))
+    }
 }

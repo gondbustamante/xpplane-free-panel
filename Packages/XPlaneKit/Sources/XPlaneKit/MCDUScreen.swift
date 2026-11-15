@@ -60,6 +60,20 @@ public struct MCDUScreen: Equatable, Sendable {
         String(cells[row].map(\.character))
     }
 
+    /// The whole screen as text: each row as shown, then its colours (w c g m a y) and sizes
+    /// (L large, s small) underneath, so a page can be read back exactly.
+    public func dump() -> String {
+        let colourLetter: [MCDUColor: Character] = [.white: "w", .cyan: "c", .green: "g", .magenta: "m", .amber: "a", .yellow: "y"]
+        return cells.indices.map { row in
+            let line = cells[row]
+            let text = String(line.map(\.character))
+            let colours = String(line.map { cell -> Character in cell.isBlank ? " " : colourLetter[cell.color] ?? "?" })
+            let sizes = String(line.map { cell -> Character in cell.isBlank ? " " : (cell.small ? "s" : "L") })
+            let number = row < 10 ? "0\(row)" : "\(row)"
+            return "\(number) |\(text)|\n   |\(colours)|\n   |\(sizes)|"
+        }.joined(separator: "\n")
+    }
+
     // MARK: Dataref names
 
     static let titleColors = ["b", "g", "s", "w", "y"]
