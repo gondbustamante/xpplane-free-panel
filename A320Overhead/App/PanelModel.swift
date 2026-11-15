@@ -337,6 +337,10 @@ final class PanelModel {
     var voiceCallouts: Bool {
         didSet { UserDefaults.standard.set(voiceCallouts, forKey: Keys.voiceCallouts) }
     }
+    /// The pilot monitoring's calls on the take-off and landing rolls (100 kt, V1, rotate…).
+    var pmCallouts: Bool {
+        didSet { UserDefaults.standard.set(pmCallouts, forKey: Keys.pmCallouts) }
+    }
     /// A plan prepared from the flight just finished, for the next leg.
     var nextLegDraft: TurnaroundPlan?
     /// Dispatch and departure briefing of the current OFP.
@@ -354,6 +358,8 @@ final class PanelModel {
     @ObservationIgnored private var flightTask: Task<Void, Never>?
     @ObservationIgnored private var gateTracker = GateTracker()
     @ObservationIgnored private var minimumsCallouts = MinimumsCallouts()
+    @ObservationIgnored private var pilotMonitoring = PilotMonitoringCallouts()
+    @ObservationIgnored private var pmCheckPending = false
     @ObservationIgnored private var landingDetector = LandingDetector()
     @ObservationIgnored private var reportBaseline: Int?
     @ObservationIgnored private var lastFuelLevel: FuelStatus.Level = .onPlan
@@ -529,6 +535,7 @@ final class PanelModel {
         static let positionReports = "flight.positionReports"
         static let lastLanding = "flight.lastLanding"
         static let voiceCallouts = "flight.voiceCallouts"
+        static let pmCallouts = "flight.pmCallouts"
         static let dispatch = "dispatch.state"
         static let flightLog = "turnaround.flightLog"
         static let extras = "diag.extraDatarefs"
@@ -560,6 +567,7 @@ final class PanelModel {
         guideDone = Set(defaults.stringArray(forKey: Keys.guideDone) ?? [])
         inspectorPanel = InspectorPanel(rawValue: defaults.string(forKey: Keys.inspectorPanel) ?? "") ?? .checklist
         voiceCallouts = defaults.object(forKey: Keys.voiceCallouts) as? Bool ?? true
+        pmCallouts = defaults.object(forKey: Keys.pmCallouts) as? Bool ?? true
         positionReports = defaults.data(forKey: Keys.positionReports)
             .flatMap { try? JSONDecoder().decode([PositionReport].self, from: $0) } ?? []
         lastLanding = defaults.data(forKey: Keys.lastLanding).flatMap { try? JSONDecoder().decode(LandingReport.self, from: $0) }
@@ -1747,6 +1755,16 @@ final class PanelModel {
         "toliss_airbus/pfdoutputs/general/ap_speed_value", "toliss_airbus/performance/DH", "toliss_airbus/performance/MDA",
         "toliss_airbus/performance/DestQNH", "toliss_airbus/performance/DestTemp",
         "toliss_airbus/performance/DestWindDir", "toliss_airbus/performance/DestWindSpd",
+        "toliss_airbus/performance/V1", "toliss_airbus/performance/VR",
+        "AirbusFBW/SpoilerPositionArray", "AirbusFBW/EngineReverserDeloymentArray",
+    ]
+
+    /// Datarefs that can trigger a pilot monitoring call: checked on every update of these,
+    /// not on the once-a-second monitor tick.
+    static let pmCalloutDatarefs: Set<String> = [
+        "sim/flightmodel/position/indicated_airspeed", "sim/flightmodel/failures/onground_any",
+        "sim/flightmodel/position/vh_ind_fpm", "sim/cockpit2/gauges/indicators/radio_altimeter_height_ft_pilot",
+        "AirbusFBW/SpoilerPositionArray", "AirbusFBW/EngineReverserDeloymentArray",
     ]
 
     struct FlightData: Equatable {
@@ -2089,13 +2107,46 @@ final class PanelModel {
         }
     }
 
-    private func postAlert(_ text: String, _ level: FlightAlert.Level, speak: Bool) {
+    private func postAlert(_ text: String, _ level: FlightAlert.Level, speak: Bool, interrupt: Bool = false) {
         flightAlert = FlightAlert(text: text, level: level, date: Date())
         if speak && voiceCallouts {
+            // A speed call is only useful on time: it cuts whatever is still being read out.
+            if interrupt, speech.isSpeaking { speech.stopSpeaking(at: .immediate) }
             let utterance = AVSpeechUtterance(string: text)
             utterance.voice = AVSpeechSynthesisVoice(language: text.uppercased() == text ? "en-US" : "es-ES")
             utterance.rate = 0.52
             speech.speak(utterance)
+        }
+    }
+
+    private func schedulePMCallouts() {
+        guard !pmCheckPending else { return }
+        pmCheckPending = true
+        Task { @MainActor [weak self] in
+            self?.pmCheckPending = false
+            self?.checkPMCallouts()
+        }
+    }
+
+    /// Runs even with the calls switched off, so turning them on mid-flight does not replay
+    /// the take-off.
+    private func checkPMCallouts() {
+        guard status == .connected, !demoMode,
+              let ias = rawValues["sim/flightmodel/position/indicated_airspeed"]?.doubleValue,
+              let ground = rawValues["sim/flightmodel/failures/onground_any"]?.doubleValue else { return }
+        func value(_ name: String) -> Double? { rawValues[name]?.doubleValue }
+        let spoilers = rawValues["AirbusFBW/SpoilerPositionArray"]?.arrayValue?.compactMap(\.doubleValue) ?? []
+        let reversers = rawValues["AirbusFBW/EngineReverserDeloymentArray"]?.arrayValue?.compactMap(\.doubleValue) ?? []
+        let snapshot = PilotMonitoringCallouts.Snapshot(
+            ias: ias, onGround: ground > 0.5,
+            verticalSpeed: value("sim/flightmodel/position/vh_ind_fpm") ?? 0,
+            radioAltitude: value("sim/cockpit2/gauges/indicators/radio_altimeter_height_ft_pilot") ?? 0,
+            v1: value("toliss_airbus/performance/V1"), vr: value("toliss_airbus/performance/VR"),
+            // Ground spoilers: most panels out (the speed brake alone moves only a few).
+            spoilersDeployed: !spoilers.isEmpty && spoilers.filter { $0 > 0.5 }.count * 5 >= spoilers.count * 4,
+            reversersDeployed: reversers.count >= 2 && reversers.prefix(2).allSatisfy { $0 >= 0.9 })
+        for callout in pilotMonitoring.update(snapshot) where pmCallouts {
+            postAlert(callout.rawValue, .info, speak: true, interrupt: true)
         }
     }
 
@@ -2574,6 +2625,7 @@ final class PanelModel {
         }
         stampChanges(for: update)
         rawValues[update.name] = update.value
+        if Self.pmCalloutDatarefs.contains(update.name) { schedulePMCallouts() }
 
         for control in controlsByDataref[update.name] ?? [] {
             if let state = control.state, state.dataref == update.name,

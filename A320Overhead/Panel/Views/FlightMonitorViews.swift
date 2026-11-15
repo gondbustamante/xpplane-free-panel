@@ -437,6 +437,11 @@ private struct ApproachCard: View {
                 }
                 Toggle("Llamadas por voz", isOn: $model.voiceCallouts)
                     .font(.footnote)
+                Toggle("Callouts del PM en despegue y aterrizaje", isOn: $model.pmCallouts)
+                    .font(.footnote)
+                    .disabled(!model.voiceCallouts)
+                Text("100 KNOTS, V1 y ROTATE con las velocidades de PERF TAKE OFF, POSITIVE CLIMB; en la carrera de aterrizaje SPOILERS, REVERSE GREEN y 70 KNOTS. Las alturas de radioaltímetro y RETARD ya las canta ToLiss.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
         }
     }

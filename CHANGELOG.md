@@ -4,6 +4,20 @@ Registro de cambios de A320 Overhead. La app muestra lo mismo en *Opciones (⋯)
 
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y las versiones, [SemVer](https://semver.org/lang/es/).
 
+## [0.9.2] · 2026-11-15 · Callouts y rendimiento
+
+### Nuevo
+- Callouts del piloto que monitoriza: ONE HUNDRED KNOTS, V1 y ROTATE con las velocidades de PERF TAKE OFF, POSITIVE CLIMB, y en la carrera de aterrizaje SPOILERS, REVERSE GREEN y SEVENTY KNOTS. Se activan en la columna Vuelo; las alturas de radioaltímetro y RETARD las sigue cantando ToLiss.
+- Panel central del overhead: FIRE, HYD, FUEL, ELEC, AIR COND, ANTI ICE, EXT LT, APU, INT LT y SIGNS en su disposición real y más grandes. Al desplegar Overhead en la barra lateral.
+
+### Mejorado
+- Rendimiento: cada mando se redibuja solo cuando cambia su dato, no con cada dato del vuelo; el iPad va más fluido y se calienta menos en vuelos largos.
+- Conexión y reconexión más rápidas con X-Plane.
+
+### Corregido
+- El MCDU podía quedarse con líneas de la página anterior a mitad de vuelo. Sin conexión, la última página se atenúa con un aviso.
+- Un gesto interrumpido (desplazar con dos dedos, abrir una hoja) ya no deja la repetición del FCU enviando comandos, la cámara girando ni un pomo saltando varios clics.
+
 ## [0.9.1] · 2026-11-02 · Pausa del simulador
 
 ### Nuevo

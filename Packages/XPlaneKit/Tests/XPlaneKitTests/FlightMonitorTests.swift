@@ -101,4 +101,63 @@ final class FlightMonitorTests: XCTestCase {
         XCTAssertEqual(ofp.destination.latitude, 41.30)
         XCTAssertEqual(ofp.enrouteAlternates, [])
     }
+
+    // MARK: PM callouts
+
+    private func ground(_ ias: Double, v1: Double = 140, vr: Double = 145,
+                        spoilers: Bool = false, reversers: Bool = false) -> PilotMonitoringCallouts.Snapshot {
+        .init(ias: ias, onGround: true, verticalSpeed: 0, radioAltitude: 0, v1: v1, vr: vr,
+              spoilersDeployed: spoilers, reversersDeployed: reversers)
+    }
+
+    private func air(_ ias: Double, vs: Double, ra: Double) -> PilotMonitoringCallouts.Snapshot {
+        .init(ias: ias, onGround: false, verticalSpeed: vs, radioAltitude: ra, v1: 140, vr: 145)
+    }
+
+    func testTakeoffCallsInOrderOnce() {
+        var pm = PilotMonitoringCallouts()
+        var calls: [PilotMonitoringCallouts.Callout] = []
+        for snapshot in [ground(0), ground(60), ground(101), ground(120), ground(141), ground(146), ground(150),
+                         air(155, vs: 800, ra: 10), air(158, vs: 1500, ra: 60), air(160, vs: 2000, ra: 400)] {
+            calls += pm.update(snapshot)
+        }
+        XCTAssertEqual(calls, [.hundredKnots, .v1, .rotate, .positiveClimb])
+    }
+
+    func testRejectedTakeoffStopsCalls() {
+        var pm = PilotMonitoringCallouts()
+        var calls: [PilotMonitoringCallouts.Callout] = []
+        for snapshot in [ground(0), ground(105), ground(125), ground(110), ground(141), ground(80), ground(20)] {
+            calls += pm.update(snapshot)
+        }
+        XCTAssertEqual(calls, [.hundredKnots], "no V1 after the speed falls on the runway")
+    }
+
+    func testNoV1WithoutPerfData() {
+        var pm = PilotMonitoringCallouts()
+        var calls: [PilotMonitoringCallouts.Callout] = []
+        for snapshot in [ground(0, v1: 0, vr: 0), ground(101, v1: 0, vr: 0), ground(150, v1: 0, vr: 0)] {
+            calls += pm.update(snapshot)
+        }
+        XCTAssertEqual(calls, [.hundredKnots])
+    }
+
+    func testLandingRollCalls() {
+        var pm = PilotMonitoringCallouts()
+        var calls: [PilotMonitoringCallouts.Callout] = []
+        for snapshot in [air(140, vs: -700, ra: 50), air(135, vs: -600, ra: 5), ground(130), ground(125, spoilers: true),
+                         ground(110, spoilers: true, reversers: true), ground(90, spoilers: true, reversers: true),
+                         ground(69, spoilers: true), ground(25)] {
+            calls += pm.update(snapshot)
+        }
+        XCTAssertEqual(calls, [.spoilers, .reverseGreen, .seventyKnots])
+    }
+
+    func testJoiningMidFlightCallsNothingUntilTouchdown() {
+        var pm = PilotMonitoringCallouts()
+        XCTAssertEqual(pm.update(air(250, vs: 0, ra: 0)), [])
+        XCTAssertEqual(pm.update(air(160, vs: -700, ra: 100)), [])
+        XCTAssertEqual(pm.update(ground(130, spoilers: true)), [])
+        XCTAssertEqual(pm.update(ground(128, spoilers: true)), [.spoilers])
+    }
 }

@@ -37,6 +37,14 @@ enum Changelog {
     private static func fixed(_ text: String) -> ChangelogRelease.Change { .init(kind: .fixed, text: text) }
 
     static let releases: [ChangelogRelease] = [
+        ChangelogRelease(version: "0.9.2", date: "2026-11-15", title: "Callouts y rendimiento", changes: [
+            new("Callouts del piloto que monitoriza: ONE HUNDRED KNOTS, V1 y ROTATE con las velocidades de PERF TAKE OFF, POSITIVE CLIMB, y en la carrera de aterrizaje SPOILERS, REVERSE GREEN y SEVENTY KNOTS. Se activan en la columna Vuelo; las alturas de radioaltímetro y RETARD las sigue cantando ToLiss."),
+            new("Panel central del overhead: FIRE, HYD, FUEL, ELEC, AIR COND, ANTI ICE, EXT LT, APU, INT LT y SIGNS en su disposición real y más grandes. Al desplegar Overhead en la barra lateral."),
+            improved("Rendimiento: cada mando se redibuja solo cuando cambia su dato, no con cada dato del vuelo; el iPad va más fluido y se calienta menos en vuelos largos."),
+            improved("Conexión y reconexión más rápidas con X-Plane."),
+            fixed("El MCDU podía quedarse con líneas de la página anterior a mitad de vuelo. Sin conexión, la última página se atenúa con un aviso."),
+            fixed("Un gesto interrumpido (desplazar con dos dedos, abrir una hoja) ya no deja la repetición del FCU enviando comandos, la cámara girando ni un pomo saltando varios clics."),
+        ]),
         ChangelogRelease(version: "0.9.1", date: "2026-11-02", title: "Pausa del simulador", changes: [
             new("Al pausar X-Plane se detienen los tiempos: cuenta atrás y hitos del turnaround, embarque y repostaje, slot y TSAT, deshielo y cronómetro de los ejercicios. Al reanudar siguen donde estaban."),
             new("Indicador «EN PAUSA» en las barras y en los cronómetros minimizados, y un aviso pasivo al pausar y al reanudar."),

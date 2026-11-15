@@ -212,6 +212,124 @@ public struct MinimumsCallouts: Sendable {
     }
 }
 
+/// The pilot monitoring's standard calls on the take-off and landing rolls, which ToLiss does
+/// not make itself (it already calls the radio heights and RETARD, so those are left out).
+/// Fed with every speed update: once a second would call V1 up to a second late.
+public struct PilotMonitoringCallouts: Sendable {
+    public enum Callout: String, Sendable, CaseIterable {
+        case hundredKnots = "ONE HUNDRED KNOTS"
+        case v1 = "V ONE"
+        case rotate = "ROTATE"
+        case positiveClimb = "POSITIVE CLIMB"
+        case spoilers = "SPOILERS"
+        case reverseGreen = "REVERSE GREEN"
+        case seventyKnots = "SEVENTY KNOTS"
+    }
+
+    public struct Snapshot: Sendable, Equatable {
+        public var ias: Double
+        public var onGround: Bool
+        public var verticalSpeed: Double
+        public var radioAltitude: Double
+        /// From PERF TAKE OFF; nil or 0 when not entered.
+        public var v1: Double?
+        public var vr: Double?
+        /// Ground spoilers extended.
+        public var spoilersDeployed: Bool
+        /// Both reversers fully deployed.
+        public var reversersDeployed: Bool
+
+        public init(ias: Double, onGround: Bool, verticalSpeed: Double, radioAltitude: Double,
+                    v1: Double? = nil, vr: Double? = nil, spoilersDeployed: Bool = false, reversersDeployed: Bool = false) {
+            self.ias = ias
+            self.onGround = onGround
+            self.verticalSpeed = verticalSpeed
+            self.radioAltitude = radioAltitude
+            self.v1 = v1
+            self.vr = vr
+            self.spoilersDeployed = spoilersDeployed
+            self.reversersDeployed = reversersDeployed
+        }
+    }
+
+    enum Phase: Equatable {
+        case unknown, parked, takeoffRoll, rejected, initialClimb, airborne, landingRoll
+    }
+
+    private(set) var phase: Phase = .unknown
+    private var previous: Snapshot?
+    private var called: Set<Callout> = []
+    private var peakSpeed: Double = 0
+
+    public init() {}
+
+    public mutating func update(_ now: Snapshot) -> [Callout] {
+        defer { previous = now }
+        guard let before = previous else {
+            // Joined mid-flight or on the ground: start from where the aircraft is.
+            phase = now.onGround ? (now.ias < 40 ? .parked : .rejected) : .airborne
+            return []
+        }
+        var calls: [Callout] = []
+        func call(_ callout: Callout) {
+            if called.insert(callout).inserted { calls.append(callout) }
+        }
+        func crossed(_ speed: Double?) -> Bool {
+            guard let speed, speed > 0 else { return false }
+            return before.ias < speed && now.ias >= speed
+        }
+
+        switch phase {
+        case .unknown:
+            phase = now.onGround ? .parked : .airborne
+        case .parked:
+            if now.onGround, crossed(100) {
+                phase = .takeoffRoll
+                called = []
+                peakSpeed = now.ias
+                call(.hundredKnots)
+            }
+        case .takeoffRoll:
+            peakSpeed = max(peakSpeed, now.ias)
+            if now.onGround, !called.contains(.v1), now.ias < peakSpeed - 10 {
+                // Speed falling before V1: rejected take-off, no more calls.
+                phase = .rejected
+            } else {
+                if crossed(now.v1) { call(.v1) }
+                if crossed(now.vr) { call(.rotate) }
+                if !now.onGround { phase = .initialClimb }
+            }
+        case .initialClimb:
+            if now.onGround {
+                phase = .takeoffRoll
+            } else if now.verticalSpeed > 300, now.radioAltitude > 30 {
+                call(.positiveClimb)
+                phase = .airborne
+            } else if now.radioAltitude > 1500 {
+                phase = .airborne
+            }
+        case .airborne:
+            if now.onGround, !before.onGround {
+                phase = .landingRoll
+                called = []
+            }
+        case .landingRoll:
+            if !now.onGround {
+                // Bounce or go-around: wait for the next touchdown.
+                phase = .airborne
+            } else {
+                if now.spoilersDeployed { call(.spoilers) }
+                if now.reversersDeployed { call(.reverseGreen) }
+                if before.ias > 70, now.ias <= 70 { call(.seventyKnots) }
+                if now.ias < 30 { phase = .parked }
+            }
+        case .rejected:
+            if now.ias < 30 { phase = .parked }
+        }
+        return calls
+    }
+}
+
 /// The touchdown: sink rate at contact and the peak load factor just after.
 public struct LandingReport: Codable, Sendable, Equatable {
     /// Feet per minute, positive down.
