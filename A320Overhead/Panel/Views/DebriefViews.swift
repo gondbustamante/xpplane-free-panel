@@ -18,7 +18,11 @@ struct DebriefSheet: View {
 
     /// Time of the last transition from air to ground.
     private var lastTouchdown: TimeInterval? {
-        zip(debrief.samples, debrief.samples.dropFirst()).last { !$0.0.onGround && $0.1.onGround }?.1.time
+        let samples = debrief.samples
+        guard let index = samples.indices.dropFirst().last(where: { !samples[$0 - 1].onGround && samples[$0].onGround }) else {
+            return nil
+        }
+        return samples[index].time
     }
 
     var body: some View {
