@@ -296,8 +296,15 @@ final class PanelModel {
     }
     /// Last OFP loaded from SimBrief, kept on the device.
     private(set) var ofp: SimBriefOFP? {
-        didSet { UserDefaults.standard.set(ofp.flatMap { try? JSONEncoder().encode($0) }, forKey: Keys.ofp) }
+        didSet {
+            UserDefaults.standard.set(ofp.flatMap { try? JSONEncoder().encode($0) }, forKey: Keys.ofp)
+            verticalProfile = ofp.map(VerticalProfile.init(ofp:))
+        }
     }
+    /// The OFP seen from the side, for the vertical display under the map.
+    private(set) var verticalProfile: VerticalProfile?
+    /// Altitude flown against distance along the route, one point per report sample.
+    private(set) var flownProfile: [VerticalProfile.Point] = []
     private(set) var ofpLoading = false
     private(set) var ofpError: String?
     /// MCDU guide steps ticked by hand, keyed "requestID#stepID".
@@ -625,7 +632,10 @@ final class PanelModel {
         showVerificationBadges = defaults.object(forKey: Keys.badges) as? Bool ?? false
         learnMode = defaults.bool(forKey: Keys.learnMode)
         simBriefUser = defaults.string(forKey: Keys.simBriefUser) ?? ""
-        ofp = defaults.data(forKey: Keys.ofp).flatMap { try? JSONDecoder().decode(SimBriefOFP.self, from: $0) }
+        // A local first: reading `ofp` back is not allowed until every property is set.
+        let storedOFP = defaults.data(forKey: Keys.ofp).flatMap { try? JSONDecoder().decode(SimBriefOFP.self, from: $0) }
+        ofp = storedOFP
+        verticalProfile = storedOFP.map(VerticalProfile.init(ofp:))
         guideDone = Set(defaults.stringArray(forKey: Keys.guideDone) ?? [])
         inspectorPanel = InspectorPanel(rawValue: defaults.string(forKey: Keys.inspectorPanel) ?? "") ?? .checklist
         voiceCallouts = defaults.object(forKey: Keys.voiceCallouts) as? Bool ?? true
@@ -1843,6 +1853,7 @@ final class PanelModel {
             guard !data.onGround || data.groundspeed > 3 else { return }
             recording = FlightRecording(start: now)
             flownTrack = []
+            flownProfile = []
         }
         guard var run = recording else { return }
         let time = now.timeIntervalSince(run.start)
@@ -1860,6 +1871,9 @@ final class PanelModel {
                                             pitch: pitch, onGround: data.onGround, latitude: data.latitude, longitude: data.longitude))
             run.lastSample = time
             if !data.onGround || flownTrack.isEmpty { flownTrack.append(run.samples[run.samples.count - 1]) }
+            if !data.onGround, let along = verticalProfile?.distanceAlong(latitude: data.latitude, longitude: data.longitude) {
+                flownProfile.append(VerticalProfile.Point(distance: along, altitude: data.altitude))
+            }
         }
         recording = run
     }

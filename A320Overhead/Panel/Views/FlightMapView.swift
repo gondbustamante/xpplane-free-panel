@@ -14,6 +14,8 @@ struct FlightMapView: View {
     @State private var distance: Double = 400_000
     @State private var satellite = false
     @State private var expanded = false
+    /// The vertical display under the map, as on the A350.
+    @State private var showsProfile = true
 
     private var route: [CLLocationCoordinate2D] {
         guard let ofp = model.ofp else { return [] }
@@ -55,11 +57,18 @@ struct FlightMapView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .top) {
-            map
-            infoStrip
+        VStack(spacing: 0) {
+            ZStack(alignment: .top) {
+                map
+                infoStrip
+            }
+            .overlay(alignment: .bottomTrailing) { controls }
+            if showsProfile {
+                Divider().overlay(PanelTheme.checklistCyan.opacity(0.4))
+                VerticalProfileView(large: fullScreen)
+                    .frame(height: fullScreen ? 250 : 180)
+            }
         }
-        .overlay(alignment: .bottomTrailing) { controls }
         .onChange(of: model.liveFlight?.latitude) { _, _ in
             if following, let aircraft { position = .camera(MapCamera(centerCoordinate: aircraft, distance: distance)) }
         }
@@ -176,6 +185,12 @@ struct FlightMapView: View {
                 Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
             }
             .accessibilityLabel("Ver toda la ruta")
+            Button {
+                withAnimation { showsProfile.toggle() }
+            } label: {
+                Image(systemName: showsProfile ? "chart.xyaxis.line" : "rectangle.bottomhalf.inset.filled")
+            }
+            .accessibilityLabel(showsProfile ? "Ocultar el perfil vertical" : "Mostrar el perfil vertical")
             Button {
                 satellite.toggle()
             } label: {
