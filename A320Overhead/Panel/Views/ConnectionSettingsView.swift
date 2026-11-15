@@ -83,6 +83,15 @@ struct ConnectionSettingsView: View {
                 } footer: {
                     Text("Para cargar tu último OFP en la Guía MCDU y en el turnaround. El Pilot ID está en SimBrief → Account Settings.")
                 }
+                Section {
+                    Toggle("After landing al salir de la pista", isOn: $model.autoAfterLanding)
+                    Toggle("Incluir arranque del APU", isOn: $model.afterLandingAPU)
+                        .disabled(!model.autoAfterLanding)
+                } header: {
+                    Text("Automatización")
+                } footer: {
+                    Text("Con X-Plane, al girar fuera de la pista tras aterrizar la app hace el flujo after landing: ground spoilers, flaps 0, strobe, luces de aterrizaje y de rodaje, TCAS y modo de motor. Cualquier flujo se puede ejecutar también con «Ejecutar flujo» en el checklist. Nunca durante un examen.")
+                }
                 Section("Interfaz") {
                     Toggle("Marcar controles con mapeo sin verificar", isOn: $model.showVerificationBadges)
                     Text("Útil al verificar datarefs desde Diagnóstico. Apagado por defecto para que el panel se vea como el del avión.")

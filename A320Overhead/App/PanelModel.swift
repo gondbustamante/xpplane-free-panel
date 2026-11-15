@@ -346,6 +346,18 @@ final class PanelModel {
     var advisoryCallouts: Bool {
         didSet { UserDefaults.standard.set(advisoryCallouts, forKey: Keys.advisoryCallouts) }
     }
+    /// Runs the after landing flow by itself once the aircraft has turned off the runway.
+    var autoAfterLanding: Bool {
+        didSet { UserDefaults.standard.set(autoAfterLanding, forKey: Keys.autoAfterLanding) }
+    }
+    /// Includes the optional APU START of the after landing flow when it runs automatically.
+    var afterLandingAPU: Bool {
+        didSet { UserDefaults.standard.set(afterLandingAPU, forKey: Keys.afterLandingAPU) }
+    }
+    /// Flow being run by the app, control by control.
+    private(set) var runningFlowID: String?
+    @ObservationIgnored private var flowTask: Task<Void, Never>?
+    @ObservationIgnored private var runwayExit = RunwayExitDetector()
     /// A plan prepared from the flight just finished, for the next leg.
     var nextLegDraft: TurnaroundPlan?
     /// Dispatch and departure briefing of the current OFP.
@@ -544,6 +556,8 @@ final class PanelModel {
         static let voiceCallouts = "flight.voiceCallouts"
         static let pmCallouts = "flight.pmCallouts"
         static let advisoryCallouts = "flight.advisoryCallouts"
+        static let autoAfterLanding = "automation.afterLanding"
+        static let afterLandingAPU = "automation.afterLandingAPU"
         static let dispatch = "dispatch.state"
         static let flightLog = "turnaround.flightLog"
         static let extras = "diag.extraDatarefs"
@@ -577,6 +591,9 @@ final class PanelModel {
         voiceCallouts = defaults.object(forKey: Keys.voiceCallouts) as? Bool ?? true
         pmCallouts = defaults.object(forKey: Keys.pmCallouts) as? Bool ?? true
         advisoryCallouts = defaults.object(forKey: Keys.advisoryCallouts) as? Bool ?? true
+        // Moving flaps and lights on its own is opt-in.
+        autoAfterLanding = defaults.bool(forKey: Keys.autoAfterLanding)
+        afterLandingAPU = defaults.bool(forKey: Keys.afterLandingAPU)
         positionReports = defaults.data(forKey: Keys.positionReports)
             .flatMap { try? JSONDecoder().decode([PositionReport].self, from: $0) } ?? []
         lastLanding = defaults.data(forKey: Keys.lastLanding).flatMap { try? JSONDecoder().decode(LandingReport.self, from: $0) }
@@ -1005,6 +1022,69 @@ final class PanelModel {
                 move(control, by: delta)
             }
         }
+    }
+
+    // MARK: Running flows
+
+    /// A flow the app can run: some of its items are read from the simulator and out of place.
+    /// Not during an exam, where doing it is the point.
+    func canRun(_ procedure: Procedure) -> Bool {
+        procedure.kind == .flow && status == .connected && !isExamRunning && runningFlowID == nil
+            && procedure.items.contains { !$0.isOptional && canApply($0) }
+    }
+
+    /// Sets every sensed item in order, as the pilot would, waiting for the simulator to
+    /// confirm each control. Items the app cannot read (RUD TRIM ZERO, ECAM STATUS CHECK) are
+    /// left to the pilot and listed at the end.
+    func runFlow(_ procedure: Procedure, includeOptional: Bool = false) {
+        guard status == .connected, runningFlowID == nil, !isExamRunning else { return }
+        runningFlowID = procedure.id
+        flowTask = Task { [weak self] in
+            guard let self else { return }
+            for item in procedure.items where item.isSensed && (includeOptional || !item.isOptional) {
+                guard !Task.isCancelled, self.status == .connected else { break }
+                for check in item.checks ?? [] {
+                    await self.setControl(check.control, to: check.expect)
+                }
+                // APU START is not sensed: press it once the master switch is on.
+                if item.checks?.contains(where: { $0.control == "apu.master" }) == true {
+                    await self.startAPUIfNeeded()
+                }
+                try? await Task.sleep(for: .milliseconds(300))
+            }
+            self.finishFlow(procedure, stopped: Task.isCancelled || self.status != .connected)
+        }
+    }
+
+    func stopFlow() {
+        flowTask?.cancel()
+    }
+
+    private func finishFlow(_ procedure: Procedure, stopped: Bool) {
+        runningFlowID = nil
+        flowTask = nil
+        guard !stopped else {
+            postAlert("\(procedure.title): detenido", .info, speak: false)
+            return
+        }
+        let byHand = procedure.items.indices
+            .filter { !procedure.items[$0].isSensed && !procedure.items[$0].isOptional && !isDone(procedure, item: $0) }
+            .map { procedure.items[$0].challenge }
+        postAlert(byHand.isEmpty
+                  ? "\(procedure.title): hecho"
+                  : "\(procedure.title): hecho. A mano: \(byHand.joined(separator: ", "))",
+                  .good, speak: false)
+    }
+
+    /// Once a second with X-Plane: the after landing flow when the aircraft turns off the runway.
+    private func tickAutomation() {
+        guard let data = flightData,
+              let heading = rawValues["sim/flightmodel/position/psi"]?.doubleValue else { return }
+        let vacated = runwayExit.update(onGround: data.onGround, groundspeed: data.groundspeed, heading: heading)
+        guard vacated, autoAfterLanding, let flow = procedure("after_landing_flow") else { return }
+        open(procedure: flow.id)
+        postAlert("Pista libre: after landing en marcha", .info, speak: false)
+        runFlow(flow, includeOptional: afterLandingAPU)
     }
 
     // MARK: Learn mode
@@ -1768,6 +1848,7 @@ final class PanelModel {
         "AirbusFBW/SpoilerPositionArray", "AirbusFBW/EngineReverserDeloymentArray",
         "sim/flightmodel/position/phi", "sim/flightmodel/position/theta",
         "toliss_airbus/performance/DeptTrans", "toliss_airbus/performance/DestTrans",
+        "sim/flightmodel/position/psi",
     ]
 
     /// Datarefs that can trigger a callout (take-off and landing, deviations, altitudes):
@@ -1958,6 +2039,7 @@ final class PanelModel {
                 self?.refreshLiveFlight()
                 self?.tickPause()
                 self?.tickFlightMonitor()
+                self?.tickAutomation()
             }
         }
     }

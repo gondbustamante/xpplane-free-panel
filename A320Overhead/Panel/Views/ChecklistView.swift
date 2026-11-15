@@ -30,6 +30,7 @@ private struct ChecklistRunner: View {
         let complete = model.isComplete(procedure)
         VStack(spacing: 0) {
             ChecklistHeader(procedure: procedure, done: progress.done, total: progress.total)
+            FlowRunnerBar(procedure: procedure)
             if model.status != .connected && procedure.items.contains(where: \.isSensed) {
                 Label("Sin conexión: marca a mano los ítems detectados.", systemImage: "antenna.radiowaves.left.and.right.slash")
                     .font(.caption)
@@ -115,6 +116,52 @@ private struct ChecklistRunner: View {
         }
         .controlSize(.regular)
         .padding(12)
+    }
+}
+
+/// Runs a flow for the pilot: the app sets every control it can read, in order.
+private struct FlowRunnerBar: View {
+    let procedure: Procedure
+    @Environment(PanelModel.self) private var model
+
+    var body: some View {
+        if model.runningFlowID == procedure.id {
+            HStack(spacing: 10) {
+                ProgressView().controlSize(.small)
+                Text("Ejecutando el flujo…")
+                Spacer(minLength: 0)
+                Button("Detener", role: .destructive) { model.stopFlow() }
+                    .buttonStyle(.bordered)
+            }
+            .flowBarStyle()
+        } else if model.canRun(procedure) {
+            HStack(spacing: 10) {
+                Button {
+                    model.runFlow(procedure)
+                } label: {
+                    Label("Ejecutar flujo", systemImage: "play.fill")
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(PanelTheme.checklistCyan.opacity(0.8))
+                Text("La app pone cada mando detectado; lo demás queda para ti.")
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                Spacer(minLength: 0)
+            }
+            .flowBarStyle()
+        }
+    }
+}
+
+private extension View {
+    func flowBarStyle() -> some View {
+        self
+            .font(.caption)
+            .controlSize(.small)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(PanelTheme.checklistCyan.opacity(0.08))
     }
 }
 
