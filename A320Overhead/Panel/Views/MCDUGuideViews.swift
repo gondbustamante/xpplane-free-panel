@@ -12,6 +12,7 @@ struct InspectorColumn: View {
                 Text("Checklist").tag(PanelModel.InspectorPanel.checklist)
                 Text("Guía MCDU").tag(PanelModel.InspectorPanel.mcduGuide)
                 Text("Vuelo").tag(PanelModel.InspectorPanel.flight)
+                Text("Mapa").tag(PanelModel.InspectorPanel.map)
             }
             .pickerStyle(.segmented)
             .padding(.horizontal, 12)
@@ -21,6 +22,7 @@ struct InspectorColumn: View {
             case .checklist: ChecklistColumn()
             case .mcduGuide: MCDUGuideColumn()
             case .flight: FlightMonitorColumn()
+            case .map: FlightMapView()
             }
         }
         .background(PanelTheme.checklistSurface)

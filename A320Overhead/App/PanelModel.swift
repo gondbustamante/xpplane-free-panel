@@ -309,6 +309,7 @@ final class PanelModel {
         case checklist
         case mcduGuide
         case flight
+        case map
     }
     var inspectorPanel: InspectorPanel {
         didSet { UserDefaults.standard.set(inspectorPanel.rawValue, forKey: Keys.inspectorPanel) }
@@ -369,6 +370,8 @@ final class PanelModel {
     private(set) var debriefIndex: [DebriefIndexEntry] = [] {
         didSet { scheduleSave(Keys.debriefIndex) { [value = self.debriefIndex] in try? JSONEncoder().encode(value) } }
     }
+    /// Path flown in this flight, for the map: one point per report sample.
+    private(set) var flownTrack: [FlightSample] = []
     /// Report open in its sheet.
     var presentedDebrief: FlightDebrief?
     /// Flow being run by the app, control by control.
@@ -1819,6 +1822,7 @@ final class PanelModel {
         if recording == nil {
             guard !data.onGround || data.groundspeed > 3 else { return }
             recording = FlightRecording(start: now)
+            flownTrack = []
         }
         guard var run = recording else { return }
         let time = now.timeIntervalSince(run.start)
@@ -1835,6 +1839,7 @@ final class PanelModel {
                                             groundspeed: data.groundspeed, verticalSpeed: data.verticalSpeed, bank: bank,
                                             pitch: pitch, onGround: data.onGround, latitude: data.latitude, longitude: data.longitude))
             run.lastSample = time
+            if !data.onGround || flownTrack.isEmpty { flownTrack.append(run.samples[run.samples.count - 1]) }
         }
         recording = run
     }
@@ -2028,6 +2033,8 @@ final class PanelModel {
         var targetSpeed: Double?
         var decisionHeight: Double?
         var minimumAltitude: Double?
+        /// True heading, degrees.
+        var heading: Double? = nil
     }
 
     /// `flightData` as of the last monitor tick, for the views: they redraw once a second
@@ -2064,7 +2071,8 @@ final class PanelModel {
             glideslopeDots: value("sim/cockpit2/radios/indicators/nav1_vdef_dots_pilot"),
             targetSpeed: positive("toliss_airbus/pfdoutputs/general/ap_speed_value"),
             decisionHeight: positive("toliss_airbus/performance/DH"),
-            minimumAltitude: positive("toliss_airbus/performance/MDA"))
+            minimumAltitude: positive("toliss_airbus/performance/MDA"),
+            heading: value("sim/flightmodel/position/psi"))
     }
 
     /// Fuel against the OFP at this point of the route, kg.

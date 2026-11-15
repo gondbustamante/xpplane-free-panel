@@ -217,6 +217,12 @@ struct SidebarView: View {
             } label: {
                 Label("Monitor de vuelo", systemImage: "gauge.with.needle")
             }
+            Button {
+                model.inspectorPanel = .map
+                model.showChecklist = true
+            } label: {
+                Label("Mapa", systemImage: "map")
+            }
         } header: {
             SectionHeader(title: "Plan de vuelo", detail: model.ofp?.airac.map { "AIRAC \($0)" })
                 .tutorialTarget(.flightPlan)
