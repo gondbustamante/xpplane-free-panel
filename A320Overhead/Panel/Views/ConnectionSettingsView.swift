@@ -94,6 +94,13 @@ struct ConnectionSettingsView: View {
                 } footer: {
                     Text("Con X-Plane. After landing al girar fuera de la pista: ground spoilers, flaps 0, strobe, luces de aterrizaje y de rodaje, TCAS y modo de motor. FL100 subiendo: luces de aterrizaje recogidas; bajando: luces de aterrizaje y cinturones. Parking cuando tú cortas los motores con el freno puesto: cinturones, beacon, luces, bombas de combustible, transpondedor y, con el APU en marcha, su sangrado. Cualquier flujo se puede ejecutar también con «Ejecutar flujo» en el checklist. Nunca durante un examen.")
                 }
+                Section {
+                    Toggle("Anuncios de cabina", isOn: $model.cabinAnnouncements)
+                } header: {
+                    Text("Cabina")
+                } footer: {
+                    Text("Con X-Plane: bienvenida al encender el beacon, CABIN SECURE en el rodaje y antes del aterrizaje, «seats for take-off» al encender los strobes, cinturones apagados, anuncio del comandante en crucero, descenso, llegada y desembarque al apagar el beacon.")
+                }
                 Section("Interfaz") {
                     Toggle("Marcar controles con mapeo sin verificar", isOn: $model.showVerificationBadges)
                     Text("Útil al verificar datarefs desde Diagnóstico. Apagado por defecto para que el panel se vea como el del avión.")

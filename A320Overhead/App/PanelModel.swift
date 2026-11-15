@@ -364,6 +364,11 @@ final class PanelModel {
         didSet { UserDefaults.standard.set(autoParking, forKey: Keys.autoParking) }
     }
     @ObservationIgnored private var automationTriggers = AutomationTriggers()
+    /// Passenger announcements and the cabin's reports, with X-Plane.
+    var cabinAnnouncements: Bool {
+        didSet { UserDefaults.standard.set(cabinAnnouncements, forKey: Keys.cabinAnnouncements) }
+    }
+    @ObservationIgnored private var cabinTimeline = CabinTimeline()
     /// The flight being recorded for its report, from the first movement to the stand.
     @ObservationIgnored private var recording: FlightRecording?
     /// Reports of past flights, newest first (the traces live in files).
@@ -581,6 +586,7 @@ final class PanelModel {
         static let autoFL100 = "automation.fl100"
         static let autoParking = "automation.parking"
         static let debriefIndex = "debrief.index"
+        static let cabinAnnouncements = "cabin.announcements"
         static let dispatch = "dispatch.state"
         static let flightLog = "turnaround.flightLog"
         static let extras = "diag.extraDatarefs"
@@ -619,6 +625,7 @@ final class PanelModel {
         afterLandingAPU = defaults.bool(forKey: Keys.afterLandingAPU)
         autoFL100 = defaults.bool(forKey: Keys.autoFL100)
         autoParking = defaults.bool(forKey: Keys.autoParking)
+        cabinAnnouncements = defaults.object(forKey: Keys.cabinAnnouncements) as? Bool ?? true
         debriefIndex = defaults.data(forKey: Keys.debriefIndex)
             .flatMap { try? JSONDecoder().decode([DebriefIndexEntry].self, from: $0) } ?? []
         positionReports = defaults.data(forKey: Keys.positionReports)
@@ -1887,6 +1894,75 @@ final class PanelModel {
         debriefIndex.removeAll { $0.id == id }
     }
 
+    // MARK: Cabin
+
+    /// Once a second with X-Plane: the timeline always runs, so switching the announcements on
+    /// later does not replay the departure.
+    private func tickCabin(now: Date = Date()) {
+        guard !simPaused, let data = flightData else { return }
+        let snapshot = CabinTimeline.Snapshot(
+            onGround: data.onGround, groundspeed: data.groundspeed, altitude: data.altitude,
+            verticalSpeed: data.verticalSpeed,
+            beaconOn: positionName(ofControl: "ext_lt.beacon").map { $0 == "ON" },
+            strobeOn: positionName(ofControl: "ext_lt.strobe").map { $0 == "ON" },
+            seatBeltsOn: positionName(ofControl: "signs.seat_belts").map { $0 == "ON" })
+        for moment in cabinTimeline.update(snapshot, at: now) where cabinAnnouncements {
+            announce(moment, data: data)
+        }
+    }
+
+    private func announce(_ moment: CabinTimeline.Moment, data: FlightData) {
+        let flight = (turnaround?.plan.flightNumber).flatMap { $0.isEmpty ? nil : $0 } ?? ofp?.callsign
+        let destination = ofp?.destination.name ?? turnaround?.plan.destination ?? ofp?.destination.icao ?? "destino"
+        let flightText = flight.map { "del vuelo \($0) " } ?? ""
+        switch moment {
+        case .welcome:
+            cabin("Cabina: bienvenida a bordo",
+                  "Señoras y señores, en nombre del comandante y de toda la tripulación, bienvenidos a bordo \(flightText)con destino \(destination). Les rogamos que comprueben que su cinturón está abrochado, el respaldo de su asiento en posición vertical y su equipaje de mano bien guardado.")
+        case .cabinSecureTakeoff:
+            cabin("CABIN SECURE FOR TAKE-OFF", "Cabin secure for take-off.", english: true)
+        case .seatsForTakeoff:
+            cabin("Cabin crew, seats for take-off", "Cabin crew, seats for take-off.", english: true)
+        case .beltsOff:
+            cabin("Cabina: cinturones apagados",
+                  "Señoras y señores, el comandante ha apagado la señal de cinturones. Pueden moverse por la cabina, aunque les recomendamos que mientras permanezcan sentados mantengan el cinturón abrochado.")
+        case .cruise:
+            var text = "Señoras y señores, les habla el comandante. Volamos a nivel \(Int((data.altitude / 100).rounded()))"
+            if let togo = routeProgress?.distanceToGo, data.groundspeed > 100 {
+                let minutes = Int((togo / data.groundspeed * 60).rounded())
+                text += " y nos quedan unos \(minutes) minutos de vuelo hasta \(destination)"
+            }
+            text += "."
+            if let temperature = ofp?.destination.metar.flatMap(CabinTimeline.temperature(metar:)) {
+                text += " En destino la temperatura es de \(temperature) grados."
+            }
+            text += " Les deseamos un feliz vuelo."
+            cabin("Cabina: anuncio de crucero", text)
+        case .descent:
+            cabin("Cabina: inicio del descenso",
+                  "Señoras y señores, hemos iniciado el descenso hacia \(destination). Les rogamos que vuelvan a sus asientos, abrochen el cinturón, pongan el respaldo en posición vertical y recojan las mesas.")
+        case .cabinSecureLanding:
+            cabin("CABIN SECURE FOR LANDING", "Cabin secure for landing.", english: true)
+        case .arrival:
+            cabin("Cabina: llegada",
+                  "Señoras y señores, bienvenidos a \(destination). Por su seguridad, permanezcan sentados con el cinturón abrochado hasta que el avión se detenga por completo y se apague la señal de cinturones.")
+        case .disembark:
+            cabin("Cabina: desembarque",
+                  "Ya pueden desabrochar sus cinturones. Gracias por volar con nosotros. Esperamos verles pronto a bordo.")
+        }
+    }
+
+    private func cabin(_ banner: String, _ text: String, english: Bool = false) {
+        flightAlert = FlightAlert(text: banner, level: .info, date: Date())
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.voice = AVSpeechSynthesisVoice(language: english ? "en-GB" : "es-ES")
+        utterance.rate = 0.48
+        // A little lower and quieter than the callouts: it comes from the cabin.
+        utterance.pitchMultiplier = 1.08
+        utterance.volume = 0.85
+        speech.speak(utterance)
+    }
+
     // MARK: Storage
 
     private func scheduleSave(_ key: String, _ encode: @escaping () -> Data?) {
@@ -2194,6 +2270,7 @@ final class PanelModel {
                 self?.tickFlightMonitor()
                 self?.tickAutomation()
                 self?.tickRecorder()
+                self?.tickCabin()
             }
         }
     }
