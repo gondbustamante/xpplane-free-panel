@@ -9,6 +9,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 ### Nuevo
 - Callouts del piloto que monitoriza: ONE HUNDRED KNOTS, V1 y ROTATE con las velocidades de PERF TAKE OFF, POSITIVE CLIMB, y en la carrera de aterrizaje SPOILERS, REVERSE GREEN y SEVENTY KNOTS. Se activan en la columna Vuelo; las alturas de radioaltímetro y RETARD las sigue cantando ToLiss.
 - Automatizar flujos: «Ejecutar flujo» en el checklist pone en orden cada mando que la app detecta y te deja lo que no puede leer. Opcional en Ajustes: el after landing se hace solo al girar fuera de la pista, con o sin arrancar el APU.
+- Más automatización (en Ajustes): flujo de ascenso al cruzar FL100 subiendo y de descenso al cruzarlo bajando, y flujo de parking cuando cortas los motores con el freno de parking puesto.
 - Desviaciones en final: SPEED, SINK RATE, BANK, PITCH, LOCALIZER y GLIDESLOPE con los límites del FCOM por debajo de 1000 ft. Y altitudes: ONE THOUSAND TO GO antes de la altitud del FCU, TEN THOUSAND, TRANSITION ALTITUDE y TRANSITION LEVEL (del MCDU o del OFP). Con su propio interruptor.
 - Panel central del overhead: FIRE, HYD, FUEL, ELEC, AIR COND, ANTI ICE, EXT LT, APU, INT LT y SIGNS en su disposición real y más grandes. Al desplegar Overhead en la barra lateral.
 

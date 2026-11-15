@@ -41,4 +41,48 @@ final class AutomationTests: XCTestCase {
         XCTAssertEqual(RunwayExitDetector.difference(10, 350), 20)
         XCTAssertEqual(RunwayExitDetector.difference(90, 270), 180)
     }
+
+    // MARK: Triggers
+
+    private let t0 = Date(timeIntervalSince1970: 0)
+
+    private func air(_ altitude: Double) -> AutomationTriggers.Snapshot {
+        .init(altitude: altitude, onGround: false, groundspeed: 300)
+    }
+
+    private func stand(brake: Bool = true, enginesOff: Bool = true, speed: Double = 0) -> AutomationTriggers.Snapshot {
+        .init(altitude: 100, onGround: true, groundspeed: speed, parkingBrakeOn: brake, enginesOff: enginesOff)
+    }
+
+    private func run(_ triggers: inout AutomationTriggers, _ snapshots: [AutomationTriggers.Snapshot]) -> [AutomationTriggers.Event] {
+        snapshots.enumerated().flatMap { second, snapshot in
+            triggers.update(snapshot, at: t0.addingTimeInterval(Double(second) * 5))
+        }
+    }
+
+    func testFL100InClimbAndDescentOnce() {
+        var triggers = AutomationTriggers()
+        let events = run(&triggers, [air(8000), air(9900), air(10_050), air(9_980), air(10_020), air(25_000),
+                                     air(12_000), air(10_100), air(9_900), air(10_010), air(9_950), air(5000)])
+        XCTAssertEqual(events, [.climbThroughFL100, .descendThroughFL100])
+    }
+
+    func testParkedAfterAFlight() {
+        var triggers = AutomationTriggers()
+        // Taxi in, brake on, engines still running, then shut down and held (5 s per step).
+        let events = run(&triggers, [air(500), stand(enginesOff: false, speed: 12), stand(enginesOff: false),
+                                     stand(), stand(), stand(), stand(), stand()])
+        XCTAssertEqual(events, [.parked], "once, ten seconds after the engines are off")
+    }
+
+    func testNoParkingFlowWithoutAFlight() {
+        var triggers = AutomationTriggers()
+        XCTAssertEqual(run(&triggers, [stand(), stand(), stand(), stand(), stand()]), [])
+    }
+
+    func testReleasingTheBrakeRestartsTheWait() {
+        var triggers = AutomationTriggers()
+        let events = run(&triggers, [air(500), stand(), stand(brake: false), stand(), stand()])
+        XCTAssertEqual(events, [], "only 5 s held after the brake came back on")
+    }
 }

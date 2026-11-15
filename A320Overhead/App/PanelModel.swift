@@ -354,6 +354,15 @@ final class PanelModel {
     var afterLandingAPU: Bool {
         didSet { UserDefaults.standard.set(afterLandingAPU, forKey: Keys.afterLandingAPU) }
     }
+    /// Runs the climb flow crossing FL100 up and the descent flow crossing it down.
+    var autoFL100: Bool {
+        didSet { UserDefaults.standard.set(autoFL100, forKey: Keys.autoFL100) }
+    }
+    /// Runs the parking flow at the stand once the pilot has shut the engines down.
+    var autoParking: Bool {
+        didSet { UserDefaults.standard.set(autoParking, forKey: Keys.autoParking) }
+    }
+    @ObservationIgnored private var automationTriggers = AutomationTriggers()
     /// Flow being run by the app, control by control.
     private(set) var runningFlowID: String?
     @ObservationIgnored private var flowTask: Task<Void, Never>?
@@ -558,6 +567,8 @@ final class PanelModel {
         static let advisoryCallouts = "flight.advisoryCallouts"
         static let autoAfterLanding = "automation.afterLanding"
         static let afterLandingAPU = "automation.afterLandingAPU"
+        static let autoFL100 = "automation.fl100"
+        static let autoParking = "automation.parking"
         static let dispatch = "dispatch.state"
         static let flightLog = "turnaround.flightLog"
         static let extras = "diag.extraDatarefs"
@@ -594,6 +605,8 @@ final class PanelModel {
         // Moving flaps and lights on its own is opt-in.
         autoAfterLanding = defaults.bool(forKey: Keys.autoAfterLanding)
         afterLandingAPU = defaults.bool(forKey: Keys.afterLandingAPU)
+        autoFL100 = defaults.bool(forKey: Keys.autoFL100)
+        autoParking = defaults.bool(forKey: Keys.autoParking)
         positionReports = defaults.data(forKey: Keys.positionReports)
             .flatMap { try? JSONDecoder().decode([PositionReport].self, from: $0) } ?? []
         lastLanding = defaults.data(forKey: Keys.lastLanding).flatMap { try? JSONDecoder().decode(LandingReport.self, from: $0) }
@@ -1076,15 +1089,43 @@ final class PanelModel {
                   .good, speak: false)
     }
 
-    /// Once a second with X-Plane: the after landing flow when the aircraft turns off the runway.
-    private func tickAutomation() {
-        guard let data = flightData,
-              let heading = rawValues["sim/flightmodel/position/psi"]?.doubleValue else { return }
-        let vacated = runwayExit.update(onGround: data.onGround, groundspeed: data.groundspeed, heading: heading)
-        guard vacated, autoAfterLanding, let flow = procedure("after_landing_flow") else { return }
+    /// Once a second with X-Plane: after landing when the aircraft turns off the runway, the
+    /// climb and descent flows at FL100, and parking once the engines are shut down at the stand.
+    /// The detectors always run, so switching an option on later does not fire on old events.
+    private func tickAutomation(now: Date = Date()) {
+        guard let data = flightData else { return }
+        if let heading = rawValues["sim/flightmodel/position/psi"]?.doubleValue,
+           runwayExit.update(onGround: data.onGround, groundspeed: data.groundspeed, heading: heading),
+           autoAfterLanding {
+            runAutomatically("after_landing_flow", notice: "Pista libre: after landing en marcha", includeOptional: afterLandingAPU)
+        }
+
+        let engines = ["eng.master1", "eng.master2"].map(positionName(ofControl:))
+        let snapshot = AutomationTriggers.Snapshot(
+            altitude: data.altitude, onGround: data.onGround, groundspeed: data.groundspeed,
+            parkingBrakeOn: positionName(ofControl: "park.brake").map { $0 == "ON" },
+            enginesOff: engines.contains(nil) ? nil : engines.allSatisfy { $0 == "OFF" })
+        for event in automationTriggers.update(snapshot, at: now) {
+            switch event {
+            case .climbThroughFL100 where autoFL100:
+                runAutomatically("climb_flow", notice: "FL100: flujo de ascenso en marcha")
+            case .descendThroughFL100 where autoFL100:
+                runAutomatically("descent_flow", notice: "FL100: flujo de descenso en marcha")
+            case .parked where autoParking:
+                // APU BLEED only makes sense with the APU running.
+                let apu = (rawValues["AirbusFBW/APUAvail"]?.doubleValue ?? 0) > 0.5
+                runAutomatically("parking_flow", notice: "Motores parados: flujo de parking en marcha", includeOptional: apu)
+            default:
+                break
+            }
+        }
+    }
+
+    private func runAutomatically(_ id: String, notice: String, includeOptional: Bool = false) {
+        guard let flow = procedure(id), runningFlowID == nil, !isExamRunning else { return }
         open(procedure: flow.id)
-        postAlert("Pista libre: after landing en marcha", .info, speak: false)
-        runFlow(flow, includeOptional: afterLandingAPU)
+        postAlert(notice, .info, speak: false)
+        runFlow(flow, includeOptional: includeOptional)
     }
 
     // MARK: Learn mode

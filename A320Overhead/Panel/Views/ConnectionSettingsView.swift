@@ -87,10 +87,12 @@ struct ConnectionSettingsView: View {
                     Toggle("After landing al salir de la pista", isOn: $model.autoAfterLanding)
                     Toggle("Incluir arranque del APU", isOn: $model.afterLandingAPU)
                         .disabled(!model.autoAfterLanding)
+                    Toggle("Ascenso y descenso al cruzar FL100", isOn: $model.autoFL100)
+                    Toggle("Parking al parar los motores", isOn: $model.autoParking)
                 } header: {
                     Text("Automatización")
                 } footer: {
-                    Text("Con X-Plane, al girar fuera de la pista tras aterrizar la app hace el flujo after landing: ground spoilers, flaps 0, strobe, luces de aterrizaje y de rodaje, TCAS y modo de motor. Cualquier flujo se puede ejecutar también con «Ejecutar flujo» en el checklist. Nunca durante un examen.")
+                    Text("Con X-Plane. After landing al girar fuera de la pista: ground spoilers, flaps 0, strobe, luces de aterrizaje y de rodaje, TCAS y modo de motor. FL100 subiendo: luces de aterrizaje recogidas; bajando: luces de aterrizaje y cinturones. Parking cuando tú cortas los motores con el freno puesto: cinturones, beacon, luces, bombas de combustible, transpondedor y, con el APU en marcha, su sangrado. Cualquier flujo se puede ejecutar también con «Ejecutar flujo» en el checklist. Nunca durante un examen.")
                 }
                 Section("Interfaz") {
                     Toggle("Marcar controles con mapeo sin verificar", isOn: $model.showVerificationBadges)
