@@ -10,9 +10,10 @@ struct InspectorColumn: View {
         VStack(spacing: 0) {
             Picker("Columna", selection: $model.inspectorPanel) {
                 Text("Checklist").tag(PanelModel.InspectorPanel.checklist)
-                Text("Guía MCDU").tag(PanelModel.InspectorPanel.mcduGuide)
+                Text("Guía").tag(PanelModel.InspectorPanel.mcduGuide)
                 Text("Vuelo").tag(PanelModel.InspectorPanel.flight)
                 Text("Mapa").tag(PanelModel.InspectorPanel.map)
+                Text("ATC").tag(PanelModel.InspectorPanel.atc)
             }
             .pickerStyle(.segmented)
             .padding(.horizontal, 12)
@@ -23,6 +24,7 @@ struct InspectorColumn: View {
             case .mcduGuide: MCDUGuideColumn()
             case .flight: FlightMonitorColumn()
             case .map: FlightMapView()
+            case .atc: ATCColumn()
             }
         }
         .background(PanelTheme.checklistSurface)

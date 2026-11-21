@@ -344,6 +344,7 @@ final class PanelModel {
         case mcduGuide
         case flight
         case map
+        case atc
     }
     var inspectorPanel: InspectorPanel {
         didSet { UserDefaults.standard.set(inspectorPanel.rawValue, forKey: Keys.inspectorPanel) }
@@ -403,6 +404,21 @@ final class PanelModel {
         didSet { UserDefaults.standard.set(cabinAnnouncements, forKey: Keys.cabinAnnouncements) }
     }
     @ObservationIgnored private var cabinTimeline = CabinTimeline()
+    /// Simulated ATC: progress through the script, who reads what and the exchange due now.
+    private(set) var atcProgress = ATCProgress() {
+        didSet { scheduleSave(Keys.atcProgress) { [value = self.atcProgress] in try? JSONEncoder().encode(value) } }
+    }
+    var atcAutoPlay: Bool {
+        didSet { UserDefaults.standard.set(atcAutoPlay, forKey: Keys.atcAutoPlay) }
+    }
+    /// The app also reads the pilot's lines aloud (to practise listening, or as the copilot).
+    var atcReadsPilot: Bool {
+        didSet { UserDefaults.standard.set(atcReadsPilot, forKey: Keys.atcReadsPilot) }
+    }
+    /// Exchange whose moment has come.
+    private(set) var atcCue: String?
+    @ObservationIgnored private var atcReplyTask: Task<Void, Never>?
+    @ObservationIgnored private var runwayVacated = false
     /// Orders to the pilot monitoring by voice, push to talk.
     var voiceCopilotEnabled: Bool {
         didSet { UserDefaults.standard.set(voiceCopilotEnabled, forKey: Keys.voiceCopilot) }
@@ -630,6 +646,9 @@ final class PanelModel {
         static let autoParking = "automation.parking"
         static let debriefIndex = "debrief.index"
         static let cabinAnnouncements = "cabin.announcements"
+        static let atcProgress = "atc.progress"
+        static let atcAutoPlay = "atc.autoPlay"
+        static let atcReadsPilot = "atc.readsPilot"
         static let voiceCopilot = "voice.enabled"
         static let voiceCopilotLanguage = "voice.language"
         static let dispatch = "dispatch.state"
@@ -674,6 +693,10 @@ final class PanelModel {
         autoFL100 = defaults.bool(forKey: Keys.autoFL100)
         autoParking = defaults.bool(forKey: Keys.autoParking)
         cabinAnnouncements = defaults.object(forKey: Keys.cabinAnnouncements) as? Bool ?? true
+        atcProgress = defaults.data(forKey: Keys.atcProgress)
+            .flatMap { try? JSONDecoder().decode(ATCProgress.self, from: $0) } ?? ATCProgress()
+        atcAutoPlay = defaults.object(forKey: Keys.atcAutoPlay) as? Bool ?? true
+        atcReadsPilot = defaults.bool(forKey: Keys.atcReadsPilot)
         voiceCopilotEnabled = defaults.bool(forKey: Keys.voiceCopilot)
         voiceCopilotLanguage = defaults.string(forKey: Keys.voiceCopilotLanguage) ?? "en-US"
         debriefIndex = defaults.data(forKey: Keys.debriefIndex)
@@ -1165,10 +1188,13 @@ final class PanelModel {
     /// The detectors always run, so switching an option on later does not fire on old events.
     private func tickAutomation(now: Date = Date()) {
         guard let data = flightData else { return }
+        if !data.onGround { runwayVacated = false }
         if let heading = rawValues["sim/flightmodel/position/psi"]?.doubleValue,
-           runwayExit.update(onGround: data.onGround, groundspeed: data.groundspeed, heading: heading),
-           autoAfterLanding {
-            runAutomatically("after_landing_flow", notice: "Pista libre: after landing en marcha", includeOptional: afterLandingAPU)
+           runwayExit.update(onGround: data.onGround, groundspeed: data.groundspeed, heading: heading) {
+            runwayVacated = true
+            if autoAfterLanding {
+                runAutomatically("after_landing_flow", notice: "Pista libre: after landing en marcha", includeOptional: afterLandingAPU)
+            }
         }
 
         let engines = ["eng.master1", "eng.master2"].map(positionName(ofControl:))
@@ -2021,6 +2047,194 @@ final class PanelModel {
         speech.speak(utterance)
     }
 
+    // MARK: Simulated ATC
+
+    /// Progress through the ATC script of one OFP: calls heard or said, per exchange.
+    struct ATCProgress: Codable, Equatable {
+        var requestID: String?
+        var revealed: [String: Int] = [:]
+    }
+
+    /// The flight's radio exchanges, from the OFP and the departure briefing.
+    var atcInput: ATCInput? {
+        guard let ofp else { return nil }
+        let clearance = dispatch.clearance
+        let departureATIS = atis
+        let arrival = ATISInfo.parse(ofp.destination.metar ?? "")
+        let originMETAR = ATISInfo.parse(ofp.origin.metar ?? "")
+        let callsign = (ofp.callsign ?? turnaround?.plan.flightNumber).flatMap { $0.isEmpty ? nil : $0 } ?? "N320TL"
+        let initial = clearance.initialAltitude.map { $0 < 1000 ? $0 * 100 : $0 } ?? 6000
+        var input = ATCInput(
+            callsign: callsign, origin: ofp.origin.icao,
+            originCity: Radio.city(icao: ofp.origin.icao, airportName: ofp.origin.name),
+            destination: ofp.destination.icao,
+            destinationCity: Radio.city(icao: ofp.destination.icao, airportName: ofp.destination.name),
+            initialClimb: initial, cruise: ofp.initialAltitude ?? 30_000,
+            squawk: clearance.isSquawkValid ? clearance.squawk : ATCScript.squawk(for: callsign + ofp.origin.icao + ofp.destination.icao))
+        input.aircraftType = ofp.aircraft.flatMap { $0.isEmpty ? nil : $0 } ?? "A320"
+        input.departureRunway = [clearance.runway, departureATIS.runway ?? "", ofp.origin.runway ?? "", ofp.takeoff?.runway ?? ""]
+            .first { !$0.isEmpty }
+        input.arrivalRunway = ofp.destination.runway
+        input.sid = clearance.sid.isEmpty ? ofp.sid : clearance.sid
+        input.star = ofp.star
+        input.departureATIS = departureATIS.letter
+        input.departureQNH = departureATIS.qnh ?? originMETAR.qnh
+        input.arrivalQNH = arrival.qnh
+        input.departureWind = (departureATIS.windDirection ?? originMETAR.windDirection, departureATIS.windSpeed ?? originMETAR.windSpeed)
+        input.arrivalWind = (arrival.windDirection, arrival.windSpeed)
+        input.departureFrequency = clearance.departureFrequency
+        input.hasILS = ofp.landingILSFrequency != nil
+        input.transitionAltitude = ofp.origin.transitionAltitude ?? 6000
+        input.destinationElevation = ofp.destination.elevation ?? 0
+        return input
+    }
+
+    var atcScript: [ATCExchange] {
+        atcInput.map(ATCScript.make) ?? []
+    }
+
+    private var atcRevealed: [String: Int] {
+        atcProgress.requestID == ofp?.requestID ? atcProgress.revealed : [:]
+    }
+
+    /// Calls of an exchange already said or heard.
+    func atcRevealedCount(_ exchange: ATCExchange) -> Int {
+        min(atcRevealed[exchange.id] ?? 0, exchange.calls.count)
+    }
+
+    func isATCDone(_ exchange: ATCExchange) -> Bool {
+        atcRevealedCount(exchange) >= exchange.calls.count
+    }
+
+    /// The exchange to do now: the first one not finished.
+    var currentATCExchange: ATCExchange? {
+        atcScript.first { !isATCDone($0) }
+    }
+
+    private func setRevealed(_ exchange: ATCExchange, _ count: Int) {
+        var progress = atcProgress.requestID == ofp?.requestID ? atcProgress : ATCProgress(requestID: ofp?.requestID)
+        progress.revealed[exchange.id] = count
+        atcProgress = progress
+    }
+
+    /// The pilot has said the next line (or wants to hear the controller's): show it, then let
+    /// the controller answer by itself.
+    func atcNext(_ exchange: ATCExchange) {
+        let count = atcRevealedCount(exchange)
+        guard count < exchange.calls.count else { return }
+        // Finishing exchanges in order: an earlier one left open counts as done.
+        for earlier in atcScript.prefix(while: { $0.id != exchange.id }) where !isATCDone(earlier) {
+            setRevealed(earlier, earlier.calls.count)
+        }
+        let call = exchange.calls[count]
+        setRevealed(exchange, count + 1)
+        if call.speaker == .controller {
+            speakATC(call)
+        } else if atcReadsPilot {
+            speakATC(call)
+        }
+        // The controller answers after a short pause.
+        if count + 1 < exchange.calls.count, exchange.calls[count + 1].speaker == .controller, call.speaker == .pilot {
+            atcReplyTask?.cancel()
+            atcReplyTask = Task { [weak self] in
+                try? await Task.sleep(for: .milliseconds(1400))
+                guard !Task.isCancelled, let self, self.atcRevealedCount(exchange) == count + 1 else { return }
+                self.atcNext(exchange)
+            }
+        }
+    }
+
+    /// "Say again": the controller's last line once more.
+    func atcSayAgain(_ call: RadioCall) {
+        speakATC(call)
+    }
+
+    func resetATC() {
+        atcReplyTask?.cancel()
+        atcProgress = ATCProgress(requestID: ofp?.requestID)
+    }
+
+    /// Sets what a clearance asks for: code in the transponder, altitude in the FCU, QNH.
+    @discardableResult
+    func applyATC(_ action: ATCAction) -> Bool {
+        guard status == .connected else { return false }
+        switch action {
+        case .squawk(let code):
+            typeSquawk(code)
+            return true
+        case .altitude(let feet):
+            guard let selector = fcu?.selectors.first(where: { $0.id == "fcu.alt" }) else { return false }
+            return set(selector, to: "\(feet)")
+        case .qnh(let hectopascals):
+            return baroPanels.map { setQNH($0, Double(hectopascals)) }.contains(true)
+        }
+    }
+
+    private func speakATC(_ call: RadioCall) {
+        let utterance = AVSpeechUtterance(string: call.text.spoken)
+        // Controllers: a British voice, a little faster and flatter, like a busy frequency.
+        utterance.voice = AVSpeechSynthesisVoice(language: call.speaker == .controller ? "en-GB" : "en-US")
+        utterance.rate = call.speaker == .controller ? 0.55 : 0.5
+        utterance.pitchMultiplier = call.speaker == .controller ? 0.92 : 1.0
+        speech.speak(utterance)
+        if call.speaker == .controller {
+            flightAlert = FlightAlert(text: "ATC: \(call.text.display)", level: .info, date: Date())
+        }
+    }
+
+    /// Once a second with X-Plane: marks when the next exchange is due and, if it is the
+    /// controller who starts it (a hand-off, a clearance), plays it.
+    private func tickATC() {
+        guard let exchange = currentATCExchange, let data = flightData, let ofp else {
+            if atcCue != nil { atcCue = nil }
+            return
+        }
+        let due = isDue(exchange.trigger, data: data, ofp: ofp)
+        let cue = due ? exchange.id : nil
+        if cue != atcCue { atcCue = cue }
+        if due, atcAutoPlay, exchange.startsWithController, atcRevealedCount(exchange) == 0 {
+            atcNext(exchange)
+        }
+    }
+
+    private func isDue(_ trigger: ATCTrigger, data: FlightData, ofp: SimBriefOFP) -> Bool {
+        let originElevation = Double(ofp.origin.elevation ?? 0)
+        let toGo = routeProgress?.distanceToGo
+        switch trigger {
+        case .manual:
+            return false
+        case .airborne(let height):
+            let above = data.radioAltitude > 0 && data.radioAltitude < 2500 ? data.radioAltitude : data.altitude - originElevation
+            return !data.onGround && above >= height
+        case .climbingThrough(let altitude):
+            return !data.onGround && data.altitude >= altitude && data.verticalSpeed > 0
+        case .nearTopOfDescent(let miles):
+            guard let toGo else { return false }
+            let required = DescentProfile.requiredDistance(altitude: data.altitude, destinationElevation: destinationElevation)
+            return !data.onGround && toGo <= required + miles
+        case .descendingThrough(let altitude):
+            return !data.onGround && data.altitude <= altitude && data.verticalSpeed < -300
+        case .distanceToGo(let miles):
+            return !data.onGround && (toGo ?? .infinity) <= miles
+        case .heightBelow(let height):
+            let above = data.radioAltitude > 0 && data.radioAltitude < 2500 ? data.radioAltitude : data.altitude - destinationElevation
+            return !data.onGround && above <= height && data.verticalSpeed < 0 && (toGo ?? 0) < 40
+        case .runwayVacated:
+            return runwayVacated
+        }
+    }
+
+    /// Types a code on the ATC panel keypad.
+    private func typeSquawk(_ code: String) {
+        let keys = ["atc.keyclr"] + code.map { "atc.key\($0)" }
+        Task {
+            for id in keys {
+                if let control = controlsByID[id] { press(control) }
+                try? await Task.sleep(for: .milliseconds(150))
+            }
+        }
+    }
+
     // MARK: Voice copilot
 
     func listenForOrder() {
@@ -2401,6 +2615,7 @@ final class PanelModel {
                 self?.tickAutomation()
                 self?.tickRecorder()
                 self?.tickCabin()
+                self?.tickATC()
             }
         }
     }
@@ -2755,15 +2970,8 @@ final class PanelModel {
 
     /// Types the cleared squawk on the ATC panel keypad.
     func applySquawk() {
-        let code = dispatch.clearance.squawk
         guard dispatch.clearance.isSquawkValid, status == .connected else { return }
-        let keys = ["atc.keyclr"] + code.map { "atc.key\($0)" }
-        Task {
-            for id in keys {
-                if let control = controlsByID[id] { press(control) }
-                try? await Task.sleep(for: .milliseconds(150))
-            }
-        }
+        typeSquawk(dispatch.clearance.squawk)
     }
 
     /// Selects the cleared initial altitude on the FCU.

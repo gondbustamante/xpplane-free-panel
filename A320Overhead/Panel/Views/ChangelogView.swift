@@ -38,6 +38,7 @@ enum Changelog {
 
     static let releases: [ChangelogRelease] = [
         ChangelogRelease(version: "0.9.2", date: "2026-11-15", title: "Copiloto, informe de vuelo y mapa", changes: [
+            new("Comunicaciones ATC simuladas a partir del OFP: autorización, remolque, rodaje, torre, salidas, centros, descenso con la STAR, aproximación, aterrizaje y rodaje al puesto, con fraseología OACI. Lees lo tuyo y tocas «Transmitir»; el controlador responde por voz, te llama solo en los cambios de frecuencia y autorizaciones cuando toca, y con un toque pones el código, la altitud o el QNH que te ha dado."),
             new("Copiloto por voz: toca el micrófono y di la orden («gear up», «flaps one», «landing lights on», «after takeoff flow»…, también en español). El copiloto la ejecuta y la repite como un PM. Se activa en Ajustes."),
             new("Informe post-vuelo estilo FOQA: cada vuelo con X-Plane queda grabado con su perfil, la aproximación final y los eventos que marcaría una aerolínea (aproximación no estabilizada, alabeo, régimen, golpe de cola, toma dura, 250 kt bajo FL100, flotada larga, rodaje rápido), con nota sobre 100. En Vuelo → Informes de vuelo y en el diario."),
             new("Mapa en movimiento: ruta del OFP, trayectoria volada, avión, TOC/TOD y aeropuertos de la ruta, en la columna o a pantalla completa."),

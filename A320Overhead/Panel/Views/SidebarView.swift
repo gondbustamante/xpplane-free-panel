@@ -223,6 +223,13 @@ struct SidebarView: View {
             } label: {
                 Label("Mapa", systemImage: "map")
             }
+            Button {
+                model.inspectorPanel = .atc
+                model.showChecklist = true
+            } label: {
+                Label("Comunicaciones ATC", systemImage: "headphones")
+            }
+            .disabled(model.ofp == nil)
         } header: {
             SectionHeader(title: "Plan de vuelo", detail: model.ofp?.airac.map { "AIRAC \($0)" })
                 .tutorialTarget(.flightPlan)
