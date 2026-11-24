@@ -22,6 +22,7 @@ struct FlightMonitorColumn: View {
                           systemImage: "antenna.radiowaves.left.and.right.slash")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                    WeatherCard()
                     FuelPlanCard(startExpanded: true)
                     ApproachCard()
                     LandingDistanceCard()
@@ -51,6 +52,7 @@ struct FlightMonitorColumn: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 RouteFuelCard()
+                WeatherCard()
                 EnrouteTimeCard()
                 FuelPlanCard(startExpanded: false)
                 DepartureCard()
@@ -494,6 +496,226 @@ private struct LandingCard: View {
                 .font(.caption).foregroundStyle(.secondary)
         }
     }
+}
+
+// MARK: Weather en route
+
+/// Live weather of the flight's airports against the dispatch, the forecast at the arrival time,
+/// the wind on the landing runway, the wind and temperature met against the plan, and the
+/// SIGMETs on the route.
+private struct WeatherCard: View {
+    @Environment(PanelModel.self) private var model
+
+    var body: some View {
+        MonitorCard(title: "METEO EN RUTA", icon: "cloud.sun.rain") {
+            header
+            ForEach(model.weatherAlerts) { alert in
+                Label(alert.text, systemImage: alert.level == .critical ? "exclamationmark.octagon.fill" : "exclamationmark.triangle.fill")
+                    .font(.caption)
+                    .foregroundStyle(alert.level == .critical ? .red : PanelTheme.checklistAmber)
+            }
+            ForEach(model.weatherAirports) { airport in
+                AirportWeatherRow(airport: airport)
+            }
+            runwayWind
+            windsAloft
+            hazards
+            Text("METAR, TAF y SIGMET en directo de aviationweather.gov, cada 15 minutos. La meteo de X-Plane coincide si usas su meteo real.")
+                .font(.caption2).foregroundStyle(.secondary)
+        }
+    }
+
+    private var header: some View {
+        HStack {
+            if let error = model.weather.error {
+                Text(error).font(.caption).foregroundStyle(PanelTheme.checklistAmber).lineLimit(2)
+            } else if let updated = model.weather.updated {
+                Text("Actualizado \(updated.formatted(.relative(presentation: .named)))")
+                    .font(.caption).foregroundStyle(.secondary)
+            } else {
+                Text("Sin datos todavía").font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+            if model.weatherLoading {
+                ProgressView().controlSize(.small)
+            } else {
+                Button {
+                    Task { await model.refreshWeather() }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Actualizar la meteo")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var runwayWind: some View {
+        if let wind = model.arrivalRunwayWind, wind.now != nil || wind.forecast != nil {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Viento en la \(wind.runway)").font(.footnote.weight(.semibold))
+                if let now = wind.now { componentsRow("Ahora", now) }
+                if let forecast = wind.forecast { componentsRow("A tu llegada", forecast) }
+            }
+        }
+    }
+
+    private func componentsRow(_ label: String, _ wind: RunwayWind) -> some View {
+        let cross = Int(abs(wind.crosswind).rounded())
+        let along = Int(abs(wind.headwind).rounded())
+        return HStack {
+            Text(label).font(.caption).foregroundStyle(.secondary)
+            Spacer()
+            Text("cruzado \(cross) kt\(cross > 0 ? (wind.crosswind > 0 ? " dcha." : " izq.") : "") · \(wind.headwind >= 0 ? "cara" : "cola") \(along) kt")
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(wind.exceedsLimits ? PanelTheme.checklistAmber : .white)
+        }
+    }
+
+    @ViewBuilder
+    private var windsAloft: some View {
+        if let wind = model.windComparison {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Viento y temperatura frente al plan").font(.footnote.weight(.semibold))
+                HStack {
+                    Text("Viento \(Self.wind(wind.actualDirection, wind.actualSpeed)) · plan \(Self.wind(wind.plannedDirection, wind.plannedSpeed))")
+                        .font(.caption.monospacedDigit())
+                    Spacer()
+                }
+                let change = Int(wind.headwindChange.rounded())
+                if abs(change) >= 5 {
+                    Text(change > 0 ? "\(change) kt más de cara que en el plan: irás más lento y gastarás más."
+                                    : "\(-change) kt más a favor que en el plan.")
+                        .font(.caption)
+                        .foregroundStyle(change > 15 ? PanelTheme.checklistAmber : .secondary)
+                } else {
+                    Text("Viento como el previsto.").font(.caption).foregroundStyle(.secondary)
+                }
+                if let actual = wind.actualISADeviation {
+                    Text("ISA \(Self.signed(actual))" + (wind.plannedISADeviation.map { " · plan \(Self.signed($0))" } ?? ""))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var hazards: some View {
+        let ahead = model.routeHazardsAhead
+        if !ahead.isEmpty {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("SIGMET en la ruta").font(.footnote.weight(.semibold))
+                ForEach(ahead) { hazard in
+                    HStack(alignment: .top, spacing: 6) {
+                        Circle().fill(hazard.sigmet.hazard.colour).frame(width: 8, height: 8).padding(.top, 4)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("\(hazard.sigmet.title) \(PanelModel.levelsText(hazard.sigmet))")
+                                .font(.caption.weight(.semibold))
+                            Text("\(model.distanceText(hazard).capitalizedFirstLetter) · \(hazard.atPlannedLevels ? "a tus niveles" : "fuera de tus niveles")\(hazard.sigmet.fir.map { " · \($0)" } ?? "")")
+                                .font(.caption2)
+                                .foregroundStyle(hazard.atPlannedLevels ? PanelTheme.checklistAmber : .secondary)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    static func wind(_ direction: Double, _ speed: Double) -> String {
+        String(format: "%03d/%d", Int(direction.rounded()) % 360, Int(speed.rounded()))
+    }
+
+    static func signed(_ value: Double) -> String {
+        let rounded = Int(value.rounded())
+        return rounded >= 0 ? "+\(rounded)" : "\(rounded)"
+    }
+}
+
+/// One airport: METAR category and text, and the forecast at the arrival for the destination
+/// and the alternate.
+private struct AirportWeatherRow: View {
+    let airport: PanelModel.WeatherAirport
+    @Environment(PanelModel.self) private var model
+
+    /// Destination at the landing time; alternate an hour later (after a missed approach).
+    private var arrivalForecast: WeatherConditions? {
+        switch airport.role {
+        case "Destino": return model.forecastAtArrival(airport.icao)
+        case "Alterno": return model.forecastAtArrival(airport.icao, later: 3600)
+        default: return nil
+        }
+    }
+
+    var body: some View {
+        let metar = model.weather.metars[airport.icao]
+        let forecast = arrivalForecast
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 6) {
+                Text(airport.icao).font(.footnote.monospaced().weight(.semibold))
+                Text(airport.role).font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                if let category = metar?.conditions.category { CategoryChip(category: category) }
+            }
+            if let raw = metar?.raw {
+                Text(raw).font(.system(size: 10).monospaced()).foregroundStyle(.secondary).lineLimit(3)
+            }
+            if let forecast {
+                HStack(spacing: 6) {
+                    Text("A tu llegada (TAF)").font(.caption2).foregroundStyle(.secondary)
+                    CategoryChip(category: forecast.category)
+                    if forecast.hasThunderstorm {
+                        Label("TS", systemImage: "cloud.bolt.fill").font(.caption2).foregroundStyle(PanelTheme.checklistAmber)
+                    }
+                    Text(PanelModel.ceilingText(forecast).trimmingCharacters(in: CharacterSet(charactersIn: ", ")))
+                        .font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+}
+
+private struct CategoryChip: View {
+    let category: FlightCategory
+
+    var body: some View {
+        Text(category.title)
+            .font(.system(size: 9, weight: .bold))
+            .padding(.horizontal, 5)
+            .padding(.vertical, 1)
+            .background(category.colour.opacity(0.25), in: Capsule())
+            .foregroundStyle(category.colour)
+    }
+}
+
+extension FlightCategory {
+    /// The usual chart colours: green, blue, red, magenta.
+    var colour: Color {
+        switch self {
+        case .vfr: return PanelTheme.checklistGreen
+        case .mvfr: return Color(red: 0.35, green: 0.6, blue: 1.0)
+        case .ifr: return .red
+        case .lifr: return Color(red: 1.0, green: 0.4, blue: 1.0)
+        }
+    }
+}
+
+extension Sigmet.Hazard {
+    var colour: Color {
+        switch self {
+        case .turbulence: return .orange
+        case .icing: return PanelTheme.checklistCyan
+        case .thunderstorm: return .red
+        case .volcanicAsh: return .gray
+        case .mountainWave: return .yellow
+        case .other: return .purple
+        }
+    }
+}
+
+extension String {
+    var capitalizedFirstLetter: String { prefix(1).uppercased() + dropFirst() }
 }
 
 // MARK: Time en route

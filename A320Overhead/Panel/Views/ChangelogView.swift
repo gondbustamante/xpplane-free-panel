@@ -37,7 +37,10 @@ enum Changelog {
     private static func fixed(_ text: String) -> ChangelogRelease.Change { .init(kind: .fixed, text: text) }
 
     static let releases: [ChangelogRelease] = [
-        ChangelogRelease(version: "0.9.3", date: "2026-11-24", title: "Tiempo en ruta", changes: [
+        ChangelogRelease(version: "0.9.3", date: "2026-11-24", title: "Meteo y tiempo en ruta", changes: [
+            new("Meteo en ruta: METAR y TAF en directo de origen, destino y alternos (aviationweather.gov, cada 15 minutos), con aviso si el destino ha empeorado desde el despacho, la previsión a tu hora de llegada (por debajo de mínimos, IFR, tormentas), el viento cruzado y de cola en tu pista con los límites del A320 y el alterno a la hora de desvío."),
+            new("Viento y temperatura frente al plan: el viento que da X-Plane contra el del navlog en tu posición (cuántos nudos más de cara) y la desviación ISA real frente a la prevista."),
+            new("SIGMET en la ruta: zonas de turbulencia, engelamiento, tormentas o ceniza que corta tu ruta, dibujadas en el mapa y en el perfil vertical a sus niveles, con aviso si las cruzas a tus niveles."),
             new("Tiempo en ruta: retraso o adelanto frente al navlog, aterrizaje y llegada a calzos previstos frente al horario del OFP, la velocidad que hace falta para llegar en hora (en nudos y Mach, o si no se recupera), los minutos de espera posibles antes de tocar el combustible del alterno y el margen de actividad. Los informes de posición muestran también los minutos frente al plan en cada punto."),
         ]),
         ChangelogRelease(version: "0.9.2", date: "2026-11-15", title: "Copiloto, informe de vuelo y mapa", changes: [

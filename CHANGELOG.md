@@ -4,9 +4,12 @@ Registro de cambios de A320 Overhead. La app muestra lo mismo en *Opciones (⋯)
 
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y las versiones, [SemVer](https://semver.org/lang/es/).
 
-## [0.9.3] · 2026-11-24 · Tiempo en ruta
+## [0.9.3] · 2026-11-24 · Meteo y tiempo en ruta
 
 ### Nuevo
+- Meteo en ruta: METAR y TAF en directo de origen, destino y alternos (aviationweather.gov, cada 15 minutos), con aviso si el destino ha empeorado desde el despacho, la previsión a tu hora de llegada (por debajo de mínimos, IFR, tormentas), el viento cruzado y de cola en tu pista con los límites del A320 y el alterno a la hora de desvío.
+- Viento y temperatura frente al plan: el viento que da X-Plane contra el del navlog en tu posición (cuántos nudos más de cara) y la desviación ISA real frente a la prevista.
+- SIGMET en la ruta: zonas de turbulencia, engelamiento, tormentas o ceniza que corta tu ruta, dibujadas en el mapa y en el perfil vertical a sus niveles, con aviso si las cruzas a tus niveles.
 - Tiempo en ruta: retraso o adelanto frente al navlog, aterrizaje y llegada a calzos previstos frente al horario del OFP, la velocidad que hace falta para llegar en hora (en nudos y Mach, o si no se recupera), los minutos de espera posibles antes de tocar el combustible del alterno y el margen de actividad. Los informes de posición muestran también los minutos frente al plan en cada punto.
 
 ## [0.9.2] · 2026-11-15 · Copiloto, informe de vuelo y mapa

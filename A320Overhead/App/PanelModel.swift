@@ -299,6 +299,12 @@ final class PanelModel {
         didSet {
             UserDefaults.standard.set(ofp.flatMap { try? JSONEncoder().encode($0) }, forKey: Keys.ofp)
             verticalProfile = ofp.map(VerticalProfile.init(ofp:))
+            if ofp?.requestID != oldValue?.requestID {
+                weather = WeatherState()
+                routeHazards = []
+                lastWeatherAttempt = nil
+                announcedWeather = []
+            }
         }
     }
     /// What the ToLiss FMS publishes about the vertical path. Values the FMS has not computed
@@ -404,6 +410,12 @@ final class PanelModel {
         didSet { UserDefaults.standard.set(cabinAnnouncements, forKey: Keys.cabinAnnouncements) }
     }
     @ObservationIgnored private var cabinTimeline = CabinTimeline()
+    /// Live weather for the flight's airports and the SIGMETs on its route.
+    private(set) var weather = WeatherState()
+    private(set) var weatherLoading = false
+    private(set) var routeHazards: [RouteHazard] = []
+    @ObservationIgnored private var lastWeatherAttempt: Date?
+    @ObservationIgnored private var announcedWeather: Set<String> = []
     /// Simulated ATC: progress through the script, who reads what and the exchange due now.
     private(set) var atcProgress = ATCProgress() {
         didSet { scheduleSave(Keys.atcProgress) { [value = self.atcProgress] in try? JSONEncoder().encode(value) } }
@@ -2414,6 +2426,11 @@ final class PanelModel {
         "sim/flightmodel/position/phi", "sim/flightmodel/position/theta",
         "toliss_airbus/performance/DeptTrans", "toliss_airbus/performance/DestTrans",
         "sim/flightmodel/position/psi", "sim/flightmodel/misc/machno",
+        // Wind and temperature at the aircraft: X-Plane 12's true wind, the ND's magnetic wind as a
+        // fallback, and the outside air temperature.
+        "sim/weather/aircraft/wind_now_direction_degt", "sim/weather/aircraft/wind_now_speed_msc",
+        "sim/cockpit2/gauges/indicators/wind_heading_deg_mag", "sim/cockpit2/gauges/indicators/wind_speed_kts",
+        "sim/cockpit2/temperature/outside_air_temp_degc",
         // FMS (ToLiss): descent path at the present position, altitude the AP is flying to,
         // active constraint, distance to destination along the FMS route, cruise level.
         "AirbusFBW/DescentProfileAlt_FMS1", "toliss_airbus/pfdoutputs/general/ap_alt_target_value",
@@ -2497,6 +2514,214 @@ final class PanelModel {
             decisionHeight: positive("toliss_airbus/performance/DH"),
             minimumAltitude: positive("toliss_airbus/performance/MDA"),
             heading: value("sim/flightmodel/position/psi"))
+    }
+
+    // MARK: Weather en route
+
+    struct WeatherState {
+        var metars: [String: METARReport] = [:]
+        var tafs: [String: TAFReport] = [:]
+        var sigmets: [Sigmet] = []
+        var updated: Date?
+        var error: String?
+    }
+
+    struct WeatherAlert: Identifiable, Equatable {
+        enum Level: Int, Comparable {
+            case info, warning, critical
+            static func < (lhs: Level, rhs: Level) -> Bool { lhs.rawValue < rhs.rawValue }
+        }
+        let id: String
+        let level: Level
+        let text: String
+    }
+
+    /// An airport of the flight and its role, for the weather list.
+    struct WeatherAirport: Identifiable, Equatable {
+        let icao: String
+        let role: String
+        var id: String { icao + role }
+    }
+
+    var weatherAirports: [WeatherAirport] {
+        guard let ofp else { return [] }
+        var list = [WeatherAirport(icao: ofp.origin.icao, role: "Origen"),
+                    WeatherAirport(icao: ofp.destination.icao, role: "Destino")]
+        if let alternate = ofp.alternate { list.append(WeatherAirport(icao: alternate.icao, role: "Alterno")) }
+        list += (ofp.enrouteAlternates ?? []).map { WeatherAirport(icao: $0.icao, role: "Alterno en ruta") }
+        var seen = Set<String>()
+        return list.filter { seen.insert($0.icao).inserted }
+    }
+
+    /// One hour either side of the estimated landing: the TAF window that matters.
+    var arrivalWindow: (start: Date, end: Date)? {
+        guard let ofp else { return nil }
+        let estimate = enrouteTime?.landing
+            ?? ofp.scheduledIn.map { $0.addingTimeInterval(-(ofp.taxiInMinutes ?? 5) * 60) }
+            ?? ofp.scheduledOut.flatMap { out in ofp.timeEnroute.map { out.addingTimeInterval(TimeInterval($0) + (ofp.taxiOutMinutes ?? 15) * 60) } }
+        guard let landing = estimate else { return nil }
+        return (landing.addingTimeInterval(-3600), landing.addingTimeInterval(3600))
+    }
+
+    /// Forecast at an airport for the arrival window (an hour later for the alternate, which is
+    /// reached after a missed approach).
+    func forecastAtArrival(_ icao: String, later: TimeInterval = 0) -> WeatherConditions? {
+        guard let window = arrivalWindow, let taf = weather.tafs[icao] else { return nil }
+        return taf.worst(from: window.start.addingTimeInterval(later), to: window.end.addingTimeInterval(later))
+    }
+
+    /// Wind on the planned landing runway: now (METAR) and at the arrival (TAF).
+    var arrivalRunwayWind: (now: RunwayWind?, forecast: RunwayWind?, runway: String)? {
+        guard let ofp, let runway = ofp.destination.runway else { return nil }
+        let now = weather.metars[ofp.destination.icao]?.conditions
+        let forecast = forecastAtArrival(ofp.destination.icao)
+        return (now.flatMap { RunwayWind.components(runway: runway, direction: $0.windDirection, speed: $0.windSpeed, gust: $0.gust) },
+                forecast.flatMap { RunwayWind.components(runway: runway, direction: $0.windDirection, speed: $0.windSpeed, gust: $0.gust) },
+                runway)
+    }
+
+    /// What changed against the dispatch and what needs a decision, worst first.
+    var weatherAlerts: [WeatherAlert] {
+        guard let ofp else { return [] }
+        var alerts: [WeatherAlert] = []
+        let destination = ofp.destination.icao
+        if let live = weather.metars[destination]?.conditions {
+            let dispatched = ofp.destination.metar.flatMap(METARReport.decode)?.conditions.category
+            if let dispatched, live.category > dispatched {
+                alerts.append(WeatherAlert(id: "dest-worse", level: .warning,
+                                           text: "\(destination) ha empeorado desde el despacho: \(live.category.title) (era \(dispatched.title))"))
+            }
+        }
+        if let forecast = forecastAtArrival(destination) {
+            if (forecast.visibility ?? .max) < 550 || (forecast.ceiling ?? .max) < 200 {
+                alerts.append(WeatherAlert(id: "dest-minima", level: .critical,
+                                           text: "\(destination) a tu llegada: por debajo de mínimos CAT I en el TAF. Revisa el alterno y el combustible."))
+            } else if forecast.category >= .ifr {
+                alerts.append(WeatherAlert(id: "dest-ifr", level: .warning,
+                                           text: "\(destination) a tu llegada: \(forecast.category.title) en el TAF\(Self.ceilingText(forecast))."))
+            }
+            if forecast.hasThunderstorm {
+                alerts.append(WeatherAlert(id: "dest-ts", level: .warning,
+                                           text: "\(destination) a tu llegada: tormentas en el TAF. Prevé espera o desvío."))
+            }
+        }
+        if let wind = arrivalRunwayWind, let component = wind.forecast ?? wind.now, component.exceedsLimits {
+            let text = -component.headwind > RunwayWind.tailwindLimit
+                ? "\(Int(-component.headwind)) kt de cola en la \(wind.runway) (límite \(Int(RunwayWind.tailwindLimit))): pide otra pista."
+                : "\(Int(abs(component.crosswind))) kt de viento cruzado en la \(wind.runway) (límite demostrado \(Int(RunwayWind.crosswindLimit)))."
+            alerts.append(WeatherAlert(id: "dest-wind", level: .warning, text: text))
+        }
+        if let alternate = ofp.alternate?.icao, let forecast = forecastAtArrival(alternate, later: 3600) {
+            if forecast.category >= .ifr || forecast.hasThunderstorm {
+                alerts.append(WeatherAlert(id: "altn", level: .warning,
+                                           text: "Alterno \(alternate): \(forecast.category.title)\(forecast.hasThunderstorm ? " con tormentas" : "") a la hora de desvío. Valora otro."))
+            }
+        }
+        for hazard in routeHazardsAhead where hazard.atPlannedLevels {
+            let level: WeatherAlert.Level = hazard.sigmet.qualifier?.uppercased() == "SEV" || hazard.sigmet.hazard == .volcanicAsh
+                ? .critical : .warning
+            alerts.append(WeatherAlert(id: "sigmet-" + hazard.id, level: level,
+                                       text: "SIGMET \(hazard.sigmet.title.lowercased()) \(Self.levelsText(hazard.sigmet)) \(distanceText(hazard))."))
+        }
+        return alerts.sorted { $0.level > $1.level }
+    }
+
+    static func ceilingText(_ conditions: WeatherConditions) -> String {
+        var parts: [String] = []
+        if let ceiling = conditions.ceiling { parts.append("techo \(ceiling) ft") }
+        if let visibility = conditions.visibility, visibility < 10_000 { parts.append("visibilidad \(visibility) m") }
+        return parts.isEmpty ? "" : ", " + parts.joined(separator: ", ")
+    }
+
+    static func levelsText(_ sigmet: Sigmet) -> String {
+        func level(_ feet: Int) -> String { feet >= 10_000 ? "FL\(feet / 100)" : "\(feet) ft" }
+        switch (sigmet.base, sigmet.top) {
+        case let (base?, top?): return "\(level(base))–\(level(top))"
+        case let (nil, top?): return "hasta \(level(top))"
+        case let (base?, nil): return "desde \(level(base))"
+        default: return ""
+        }
+    }
+
+    /// "en tu ruta a 120 NM" or "en tu ruta ahora".
+    func distanceText(_ hazard: RouteHazard) -> String {
+        guard let along = aircraftAlongRoute else { return "en tu ruta" }
+        let ahead = hazard.entry - along
+        return ahead > 0 ? "en tu ruta a \(Int(ahead.rounded())) NM" : "en tu ruta ahora"
+    }
+
+    /// Distance of the aircraft along the route, on the vertical profile's scale.
+    var aircraftAlongRoute: Double? {
+        guard let data = liveFlight, let profile = verticalProfile else { return nil }
+        return profile.distanceAlong(latitude: data.latitude, longitude: data.longitude)
+    }
+
+    /// SIGMETs on the route not yet left behind.
+    var routeHazardsAhead: [RouteHazard] {
+        guard let along = aircraftAlongRoute else { return routeHazards }
+        return routeHazards.filter { $0.exit >= along }
+    }
+
+    /// Wind and temperature now against the navlog's, in flight.
+    var windComparison: WindComparison? {
+        guard let ofp, let progress = routeProgress, let data = liveFlight, !data.onGround else { return nil }
+        func value(_ name: String) -> Double? { rawValues[name]?.doubleValue }
+        let direction: Double, speed: Double
+        if let trueDirection = value("sim/weather/aircraft/wind_now_direction_degt"),
+           let metresPerSecond = value("sim/weather/aircraft/wind_now_speed_msc") {
+            direction = trueDirection
+            speed = metresPerSecond * 1.943844
+        } else if let magnetic = value("sim/cockpit2/gauges/indicators/wind_heading_deg_mag"),
+                  let knots = value("sim/cockpit2/gauges/indicators/wind_speed_kts") {
+            direction = magnetic
+            speed = knots
+        } else {
+            return nil
+        }
+        return WindComparison.compare(progress: progress, fixes: ofp.fixes, windDirection: direction, windSpeed: speed,
+                                      temperature: value("sim/cockpit2/temperature/outside_air_temp_degc"),
+                                      altitude: data.altitude)
+    }
+
+    func refreshWeather() async {
+        let airports = weatherAirports.map(\.icao)
+        guard !airports.isEmpty, !weatherLoading else { return }
+        weatherLoading = true
+        lastWeatherAttempt = Date()
+        defer { weatherLoading = false }
+        do {
+            let result = try await WeatherService.fetch(airports: airports)
+            weather = WeatherState(metars: result.metars, tafs: result.tafs, sigmets: result.sigmets,
+                                   updated: Date(), error: nil)
+            updateRouteHazards()
+            announceWeather()
+        } catch {
+            weather.error = "Sin conexión con aviationweather.gov: \(error.localizedDescription)"
+        }
+    }
+
+    private func updateRouteHazards() {
+        guard let ofp, let profile = verticalProfile else {
+            routeHazards = []
+            return
+        }
+        routeHazards = RouteHazard.along(profile, fixes: ofp.fixes, sigmets: weather.sigmets, now: Date())
+    }
+
+    /// New alerts go to the banner once each.
+    private func announceWeather() {
+        for alert in weatherAlerts where alert.level >= .warning && announcedWeather.insert(alert.id).inserted {
+            postAlert("Meteo: \(alert.text)", alert.level == .critical ? .critical : .warning, speak: false)
+            break   // one banner at a time; the card lists the rest
+        }
+    }
+
+    /// Every 15 minutes with an OFP (5 after a failure).
+    private func tickWeather(now: Date = Date()) {
+        guard ofp != nil, !weatherLoading else { return }
+        let interval: TimeInterval = weather.error == nil ? 900 : 300
+        if let last = lastWeatherAttempt, now.timeIntervalSince(last) < interval { return }
+        Task { await refreshWeather() }
     }
 
     // MARK: Time en route
@@ -2660,6 +2885,7 @@ final class PanelModel {
                 self?.tickRecorder()
                 self?.tickCabin()
                 self?.tickATC()
+                self?.tickWeather()
             }
         }
     }

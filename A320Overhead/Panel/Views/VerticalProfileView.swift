@@ -107,6 +107,18 @@ struct VerticalProfileView: View {
                        domain: ClosedRange<Double>, top: Double) -> some View {
         let descent = profile.descentPath(ceiling: profile.planned.map(\.altitude).max() ?? 10_000)
         return Chart {
+            // SIGMETs on the route at their levels, behind everything else.
+            ForEach(model.routeHazards) { hazard in
+                RectangleMark(xStart: .value("NM", hazard.entry), xEnd: .value("NM", max(hazard.exit, hazard.entry + 2)),
+                              yStart: .value("ft", Double(hazard.sigmet.base ?? 0)),
+                              yEnd: .value("ft", min(top, Double(hazard.sigmet.top ?? Int(top)))))
+                    .foregroundStyle(hazard.sigmet.hazard.colour.opacity(0.22))
+                    .annotation(position: .overlay, alignment: .top) {
+                        Text(hazard.sigmet.hazard.title)
+                            .font(.system(size: 8, weight: .semibold))
+                            .foregroundStyle(hazard.sigmet.hazard.colour)
+                    }
+            }
             ForEach(Array(descent.enumerated()), id: \.offset) { _, point in
                 LineMark(x: .value("NM", point.distance), y: .value("ft", point.altitude), series: .value("Serie", "3:1"))
                     .foregroundStyle(Color.gray.opacity(0.7))

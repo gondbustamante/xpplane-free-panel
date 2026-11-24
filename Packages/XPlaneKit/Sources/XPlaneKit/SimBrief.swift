@@ -44,6 +44,11 @@ public struct SimBriefOFP: Codable, Sendable, Equatable {
         /// Airway or procedure the point is flown by, and whether it belongs to the SID or STAR.
         public var airway: String? = nil
         public var isProcedure: Bool? = nil
+        /// Forecast wind (true degrees, knots) and temperature (°C, and against ISA) at the point.
+        public var windDirection: Int? = nil
+        public var windSpeed: Int? = nil
+        public var temperature: Int? = nil
+        public var isaDeviation: Int? = nil
     }
 
     public struct Fuel: Codable, Sendable, Equatable {
@@ -253,7 +258,9 @@ public struct SimBriefOFP: Codable, Sendable, Equatable {
                               legDistance: number(fix["distance"]), altitude: integer(fix["altitude_feet"]),
                               plannedFuel: number(fix["fuel_plan_onboard"]), minimumFuel: number(fix["fuel_min_onboard"]),
                               timeTotal: integer(fix["time_total"]), stage: text(fix["stage"]),
-                              airway: text(fix["via_airway"]), isProcedure: text(fix["is_sid_star"]).map { $0 == "1" })
+                              airway: text(fix["via_airway"]), isProcedure: text(fix["is_sid_star"]).map { $0 == "1" },
+                              windDirection: integer(fix["wind_dir"]), windSpeed: integer(fix["wind_spd"]),
+                              temperature: integer(fix["oat"]), isaDeviation: integer(fix["oat_isa_dev"]))
             }
         }
         ofp.enrouteAlternates = runways(root["enroute_altn"]).compactMap { airport($0) }

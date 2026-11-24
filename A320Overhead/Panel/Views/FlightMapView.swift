@@ -85,6 +85,12 @@ struct FlightMapView: View {
                 MapPolyline(coordinates: route)
                     .stroke(Color(red: 1.0, green: 0.4, blue: 1.0), lineWidth: 2.5)
             }
+            // SIGMETs the route goes through.
+            ForEach(model.routeHazards) { hazard in
+                MapPolygon(coordinates: hazard.sigmet.area.map { .init(latitude: $0.latitude, longitude: $0.longitude) })
+                    .foregroundStyle(hazard.sigmet.hazard.colour.opacity(hazard.atPlannedLevels ? 0.28 : 0.12))
+                    .stroke(hazard.sigmet.hazard.colour, lineWidth: 1.5)
+            }
             if model.flownTrack.count > 1 {
                 MapPolyline(coordinates: model.flownTrack.map { .init(latitude: $0.latitude, longitude: $0.longitude) })
                     .stroke(PanelTheme.checklistGreen, style: StrokeStyle(lineWidth: 3, lineCap: .round))
