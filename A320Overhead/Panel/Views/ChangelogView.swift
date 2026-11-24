@@ -37,6 +37,9 @@ enum Changelog {
     private static func fixed(_ text: String) -> ChangelogRelease.Change { .init(kind: .fixed, text: text) }
 
     static let releases: [ChangelogRelease] = [
+        ChangelogRelease(version: "0.9.3", date: "2026-11-24", title: "Tiempo en ruta", changes: [
+            new("Tiempo en ruta: retraso o adelanto frente al navlog, aterrizaje y llegada a calzos previstos frente al horario del OFP, la velocidad que hace falta para llegar en hora (en nudos y Mach, o si no se recupera), los minutos de espera posibles antes de tocar el combustible del alterno y el margen de actividad. Los informes de posición muestran también los minutos frente al plan en cada punto."),
+        ]),
         ChangelogRelease(version: "0.9.2", date: "2026-11-15", title: "Copiloto, informe de vuelo y mapa", changes: [
             new("Comunicaciones ATC simuladas a partir del OFP: autorización, remolque, rodaje, torre, salidas, centros, descenso con la STAR, aproximación, aterrizaje y rodaje al puesto, con fraseología OACI. Lees lo tuyo y tocas «Transmitir»; el controlador responde por voz, te llama solo en los cambios de frecuencia y autorizaciones cuando toca, y con un toque pones el código, la altitud o el QNH que te ha dado."),
             new("Copiloto por voz: toca el micrófono y di la orden («gear up», «flaps one», «landing lights on», «after takeoff flow»…, también en español). El copiloto la ejecuta y la repite como un PM. Se activa en Ajustes."),

@@ -4,6 +4,11 @@ Registro de cambios de A320 Overhead. La app muestra lo mismo en *Opciones (⋯)
 
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y las versiones, [SemVer](https://semver.org/lang/es/).
 
+## [0.9.3] · 2026-11-24 · Tiempo en ruta
+
+### Nuevo
+- Tiempo en ruta: retraso o adelanto frente al navlog, aterrizaje y llegada a calzos previstos frente al horario del OFP, la velocidad que hace falta para llegar en hora (en nudos y Mach, o si no se recupera), los minutos de espera posibles antes de tocar el combustible del alterno y el margen de actividad. Los informes de posición muestran también los minutos frente al plan en cada punto.
+
 ## [0.9.2] · 2026-11-15 · Copiloto, informe de vuelo y mapa
 
 ### Nuevo

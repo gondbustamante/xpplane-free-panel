@@ -434,6 +434,8 @@ final class PanelModel {
     private(set) var debriefIndex: [DebriefIndexEntry] = [] {
         didSet { scheduleSave(Keys.debriefIndex) { [value = self.debriefIndex] in try? JSONEncoder().encode(value) } }
     }
+    /// When this flight left the ground, as the recorder saw it.
+    @ObservationIgnored private var takeOffTime: Date?
     /// Path flown in this flight, for the map: one point per report sample.
     private(set) var flownTrack: [FlightSample] = []
     /// Report open in its sheet.
@@ -1905,11 +1907,13 @@ final class PanelModel {
         if recording == nil {
             guard !data.onGround || data.groundspeed > 3 else { return }
             recording = FlightRecording(start: now)
+            takeOffTime = nil
             flownTrack = []
             flownProfile = []
             fmsDescentProfile = []
         }
         guard var run = recording else { return }
+        if !data.onGround, takeOffTime == nil { takeOffTime = now }
         let time = now.timeIntervalSince(run.start)
         let height = data.radioAltitude > 0 && data.radioAltitude < 2500 ? data.radioAltitude : data.altitude - destinationElevation
         let bank = rawValues["sim/flightmodel/position/phi"]?.doubleValue ?? 0
@@ -2409,7 +2413,7 @@ final class PanelModel {
         "AirbusFBW/SpoilerPositionArray", "AirbusFBW/EngineReverserDeloymentArray",
         "sim/flightmodel/position/phi", "sim/flightmodel/position/theta",
         "toliss_airbus/performance/DeptTrans", "toliss_airbus/performance/DestTrans",
-        "sim/flightmodel/position/psi",
+        "sim/flightmodel/position/psi", "sim/flightmodel/misc/machno",
         // FMS (ToLiss): descent path at the present position, altitude the AP is flying to,
         // active constraint, distance to destination along the FMS route, cruise level.
         "AirbusFBW/DescentProfileAlt_FMS1", "toliss_airbus/pfdoutputs/general/ap_alt_target_value",
@@ -2493,6 +2497,46 @@ final class PanelModel {
             decisionHeight: positive("toliss_airbus/performance/DH"),
             minimumAltitude: positive("toliss_airbus/performance/MDA"),
             heading: value("sim/flightmodel/position/psi"))
+    }
+
+    // MARK: Time en route
+
+    /// Take-off time: the block times of the turnaround, else what the recorder saw.
+    var flightTakeOff: Date? {
+        turnaround?.blockTimes.offTime ?? takeOffTime
+    }
+
+    /// The flight against the navlog's times and the schedule, with X-Plane and an OFP.
+    var enrouteTime: EnrouteTime? {
+        guard let ofp, let progress = routeProgress, let data = liveFlight, !data.onGround,
+              let total = ofp.fixes.last?.timeTotal ?? ofp.timeEnroute else { return nil }
+        return EnrouteTime.evaluate(now: Date(), takeOff: flightTakeOff, progress: progress, fixes: ofp.fixes,
+                                    totalPlanned: TimeInterval(total), scheduledIn: ofp.scheduledIn,
+                                    taxiIn: ofp.taxiInMinutes ?? 5)
+    }
+
+    /// Speed change to arrive on schedule (or on the plan without one), in the cruise only.
+    var speedAdvice: SpeedAdvice? {
+        guard let time = enrouteTime, let late = time.arrivalDelay ?? time.deviation, let data = liveFlight,
+              let toGo = routeProgress?.distanceToGo, data.altitude > 20_000, abs(data.verticalSpeed) < 500 else { return nil }
+        let cruise = toGo - DescentProfile.requiredDistance(altitude: data.altitude, destinationElevation: destinationElevation)
+        let mach = rawValues["sim/flightmodel/misc/machno"]?.doubleValue
+        let tasPerMach = data.trueAirspeed.flatMap { tas in mach.flatMap { $0 > 0.3 ? tas / $0 : nil } }
+        return SpeedAdvice.toRecover(late: late, cruiseDistance: cruise, groundspeed: data.groundspeed, tasPerMach: tasPerMach)
+    }
+
+    /// Minutes of holding before landing below final reserve plus alternate fuel.
+    var holdingMinutes: Int? {
+        guard let ofp, let status = fuelStatus, let reserve = ofp.kilograms(ofp.fuel.finalReserve) else { return nil }
+        return HoldingTime.available(estimatedLandingFuel: status.estimatedLanding, finalReserve: reserve,
+                                     alternate: ofp.kilograms(ofp.fuel.alternate) ?? 0)
+    }
+
+    /// Margin between the estimated in-block time and the end of the maximum duty period.
+    var dutyMargin: TimeInterval? {
+        guard let inBlock = enrouteTime?.inBlock,
+              let offBlocks = turnaround?.plan.offBlocks ?? ofp?.scheduledOut else { return nil }
+        return dutyPeriod(offBlocks: offBlocks).maximumEnd.timeIntervalSince(inBlock)
     }
 
     /// Fuel against the OFP at this point of the route, kg.

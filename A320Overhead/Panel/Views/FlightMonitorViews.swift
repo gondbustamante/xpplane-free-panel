@@ -51,6 +51,7 @@ struct FlightMonitorColumn: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 RouteFuelCard()
+                EnrouteTimeCard()
                 FuelPlanCard(startExpanded: false)
                 DepartureCard()
                 CruiseCard()
@@ -495,10 +496,94 @@ private struct LandingCard: View {
     }
 }
 
+// MARK: Time en route
+
+/// Time against the navlog and the schedule: late or early here, landing and in-block times,
+/// what speed change brings the flight back on time, holding time available and the duty margin.
+private struct EnrouteTimeCard: View {
+    @Environment(PanelModel.self) private var model
+
+    var body: some View {
+        if let time = model.enrouteTime {
+            MonitorCard(title: "TIEMPO EN RUTA", icon: "clock.arrow.2.circlepath") {
+                if let deviation = time.deviation {
+                    Row(label: "Frente al plan aquí", value: TimeFormat.signed(deviation),
+                        colour: TimeFormat.colour(deviation))
+                }
+                Row(label: "Aterrizaje previsto", value: TurnaroundFormat.utc(time.landing))
+                Row(label: "En calzos previsto", value: TurnaroundFormat.utc(time.inBlock))
+                if let delay = time.arrivalDelay, let scheduled = model.ofp?.scheduledIn {
+                    Row(label: "Horario (\(TurnaroundFormat.utc(scheduled)))", value: TimeFormat.signed(delay),
+                        colour: TimeFormat.colour(delay))
+                }
+                if let advice = model.speedAdvice {
+                    adviceRow(advice, late: (time.arrivalDelay ?? time.deviation ?? 0) > 0)
+                }
+                if let holding = model.holdingMinutes {
+                    Row(label: "Espera posible", value: "\(holding) min",
+                        colour: holding < 10 ? PanelTheme.checklistAmber : .white)
+                }
+                if let margin = model.dutyMargin {
+                    Row(label: "Margen de actividad (FDP)", value: TimeFormat.duration(margin),
+                        colour: margin < 3600 ? PanelTheme.checklistAmber : .white)
+                }
+                Text("Tiempos del navlog del OFP desde el despegue. «Espera posible»: minutos en espera antes de aterrizar por debajo de la reserva final más el combustible al alterno.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func adviceRow(_ advice: SpeedAdvice, late: Bool) -> some View {
+        let knots = Int(abs(advice.groundspeedChange).rounded())
+        let mach = advice.machChange.map { String(format: " (M %@%.3f)", $0 >= 0 ? "+" : "−", abs($0)) } ?? ""
+        if !advice.feasible {
+            Label(late ? "No se recupera en crucero: harían falta \(knots) kt más. Avisa de la hora estimada."
+                       : "Llegas muy pronto: harían falta \(knots) kt menos. Pide una velocidad reducida o prevé espera.",
+                  systemImage: "exclamationmark.triangle")
+                .font(.caption)
+                .foregroundStyle(PanelTheme.checklistAmber)
+        } else {
+            Label(late ? "Para llegar en hora: +\(knots) kt de GS\(mach). Sube el cost index en PERF CRZ."
+                       : "Vas adelantado: puedes ir \(knots) kt más lento\(mach) y ahorrar combustible.",
+                  systemImage: late ? "hare" : "tortoise")
+                .font(.caption)
+                .foregroundStyle(late ? PanelTheme.checklistCyan : PanelTheme.checklistGreen)
+        }
+    }
+}
+
+enum TimeFormat {
+    /// "+4 min" (late) or "−2 min" (early); "en hora" within a minute.
+    static func signed(_ seconds: TimeInterval) -> String {
+        let minutes = Int((seconds / 60).rounded())
+        if minutes == 0 { return "en hora" }
+        return minutes > 0 ? "+\(minutes) min (tarde)" : "−\(-minutes) min (pronto)"
+    }
+
+    static func colour(_ seconds: TimeInterval) -> Color {
+        seconds > 300 ? PanelTheme.checklistAmber : seconds < -300 ? PanelTheme.checklistCyan : PanelTheme.checklistGreen
+    }
+
+    /// "1 h 25 min".
+    static func duration(_ seconds: TimeInterval) -> String {
+        let minutes = Int(seconds / 60)
+        guard minutes >= 0 else { return "excedido \(-minutes) min" }
+        return minutes >= 60 ? "\(minutes / 60) h \(minutes % 60) min" : "\(minutes) min"
+    }
+}
+
 // MARK: Position reports (5.5)
 
 private struct PositionReportsCard: View {
     @Environment(PanelModel.self) private var model
+
+    /// Minutes late (+) or early at a point, against the navlog time from the take-off.
+    private func timeDeviation(_ report: PositionReport) -> Int? {
+        guard let takeOff = model.flightTakeOff,
+              let planned = model.ofp?.fixes.first(where: { $0.ident == report.ident })?.timeTotal else { return nil }
+        return Int((report.date.timeIntervalSince(takeOff.addingTimeInterval(TimeInterval(planned))) / 60).rounded())
+    }
 
     var body: some View {
         if !model.positionReports.isEmpty {
@@ -507,6 +592,11 @@ private struct PositionReportsCard: View {
                     HStack {
                         Text(report.ident).font(.footnote.monospaced().weight(.semibold))
                         Text(TurnaroundFormat.utc(report.date)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                        if let late = timeDeviation(report) {
+                            Text(late == 0 ? "±0" : late > 0 ? "+\(late)′" : "−\(-late)′")
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(abs(late) > 5 ? PanelTheme.checklistAmber : .secondary)
+                        }
                         Spacer()
                         if let altitude = report.altitude {
                             Text("FL\(altitude / 100)").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
@@ -518,7 +608,7 @@ private struct PositionReportsCard: View {
                         }
                     }
                 }
-                Text("Combustible real frente al del plan en cada punto, como en el registro de navegación del OFP.")
+                Text("Hora de paso, minutos frente al plan y combustible real frente al del plan en cada punto, como en el registro de navegación del OFP.")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }

@@ -124,6 +124,9 @@ public struct SimBriefOFP: Codable, Sendable, Equatable {
     /// Landing runway from the TLR: distance available (feet) and the surface SimBrief planned with.
     public var landingRunwayLDA: Int? = nil
     public var landingSurface: String? = nil
+    /// Scheduled in-block time and the planned taxi in, minutes.
+    public var scheduledIn: Date? = nil
+    public var taxiInMinutes: Double? = nil
 
     public var fixes: [NavFix] { navlog ?? [] }
 
@@ -239,6 +242,8 @@ public struct SimBriefOFP: Codable, Sendable, Equatable {
             takeoff: nil,
             landingILSFrequency: nil)
         if ofp.callsign?.isEmpty == true { ofp.callsign = nil }
+        ofp.scheduledIn = number(times["sched_in"]).map { Date(timeIntervalSince1970: $0) }
+        ofp.taxiInMinutes = number(times["taxi_in"]).map { $0 / 60 }
 
         if let navlog = root["navlog"] as? [String: Any] {
             ofp.navlog = runways(navlog["fix"]).compactMap { fix in
