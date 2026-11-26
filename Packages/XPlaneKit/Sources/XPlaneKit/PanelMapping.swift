@@ -265,15 +265,25 @@ public struct PanelArea: Codable, Identifiable, Sendable, Hashable {
     public let icon: String?
     /// Group the area belongs to; the sidebar lists it under that group.
     public let group: String
+    /// Subpanel ids, plus "mcdu" or "fcu" for the units drawn by the app.
     public let subpanels: [String]
+    /// How the canvas lays the area out. Nil: as any selection (units first, then each group in
+    /// its geometry). "pedestal": the MCDU beside the ECAM control panel, above the pedestal,
+    /// as the whole pedestal sits in the aircraft.
+    public let arrangement: String?
 
-    public init(id: String, title: String, icon: String? = nil, group: String, subpanels: [String]) {
+    public init(id: String, title: String, icon: String? = nil, group: String, subpanels: [String],
+                arrangement: String? = nil) {
         self.id = id
         self.title = title
         self.icon = icon
         self.group = group
         self.subpanels = subpanels
+        self.arrangement = arrangement
     }
+
+    /// The whole-pedestal layout: MCDU and ECAM side by side over the pedestal.
+    public var isPedestal: Bool { arrangement == "pedestal" }
 }
 
 /// Physical arrangement of a group's subpanels: columns (left → right), each a list of rows

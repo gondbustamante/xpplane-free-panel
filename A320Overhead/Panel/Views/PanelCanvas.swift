@@ -26,6 +26,56 @@ private struct StandardCanvas: View {
     @Environment(PanelModel.self) private var model
 
     var body: some View {
+        if let area = model.selectedArea, area.isPedestal {
+            pedestalBody
+        } else {
+            standardBody
+        }
+    }
+
+    /// The whole pedestal: the MCDU beside the ECAM control panel, as at the front of the real
+    /// pedestal, and the pedestal itself (radios, ENG, WX RADAR, ATC…) below.
+    private var pedestalBody: some View {
+        VStack(alignment: .leading, spacing: 30) {
+            HStack(alignment: .top, spacing: 30) {
+                if items.contains(where: { if case .mcdu = $0 { return true } else { return false } }) {
+                    MCDUView()
+                        .environment(\.backlight, model.backlight(forGroup: "mcdu"))
+                }
+                groupFace("ecam")
+            }
+            ForEach(model.layout.groups.filter { $0.id != "ecam" }) { group in
+                groupFace(group.id)
+            }
+        }
+    }
+
+    /// One group's visible sections in its real geometry (or its arrangement or flow).
+    @ViewBuilder
+    private func groupFace(_ groupID: String) -> some View {
+        let visible = model.visibleSubpanels(in: groupID)
+        if !visible.isEmpty {
+            let absolute = visible.values.filter(\.isAbsolute)
+            if let canvas = model.layout.canvas(for: groupID), !absolute.isEmpty {
+                AbsoluteGroupView(canvas: canvas, panels: absolute.sorted { $0.id < $1.id })
+                    .environment(\.backlight, model.backlight(forGroup: groupID))
+            } else {
+                PanelFace {
+                    if let arrangement = model.layout.arrangement(for: groupID) {
+                        ArrangedGroupView(arrangement: arrangement, panels: visible)
+                    } else {
+                        FlowLayout(spacing: 26) {
+                            ForEach(visible.values.sorted { ($0.order ?? .max, $0.title) < ($1.order ?? .max, $1.title) }) { panel in
+                                SubpanelView(panel: panel)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var standardBody: some View {
             VStack(alignment: .leading, spacing: 30) {
                 if items.isEmpty {
                     Text("No hay paneles para esta selección. Revisa mapping/layout.json.")

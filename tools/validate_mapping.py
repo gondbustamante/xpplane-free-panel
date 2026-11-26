@@ -294,6 +294,14 @@ def validate_layout(root, panel_ids, panel_ids_by_group):
         for sub in phase.get("subpanels", []):
             if sub not in panel_ids and sub not in BUILTIN_PANELS:
                 errors.append(f"layout.json: la fase '{phase.get('id')}' referencia el panel inexistente '{sub}'")
+    for area in layout.get("areas", []) or []:
+        if area.get("group") not in group_ids:
+            errors.append(f"layout.json: la zona '{area.get('id')}' usa el grupo no declarado '{area.get('group')}'")
+        if area.get("arrangement") not in (None, "pedestal"):
+            errors.append(f"layout.json: la zona '{area.get('id')}' tiene una disposición desconocida '{area.get('arrangement')}'")
+        for sub in area.get("subpanels", []):
+            if sub not in panel_ids and sub not in BUILTIN_PANELS | {"fcu"}:
+                errors.append(f"layout.json: la zona '{area.get('id')}' referencia el panel inexistente '{sub}'")
     for group in (layout.get("canvases") or {}):
         if group not in group_ids:
             errors.append(f"layout.json: 'canvases' usa el grupo no declarado '{group}'")

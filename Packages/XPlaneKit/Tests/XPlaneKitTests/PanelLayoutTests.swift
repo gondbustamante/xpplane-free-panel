@@ -19,6 +19,23 @@ final class PanelLayoutTests: XCTestCase {
         XCTAssertNil(layout.areas(in: "overhead").first?.icon)
     }
 
+    func testAreaArrangementIsOptionalAndNamesThePedestalLayout() throws {
+        let json = """
+        {
+          "groups": [], "phases": [],
+          "areas": [
+            { "id": "pedestal_full", "title": "Pedestal completo", "group": "pedestal",
+              "arrangement": "pedestal", "subpanels": ["mcdu", "ecp", "rmp1"] },
+            { "id": "overhead_center", "title": "Panel central", "group": "overhead", "subpanels": ["fire"] }
+          ]
+        }
+        """
+        let layout = try JSONDecoder().decode(PanelLayout.self, from: Data(json.utf8))
+        XCTAssertEqual(layout.areas(in: "pedestal").first?.isPedestal, true)
+        XCTAssertEqual(layout.areas(in: "pedestal").first?.subpanels.first, "mcdu")
+        XCTAssertEqual(layout.areas(in: "overhead").first?.isPedestal, false)
+    }
+
     func testAreasAreOptional() throws {
         let json = #"{ "groups": [], "phases": [] }"#
         let layout = try JSONDecoder().decode(PanelLayout.self, from: Data(json.utf8))

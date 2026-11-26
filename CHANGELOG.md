@@ -13,8 +13,13 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 - Al conectar, si X-Plane tiene cargado un avión distinto del elegido, la barra lateral ofrece cambiar con un toque.
 - Cifras propias del A340-600 en la hoja de carga (pesos máximos y operativo), el turnaround (380 plazas, 90 min de salida y de tránsito, combustible hasta 155 t), el golpe de cola del informe de vuelo, el rodaje con motores reducidos, la fraseología de pushback y la inspección exterior.
 
+- Pedestal completo, igual que el overhead entero: MCDU junto al panel del ECAM y debajo radios, ENG, WX RADAR, ATC/TCAS y el resto del pedestal. En *Cabina → Pedestal*, para los dos aviones.
+
 ### Mejorado
 - El modo demo simula 2 o 4 motores: generadores, sangrado por lados del colector y bombas hidráulicas según el avión.
+
+### Corregido
+- Ruedas (GAIN y TILT del radar, temperaturas, brillo, LDG ELEV): siguen al dedo sin saltar atrás, un toque a la izquierda o a la derecha las mueve un paso y las escrituras llegan en orden. GAIN del radar ya se puede girar; los mandos del WX RADAR son más grandes.
 
 ### Pendiente de verificar
 - Los mandos nuevos del A340 (motores 3 y 4, índices de los arrays de FUEL/HYD/ELEC) siguen la nomenclatura de la familia ToLiss pero no se han comprobado contra un volcado del A340. Con el A340 cargado: `python3 tools/xp.py dump --grep "AirbusFBW|toliss"` y Diagnóstico de datarefs; detalles en docs/MAPPING.md.

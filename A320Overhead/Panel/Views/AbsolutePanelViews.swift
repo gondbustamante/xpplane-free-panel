@@ -385,8 +385,33 @@ struct KnobView: View {
     let onChange: (Double) -> Void
 
     @State private var dragStart: Double?
+    /// What the finger set while dragging or tapping. The pointer follows it at once instead of
+    /// waiting for (and jumping back to) the simulator's slower readings; it is dropped once the
+    /// simulator catches up, or shortly after the hand leaves the knob.
+    @State private var local: Double?
+    @State private var releaseTask: Task<Void, Never>?
 
-    private var angle: Double { -135 + 270 * min(max(fraction, 0), 1) }
+    /// One tap: 5 % of the travel (1.5° of TILT, a step of temperature or brightness).
+    private static let tapStep = 0.05
+
+    private var shown: Double { min(max(local ?? fraction, 0), 1) }
+    private var angle: Double { -135 + 270 * shown }
+
+    private func set(_ value: Double) {
+        let clamped = min(max(value, 0), 1)
+        local = clamped
+        onChange(clamped)
+    }
+
+    /// Keeps the local pointer a moment after the gesture so late readings cannot pull it back.
+    private func release() {
+        releaseTask?.cancel()
+        releaseTask = Task {
+            try? await Task.sleep(for: .milliseconds(900))
+            guard !Task.isCancelled else { return }
+            local = nil
+        }
+    }
 
     var body: some View {
         ZStack {
@@ -421,16 +446,30 @@ struct KnobView: View {
         }
         .opacity(dimmed ? 0.5 : 1)
         .contentShape(Circle())
-        .animation(.easeOut(duration: 0.12), value: fraction)
+        .animation(.easeOut(duration: 0.12), value: shown)
+        // Tap the left half to turn it down a step, the right half to turn it up.
+        .onTapGesture { location in
+            set(shown + (location.x < diameter * 0.65 ? -Self.tapStep : Self.tapStep))
+            release()
+        }
+        // Drag right or up to turn clockwise; the whole width of the knob is a third of the travel.
         .gesture(
             DragGesture(minimumDistance: 4)
                 .onChanged { value in
-                    if dragStart == nil { dragStart = fraction }
+                    releaseTask?.cancel()
+                    if dragStart == nil { dragStart = shown }
                     let delta = Double(value.translation.width - value.translation.height) / 220
-                    onChange(min(max((dragStart ?? fraction) + delta, 0), 1))
+                    set((dragStart ?? shown) + delta)
                 }
-                .onEnded { _ in dragStart = nil }
+                .onEnded { _ in
+                    dragStart = nil
+                    release()
+                }
         )
+        .onChange(of: fraction) { _, simulator in
+            // The simulator confirmed the value: no need to hold the local pointer any more.
+            if dragStart == nil, let local, abs(local - simulator) < 0.01 { self.local = nil }
+        }
         .disabled(!enabled)
     }
 }

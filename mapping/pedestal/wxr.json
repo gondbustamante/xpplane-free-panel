@@ -32,7 +32,7 @@
         "OFF",
         "2"
       ],
-      "size": 14,
+      "size": 18,
       "state": {
         "dataref": "AirbusFBW/WXPowerSwitch",
         "values": [
@@ -58,7 +58,7 @@
         "OFF",
         "AUTO"
       ],
-      "size": 11,
+      "size": 13,
       "state": {
         "dataref": "AirbusFBW/WXSwitchPWS",
         "values": [
@@ -79,7 +79,7 @@
         "MAN",
         "AUTO"
       ],
-      "size": 11,
+      "size": 13,
       "state": {
         "dataref": "AirbusFBW/WXSwitchMultiscan",
         "values": [
@@ -102,7 +102,7 @@
         "TURB",
         "MAP"
       ],
-      "size": 15,
+      "size": 18,
       "state": {
         "dataref": "AirbusFBW/WXSwitchMode",
         "values": [
@@ -126,7 +126,7 @@
         "CAL",
         "MAX"
       ],
-      "size": 18,
+      "size": 22,
       "state": {
         "dataref": "AirbusFBW/WXRadarGain"
       },
@@ -134,9 +134,8 @@
         "min": 0,
         "max": 1
       },
-      "readOnly": true,
       "verified": false,
-      "notes": "Rango desconocido: bloqueado hasta confirmarlo en Diagnóstico.",
+      "notes": "Rango 0…1 supuesto (CAL a la izquierda, MAX a la derecha): desbloqueado para poder girarlo. Si en Diagnóstico ToLiss da otros valores en los extremos, ajusta 'range'.",
       "x": 56,
       "y": 66
     },
@@ -148,7 +147,7 @@
         "-15",
         "+15"
       ],
-      "size": 18,
+      "size": 22,
       "state": {
         "dataref": "AirbusFBW/WXRadarTilt"
       },
@@ -157,7 +156,7 @@
         "max": 15
       },
       "verified": false,
-      "notes": "Grados de inclinación de la antena; rango supuesto ±15.",
+      "notes": "Grados de inclinación de la antena; rango supuesto ±15. Un toque mueve 1,5°, arrastrar gira de forma continua.",
       "x": 92,
       "y": 66
     }

@@ -44,6 +44,8 @@ enum Changelog {
             new("Al conectar, si X-Plane tiene cargado un avión distinto del elegido, la barra lateral ofrece cambiar con un toque."),
             new("Cifras propias del A340-600 en la hoja de carga (pesos máximos y operativo), el turnaround (380 plazas, 90 min de salida y de tránsito, combustible hasta 155 t), el golpe de cola del informe de vuelo, el rodaje con motores reducidos, la fraseología de pushback y la inspección exterior."),
             improved("El modo demo simula 2 o 4 motores: generadores, sangrado por lados del colector y bombas hidráulicas según el avión."),
+            new("Pedestal completo, igual que el overhead entero: MCDU junto al panel del ECAM y debajo radios, ENG, WX RADAR, ATC/TCAS y el resto del pedestal. En Cabina → Pedestal, para los dos aviones."),
+            fixed("Ruedas (GAIN y TILT del radar, temperaturas, brillo, LDG ELEV): siguen al dedo sin saltar atrás, un toque a la izquierda o a la derecha las mueve un paso y las escrituras llegan en orden. GAIN del radar ya se puede girar; los mandos del WX RADAR son más grandes."),
         ]),
         ChangelogRelease(version: "0.9.2", date: "2026-11-15", title: "Copiloto, informe de vuelo y mapa", changes: [
             new("Comunicaciones ATC simuladas a partir del OFP: autorización, remolque, rodaje, torre, salidas, centros, descenso con la STAR, aproximación, aterrizaje y rodaje al puesto, con fraseología OACI. Lees lo tuyo y tocas «Transmitir»; el controlador responde por voz, te llama solo en los cambios de frecuencia y autorizaciones cuando toca, y con un toque pones el código, la altitud o el QNH que te ha dado."),

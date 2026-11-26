@@ -280,6 +280,14 @@
       "icon": "rectangle.center.inset.filled",
       "group": "overhead",
       "subpanels": ["fire", "hyd", "fuel", "elec", "air_cond", "anti_ice", "probe_window", "cabin_press", "ext_lt", "apu", "int_lt", "signs"]
+    },
+    {
+      "id": "pedestal_full",
+      "title": "Pedestal completo",
+      "icon": "rectangle.bottomhalf.inset.filled",
+      "group": "pedestal",
+      "arrangement": "pedestal",
+      "subpanels": ["mcdu", "ecp", "rmp1", "speedbrake", "flaps", "rmp2", "eng_pedestal", "wxr", "atc_tcas", "rud_trim", "park_brk", "cockpit_door"]
     }
   ],
   "canvases": {

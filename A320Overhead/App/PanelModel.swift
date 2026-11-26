@@ -595,6 +595,9 @@ final class PanelModel {
         didSet { UserDefaults.standard.set(recentFrequencies, forKey: Keys.recentFrequencies) }
     }
     @ObservationIgnored private var tuningTask: Task<Void, Never>?
+    /// Latest value waiting to be written per knob, and the knobs with a write in flight.
+    @ObservationIgnored private var pendingKnobValues: [String: Double] = [:]
+    @ObservationIgnored private var knobWriters: Set<String> = []
     @ObservationIgnored private var highlightTask: Task<Void, Never>?
     /// Control id → definition and → subpanel id, built once from the mapping.
     @ObservationIgnored private var controlsByID: [String: ControlDefinition] = [:]
@@ -903,7 +906,10 @@ final class PanelModel {
             }
         case .area(let id):
             guard let area = layout.areas?.first(where: { $0.id == id }) else { return [] }
-            return area.subpanels.compactMap { wanted in subpanels.first { $0.id == wanted }.map { PanelItem.subpanel($0) } }
+            return area.subpanels.flatMap { wanted -> [PanelItem] in
+                if let items = special(wanted) { return items }
+                return subpanels.first { $0.id == wanted }.map { [.subpanel($0)] } ?? []
+            }
         case .subpanel(let id):
             if let items = special(id) { return items }
             return subpanels.first { $0.id == id }.map { [.subpanel($0)] } ?? []
@@ -3231,6 +3237,12 @@ final class PanelModel {
     }
 
     /// Subpanels of a group that are visible now, keyed by id.
+    /// The area selected in the sidebar, when it is one.
+    var selectedArea: PanelArea? {
+        guard case .area(let id) = selection else { return nil }
+        return layout.areas?.first { $0.id == id }
+    }
+
     func visibleSubpanels(in group: String) -> [String: SubpanelDefinition] {
         var result: [String: SubpanelDefinition] = [:]
         for case .subpanel(let panel) in visibleItems where panel.groupID == group {
@@ -3563,16 +3575,23 @@ final class PanelModel {
         return range.fraction(of: raw)
     }
 
-    /// Knob: writes the raw value for a 0…1 fraction.
+    /// Knob: writes the raw value for a 0…1 fraction. A drag sends dozens of values a second, so
+    /// writes are coalesced per knob: one in flight at a time, always the latest value, in order
+    /// (separate tasks could land out of order and leave the knob where the finger was earlier).
     func set(_ control: ControlDefinition, fraction: Double) {
         guard let client, let binding = control.writeBinding, let range = control.range else { return }
         let target = range.value(at: fraction)
+        pendingKnobValues[control.id] = target
+        guard knobWriters.insert(control.id).inserted else { return }
         Task {
-            do {
-                try await client.write(binding.key, XPValue(target))
-            } catch {
-                self.lastError = self.describe(error)
+            while let value = pendingKnobValues.removeValue(forKey: control.id) {
+                do {
+                    try await client.write(binding.key, XPValue(value))
+                } catch {
+                    lastError = describe(error)
+                }
             }
+            knobWriters.remove(control.id)
         }
     }
 
