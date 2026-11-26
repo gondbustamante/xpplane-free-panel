@@ -99,6 +99,12 @@ final class AircraftProfileTests: XCTestCase {
         let start = try XCTUnwrap(procedures.first { $0.id == "engine_start_flow" })
         let masters = start.items.compactMap { $0.checks?.first?.control }.filter { $0.hasPrefix("eng.master") }
         XCTAssertEqual(masters, ["eng.master4", "eng.master3", "eng.master2", "eng.master1"])
+        // A340 checklists: CG/THS before start, the yellow electric pump sensed at the stand.
+        let beforeStart = try XCTUnwrap(procedures.first { $0.id == "before_start_cl" })
+        XCTAssertTrue(beforeStart.items.contains { $0.challenge == "T.O CG / THS" })
+        let parking = try XCTUnwrap(procedures.first { $0.id == "parking_cl" })
+        let yellow = try XCTUnwrap(parking.items.first { $0.challenge == "YELLOW ELEC PUMP" })
+        XCTAssertEqual(yellow.checks?.map(\.control), ["hyd.elec_pump_y"])
     }
 
     func testOverlayRemovalMarkerDeletesTheBaseFile() throws {

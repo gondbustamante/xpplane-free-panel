@@ -716,9 +716,9 @@
           "sub": [
             "ZFW/ZFWCG: peso sin combustible y centro de gravedad estimados del OFP",
             "BLOCK: combustible total a bordo",
-            "TAXI: combustible de rodaje (por defecto 0,2 t)",
+            "TAXI: combustible de rodaje (en el A340 unas 0,6 t; el OFP da el valor del aeropuerto)",
             "RTE RSV, FINAL, ALTN: del OFP",
-            "Comprueba TOW y TRIP calculados"
+            "Comprueba TOW, TRIP y el CG de despegue calculados"
           ],
           "why": "Con el peso el FMGS calcula velocidades (VLS, maniobra), nivel máximo y predicciones. Un ZFW erróneo da velocidades de despegue erróneas: es una de las causas clásicas de incidentes.",
           "panels": [
@@ -796,7 +796,7 @@
         {
           "challenge": "FUEL QUANTITY",
           "response": "___ KG/LB",
-          "why": "Confirma que el combustible a bordo es el del plan antes de cerrar puertas, cuando aún se puede repostar."
+          "why": "Combustible del ECAM frente al BLOCK del OFP. En el A340 mira también el reparto en la página FUEL: el trim tank de la cola y los exteriores se llenan según el CG y la cantidad cargada."
         },
         {
           "challenge": "SEAT BELTS",
@@ -1048,6 +1048,14 @@
           ]
         },
         {
+          "challenge": "T.O CG / THS",
+          "response": "___ % / ___ (BOTH)",
+          "why": "En el A340 el CG de despegue cambia mucho con el combustible del trim tank y con el pasaje. El CG de la hoja de carga da la compensación (THS) de despegue que se pone en la rueda del pedestal: ambos pilotos lo leen y lo comparan con PERF TAKE OFF.",
+          "panels": [
+            "mcdu"
+          ]
+        },
+        {
           "challenge": "WINDOWS",
           "response": "CLOSED (BOTH)",
           "why": "Una ventana abierta no presuriza y hace mucho ruido en el despegue.",
@@ -1231,7 +1239,7 @@
         {
           "challenge": "PITCH TRIM",
           "response": "SET",
-          "why": "La compensación del estabilizador según el centro de gravedad hace que la rotación sea normal: ni demasiado ligera ni pesada."
+          "why": "La compensación del estabilizador según el CG de despegue (hoja de carga) hace que la rotación sea normal. En el A340-600, largo y con el CG muy variable por el trim tank, un THS mal puesto se nota mucho más."
         },
         {
           "challenge": "ECAM STATUS",
@@ -1280,8 +1288,8 @@
         },
         {
           "challenge": "PITCH TRIM",
-          "response": "___ %",
-          "why": "Compensación de despegue confirmada con la del cálculo de performance."
+          "response": "___ (T.O CG ___ %)",
+          "why": "Compensación de despegue confirmada con la de PERF TAKE OFF y el CG de la hoja de carga."
         },
         {
           "challenge": "RUDDER TRIM",
@@ -2271,6 +2279,20 @@
       "phase": "shutdown",
       "items": [
         {
+          "challenge": "APU BLEED",
+          "response": "ON",
+          "why": "Con los cuatro motores parados el aire de la cabina lo da el APU; sin él la cabina se calienta enseguida con el pasaje desembarcando.",
+          "optional": true,
+          "checks": [
+            {
+              "control": "air_cond.apu_bleed",
+              "expect": [
+                "ON"
+              ]
+            }
+          ]
+        },
+        {
           "challenge": "PARK BRK or CHOCKS",
           "response": "SET",
           "why": "Confirmación de que el avión está inmovilizado.",
@@ -2385,9 +2407,17 @@
         {
           "challenge": "YELLOW ELEC PUMP",
           "response": "OFF",
-          "why": "Si se usó la bomba amarilla, se apaga para no gastar baterías ni recalentarla.",
+          "why": "En el A340 la bomba eléctrica amarilla mueve las puertas de bodega en tierra. Al acabar se deja en OFF para no gastar energía ni recalentarla.",
           "panels": [
             "hyd"
+          ],
+          "checks": [
+            {
+              "control": "hyd.elec_pump_y",
+              "expect": [
+                "OFF"
+              ]
+            }
           ]
         }
       ]
@@ -2572,7 +2602,7 @@
         },
         {
           "challenge": "BATTERIES",
-          "response": "OFF",
+          "response": "OFF (BAT 1, 2 Y APU)",
           "why": "Confirmación final: avión sin corriente.",
           "checks": [
             {
@@ -2587,7 +2617,8 @@
                 "OFF"
               ]
             }
-          ]
+          ],
+          "note": "La APU BAT se apaga en la cabina del ToLiss: en la app se lee pero no se acciona hasta verificar su dataref."
         }
       ]
     }
