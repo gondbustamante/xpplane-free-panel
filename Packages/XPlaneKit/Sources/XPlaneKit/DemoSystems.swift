@@ -135,8 +135,13 @@ struct DemoAircraft: Sendable {
 
     // MARK: Derived
 
+    /// Engines the switches describe: 2 on the A320, 4 on the A340.
+    func engineCount(_ s: DemoSwitches) -> Int { s.engineMasters.count }
+
     func acSource(_ s: DemoSwitches) -> String? {
-        for i in 0..<2 where isRunning(i) && s.generators[i] { return "GEN \(i + 1)" }
+        for i in 0..<engineCount(s) where isRunning(i) && s.generators.indices.contains(i) && s.generators[i] {
+            return "GEN \(i + 1)"
+        }
         if s.gpu && s.extPower { return "EXT PWR" }
         if apuAvailable && s.apuGen { return "APU GEN" }
         return nil
@@ -147,18 +152,27 @@ struct DemoAircraft: Sendable {
         return s.battery ? .battery : .none
     }
 
-    func isRunning(_ engine: Int) -> Bool { engines[engine] == 1 }
+    func isRunning(_ engine: Int) -> Bool { engines.indices.contains(engine) && engines[engine] == 1 }
 
-    /// Bleed air reaches engine `i`'s side of the duct.
+    private func bleedOn(_ engine: Int, _ s: DemoSwitches) -> Bool {
+        s.engineBleeds.indices.contains(engine) ? s.engineBleeds[engine] : true
+    }
+
+    /// Bleed air reaches engine `i`'s side of the duct. The duct has a left side (engine 1, and 2
+    /// on the A340) and a right side, joined by the crossbleed; the APU feeds the left side.
     func bleed(forEngine i: Int, _ s: DemoSwitches) -> Bool {
-        if apuAvailable && s.apuBleed && (i == 0 || s.crossBleed != "SHUT") { return true }
-        let other = 1 - i
-        return isRunning(other) && s.engineBleeds[other] && s.crossBleed == "OPEN"
+        let count = engineCount(s)
+        let left = i < count / 2
+        if apuAvailable && s.apuBleed && (left || s.crossBleed != "SHUT") { return true }
+        let sameSide = (0..<count).filter { $0 != i && ($0 < count / 2) == left }
+        if sameSide.contains(where: { isRunning($0) && bleedOn($0, s) }) { return true }
+        let otherSide = (0..<count).filter { ($0 < count / 2) != left }
+        return otherSide.contains { isRunning($0) && bleedOn($0, s) } && s.crossBleed == "OPEN"
     }
 
     /// Some bleed air in the duct, for the packs.
     func bleedAvailable(_ s: DemoSwitches) -> Bool {
-        (apuAvailable && s.apuBleed) || (0..<2).contains { isRunning($0) && s.engineBleeds[$0] }
+        (apuAvailable && s.apuBleed) || (0..<engineCount(s)).contains { isRunning($0) && bleedOn($0, s) }
     }
 
     /// The APU START button stays lit only while the APU spools up.
@@ -238,8 +252,11 @@ struct DemoAircraft: Sendable {
     }
 
     private mutating func stepEngines(_ dt: Double, _ s: DemoSwitches, powered: Bool) {
-        for i in 0..<2 {
-            guard s.engineMasters[i], !s.fireHandles[i] else {
+        let count = engineCount(s)
+        if engines.count < count { engines += Array(repeating: nil, count: count - engines.count) }
+        for i in 0..<count {
+            let fire = s.fireHandles.indices.contains(i) && s.fireHandles[i]
+            guard s.engineMasters[i], !fire else {
                 engines[i] = nil
                 continue
             }
@@ -313,13 +330,13 @@ struct DemoAircraft: Sendable {
             }
         }
 
-        for i in 0..<2 where s.engineMasters[i] {
+        for i in 0..<engineCount(s) where s.engineMasters[i] {
             let name = "ENG \(i + 1)"
-            if s.fireHandles[i] {
+            if s.fireHandles.indices.contains(i) && s.fireHandles[i] {
                 lines.append(.init("\(name): PULSADOR DE FUEGO ACTIVADO", "amber"))
             } else if isRunning(i) {
                 lines.append(.init("\(name) EN MARCHA", "green"))
-            } else if let progress = engines[i] {
+            } else if engines.indices.contains(i), let progress = engines[i] {
                 lines.append(.init("\(name) ARRANCANDO \(Int(progress * 100)) %", "cyan"))
             } else if s.engineMode != "IGN/START" {
                 lines.append(.init("\(name): ENG MODE NO ESTÁ EN IGN/START", "amber"))

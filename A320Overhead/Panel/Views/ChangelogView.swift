@@ -37,6 +37,14 @@ enum Changelog {
     private static func fixed(_ text: String) -> ChangelogRelease.Change { .init(kind: .fixed, text: text) }
 
     static let releases: [ChangelogRelease] = [
+        ChangelogRelease(version: "0.10.0", date: "2026-11-26", title: "ToLiss A340-600", changes: [
+            new("Elige el avión que vuelas: ToLiss A320 o ToLiss A340-600, tocando el nombre del avión en la barra lateral o en Ajustes. Paneles, procedimientos, guía, ejercicios, turnaround y modo demo se adaptan; el A320 sigue exactamente igual."),
+            new("Overhead del A340 con cuatro motores: FIRE de los motores 1 a 4 y del APU, HYD con las bombas de los motores exteriores, FUEL con bomba principal y de reserva por tanque de alimentación y crossfeed por motor, ELEC con GEN e IDG 1-4, EXT A/B y APU BAT, sangrado y antihielo de los cuatro motores y MAN START 1-4. En el pedestal, ENG MASTER 1 a 4."),
+            new("Procedimientos del A340: arranque en orden 4-3-2-1, bombas de combustible, sangrados y masters de los cuatro motores en la preparación, el parking y la checklist."),
+            new("Al conectar, si X-Plane tiene cargado un avión distinto del elegido, la barra lateral ofrece cambiar con un toque."),
+            new("Cifras propias del A340-600 en la hoja de carga (pesos máximos y operativo), el turnaround (380 plazas, 90 min de salida y de tránsito, combustible hasta 155 t), el golpe de cola del informe de vuelo, el rodaje con motores reducidos, la fraseología de pushback y la inspección exterior."),
+            improved("El modo demo simula 2 o 4 motores: generadores, sangrado por lados del colector y bombas hidráulicas según el avión."),
+        ]),
         ChangelogRelease(version: "0.9.2", date: "2026-11-15", title: "Copiloto, informe de vuelo y mapa", changes: [
             new("Comunicaciones ATC simuladas a partir del OFP: autorización, remolque, rodaje, torre, salidas, centros, descenso con la STAR, aproximación, aterrizaje y rodaje al puesto, con fraseología OACI. Lees lo tuyo y tocas «Transmitir»; el controlador responde por voz, te llama solo en los cambios de frecuencia y autorizaciones cuando toca, y con un toque pones el código, la altitud o el QNH que te ha dado."),
             new("Copiloto por voz: toca el micrófono y di la orden («gear up», «flaps one», «landing lights on», «after takeoff flow»…, también en español). El copiloto la ejecuta y la repite como un PM. Se activa en Ajustes."),

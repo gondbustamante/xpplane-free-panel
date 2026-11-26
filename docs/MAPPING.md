@@ -297,6 +297,24 @@ Explicaciones que aparecen al tocar un mando con el modo aprender activo (birret
 - La hoja de cada mando enlaza además los procedimientos que lo usan (sus `checks`, o `panels` para el FCU y el MCDU).
 - Un mando sin entrada muestra sus posiciones y su sistema, y un aviso de que falta la explicación. El validador lista los que faltan, comprueba ids, posiciones y paneles, y no admite dos entradas para un mismo mando.
 
+## Otros aviones (`mapping/aircraft/<id>/`)
+
+El A320 es la base: todo lo que hay en `mapping/` es su mapeo y no se toca al añadir aviones. Cada avión adicional es una **capa** en `mapping/aircraft/<id>/` con la misma estructura de carpetas: un archivo de la capa sustituye al de la base con la misma ruta relativa (`overhead/fuel.json`, `procedures/normal.json`…) y uno nuevo se añade. Lo que la capa no trae (FCU, EFIS, RMP, ECAM, MCDU, tierra…) se comparte, porque ToLiss usa la misma cabina y los mismos datarefs en su familia Airbus. Un archivo `<nombre>.removed` en la capa elimina `<nombre>` de la base.
+
+Al elegir el avión en la app, `MappingOverlay.merge` copia la base (sin `aircraft/`) a una carpeta temporal, aplica la capa encima y la app carga esa carpeta. Las cifras que no son mapeo (pesos, plazas, motores, golpe de cola, rodaje) están en `AircraftProfile` (XPlaneKit).
+
+**A340-600** (`mapping/aircraft/a340/`): sustituye FIRE, HYD, FUEL, ELEC, AIR COND (sangrado), ANTI ICE y ENG del overhead, ENG del pedestal, los procedimientos (arranque 4-3-2-1, cuatro masters, bombas MAIN/STBY), la guía, los ejercicios y el turnaround de largo radio. Convenciones de ids para que la app y el modo demo reconozcan los motores: `eng.master<n>`, `elec.gen<n>`, `air_cond.eng<n>_bleed`, `fire.eng<n>`, `hyd.eng<n>_pump…`, `anti_ice.eng<n>`.
+
+Los nombres siguen la nomenclatura de la familia ToLiss (los comandos `Master3On`, `FireTestENG3`… ya están en el volcado del A320), pero los índices de los arrays (`FuelOHPArray`, `HydOHPArray`, `EngGenOHPArray`, `FireExOHPArray`…) para cuatro motores son **supuestos** y todos los mandos nuevos llevan `verified: false`. Para confirmarlos, con el A340 cargado en X-Plane:
+
+```bash
+python3 tools/xp.py dump --grep "AirbusFBW|toliss"     # y mueve el volcado a mapping/aircraft/a340/reference/
+python3 tools/xp.py watch AirbusFBW/FuelOHPArray       # pulsa cada bomba en la cabina virtual y mira el índice
+python3 tools/validate_mapping.py --aircraft a340
+```
+
+Con un volcado propio en `mapping/aircraft/a340/reference/`, el validador trata como error cualquier nombre del A340 que no aparezca en él; sin volcado, solo avisa. Sin opciones, `validate_mapping.py` valida la base y cada capa fusionada.
+
 ## Procedimiento de verificación
 
 Se hace con el ToLiss cargado y, idealmente, en tierra con motores apagados. Hay dos caminos equivalentes.

@@ -1,0 +1,418 @@
+{
+  "id": "air_cond",
+  "title": "",
+  "group": "overhead",
+  "order": 30,
+  "frame": {
+    "x": 200,
+    "y": 376,
+    "w": 416,
+    "h": 92
+  },
+  "titleHidden": true,
+  "notes": "A340: como el A320 (dos packs) pero con sangrado de los cuatro motores; X BLEED une el lado izquierdo (motores 1 y 2, APU) con el derecho (3 y 4). ToLiss A340-600: nombres siguiendo los de la familia ToLiss (mismo código base que el A320, volcado en mapping/reference). Índices de array supuestos para 4 motores: verificar con Diagnóstico o xp.py watch en el A340. Geometría adaptada a la distribución del overhead del A340 (cuatro motores) sobre el lienzo del A320.",
+  "decorations": [
+    {
+      "type": "text",
+      "at": [
+        9.2,
+        46.0
+      ],
+      "text": "AIR\\nCOND",
+      "size": 7,
+      "vertical": true
+    },
+    {
+      "type": "text",
+      "at": [
+        406.4,
+        46.0
+      ],
+      "text": "AIR\\nCOND",
+      "size": 7,
+      "vertical": true
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          36.0,
+          64.0
+        ],
+        [
+          380.0,
+          64.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          208.0,
+          60.0
+        ],
+        [
+          208.0,
+          64.0
+        ]
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "id": "air_cond.pack_flow",
+      "label": "PACK FLOW",
+      "kind": "rotary",
+      "positions": [
+        "LO",
+        "NORM",
+        "HI"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/PackFlowSel"
+      },
+      "verified": false,
+      "notes": "Escribible (volcado). Orden de valores por confirmar.",
+      "size": 24,
+      "x": 48.0,
+      "y": 24.7
+    },
+    {
+      "id": "air_cond.ckpt_temp",
+      "label": "COCKPIT",
+      "kind": "knob",
+      "positions": [
+        "COLD",
+        "HOT"
+      ],
+      "size": 26,
+      "state": {
+        "dataref": "AirbusFBW/CockpitTemp"
+      },
+      "range": {
+        "min": 0,
+        "max": 100
+      },
+      "readOnly": true,
+      "notes": "CockpitTemp (int, rw); rango por confirmar. Bloqueado.",
+      "x": 144.1,
+      "y": 24.7,
+      "verified": false
+    },
+    {
+      "id": "air_cond.fwd_temp",
+      "label": "FWD CABIN",
+      "kind": "knob",
+      "positions": [
+        "COLD",
+        "HOT"
+      ],
+      "size": 26,
+      "state": {
+        "dataref": "AirbusFBW/FwdCabinTemp"
+      },
+      "range": {
+        "min": 0,
+        "max": 100
+      },
+      "readOnly": true,
+      "notes": "FwdCabinTemp (int, rw); rango por confirmar. Bloqueado.",
+      "x": 206.9,
+      "y": 24.7,
+      "verified": false
+    },
+    {
+      "id": "air_cond.aft_temp",
+      "label": "AFT CABIN",
+      "kind": "knob",
+      "positions": [
+        "COLD",
+        "HOT"
+      ],
+      "size": 26,
+      "state": {
+        "dataref": "AirbusFBW/AftCabinTemp"
+      },
+      "range": {
+        "min": 0,
+        "max": 100
+      },
+      "readOnly": true,
+      "notes": "AftCabinTemp (int, rw); rango por confirmar. Bloqueado.",
+      "x": 269.7,
+      "y": 24.7,
+      "verified": false
+    },
+    {
+      "id": "air_cond.hot_air",
+      "label": "HOT AIR",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/HotAirSwitch"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/HotAirSwitchIllum",
+          "bit": 2
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/HotAirSwitch",
+          "onValue": 0
+        }
+      },
+      "verified": false,
+      "notes": "Escribible (volcado). Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref.",
+      "x": 360.2,
+      "y": 24.7
+    },
+    {
+      "id": "air_cond.pack1",
+      "label": "PACK 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/Pack1Switch"
+      },
+      "commands": {
+        "up": "toliss_airbus/aircondcommands/Pack1On",
+        "down": "toliss_airbus/aircondcommands/Pack1Off"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/OHPLightsATA21_Raw",
+          "index": 7
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/OHPLightsATA21_Raw",
+          "index": 6
+        }
+      },
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "x": 40.6,
+      "y": 50.8
+    },
+    {
+      "id": "air_cond.pack2",
+      "label": "PACK 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/Pack2Switch"
+      },
+      "commands": {
+        "up": "toliss_airbus/aircondcommands/Pack2On",
+        "down": "toliss_airbus/aircondcommands/Pack2Off"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/OHPLightsATA21_Raw",
+          "index": 9
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/OHPLightsATA21_Raw",
+          "index": 8
+        }
+      },
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "x": 375.0,
+      "y": 50.8
+    },
+    {
+      "id": "air_cond.ram_air",
+      "label": "RAM AIR",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/RamAirSwitch"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/RamAirSwitchLights",
+          "bit": 1
+        }
+      },
+      "guarded": true,
+      "verified": false,
+      "notes": "Escribible (volcado). Lámparas en bits: 1 = encendida/ON, 2 = FAULT (patrón de ToLiss en WAILights); por confirmar en este dataref.",
+      "guardStyle": "cage",
+      "x": 256.0,
+      "y": 75.5
+    },
+    {
+      "id": "air_cond.apu_bleed",
+      "label": "APU BLEED",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/APUBleedSwitch"
+      },
+      "commands": {
+        "up": "toliss_airbus/apucommands/BleedOn",
+        "down": "toliss_airbus/apucommands/BleedOff"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/APUBleedInd",
+          "onValue": 2
+        },
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/OHPLightsATA21_Raw",
+          "index": 4
+        }
+      },
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API).",
+      "x": 160.0,
+      "y": 75.5
+    },
+    {
+      "id": "air_cond.x_bleed",
+      "label": "X BLEED",
+      "kind": "rotary",
+      "positions": [
+        "SHUT",
+        "AUTO",
+        "OPEN"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/XBleedSwitch"
+      },
+      "verified": false,
+      "notes": "Escribible (volcado). Orden de valores por confirmar.",
+      "size": 24,
+      "x": 208.0,
+      "y": 72.3
+    },
+    {
+      "id": "air_cond.eng1_bleed",
+      "label": "ENG 1 BLEED",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENG1BleedSwitch"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/ENG1BleedSwitch",
+          "onValue": 0
+        }
+      },
+      "verified": false,
+      "x": 36.0,
+      "y": 75.5
+    },
+    {
+      "id": "air_cond.eng2_bleed",
+      "label": "ENG 2 BLEED",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENG2BleedSwitch"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/ENG2BleedSwitch",
+          "onValue": 0
+        }
+      },
+      "verified": false,
+      "x": 96.0,
+      "y": 75.5
+    },
+    {
+      "id": "air_cond.eng3_bleed",
+      "label": "ENG 3 BLEED",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENG3BleedSwitch"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/ENG3BleedSwitch",
+          "onValue": 0
+        }
+      },
+      "verified": false,
+      "notes": "ENG3BleedSwitch por analogía con ENG1/2BleedSwitch del A320.",
+      "x": 320.0,
+      "y": 75.5
+    },
+    {
+      "id": "air_cond.eng4_bleed",
+      "label": "ENG 4 BLEED",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENG4BleedSwitch"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/ENG4BleedSwitch",
+          "onValue": 0
+        }
+      },
+      "verified": false,
+      "notes": "ENG4BleedSwitch por analogía con ENG1/2BleedSwitch del A320.",
+      "x": 380.0,
+      "y": 75.5
+    }
+  ]
+}

@@ -1,0 +1,163 @@
+{
+  "id": "eng_pedestal",
+  "title": "ENG",
+  "group": "pedestal",
+  "frame": {
+    "x": 124,
+    "y": 50,
+    "w": 132,
+    "h": 86
+  },
+  "titleAt": [
+    66.0,
+    5.5
+  ],
+  "order": 40,
+  "decorations": [
+    {
+      "type": "text",
+      "at": [
+        16.0,
+        50.0
+      ],
+      "text": "1",
+      "size": 6
+    },
+    {
+      "type": "text",
+      "at": [
+        44.0,
+        50.0
+      ],
+      "text": "2",
+      "size": 6
+    },
+    {
+      "type": "text",
+      "at": [
+        88.0,
+        50.0
+      ],
+      "text": "3",
+      "size": 6
+    },
+    {
+      "type": "text",
+      "at": [
+        116.0,
+        50.0
+      ],
+      "text": "4",
+      "size": 6
+    }
+  ],
+  "notes": "A340: ENG MASTER 1 a 4 y ENG MODE. ToLiss A340-600: nombres siguiendo los de la familia ToLiss (mismo código base que el A320, volcado en mapping/reference). Índices de array supuestos para 4 motores: verificar con Diagnóstico o xp.py watch en el A340.",
+  "controls": [
+    {
+      "id": "eng.master1",
+      "label": "MASTER 1",
+      "kind": "toggle2",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "size": 17,
+      "state": {
+        "dataref": "AirbusFBW/ENG1MasterSwitch"
+      },
+      "commands": {
+        "up": "toliss_airbus/engcommands/Master1On",
+        "down": "toliss_airbus/engcommands/Master1Off"
+      },
+      "verified": true,
+      "notes": "Comandos Master1On/Off y dataref ENG1MasterSwitch presentes en el volcado de la familia ToLiss.",
+      "x": 16.0,
+      "y": 32.9
+    },
+    {
+      "id": "eng.master2",
+      "label": "MASTER 2",
+      "kind": "toggle2",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "size": 17,
+      "state": {
+        "dataref": "AirbusFBW/ENG2MasterSwitch"
+      },
+      "commands": {
+        "up": "toliss_airbus/engcommands/Master2On",
+        "down": "toliss_airbus/engcommands/Master2Off"
+      },
+      "verified": true,
+      "notes": "Comandos Master2On/Off y dataref ENG2MasterSwitch presentes en el volcado de la familia ToLiss.",
+      "x": 44.0,
+      "y": 32.9
+    },
+    {
+      "id": "eng.master3",
+      "label": "MASTER 3",
+      "kind": "toggle2",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "size": 17,
+      "state": {
+        "dataref": "AirbusFBW/ENG3MasterSwitch"
+      },
+      "commands": {
+        "up": "toliss_airbus/engcommands/Master3On",
+        "down": "toliss_airbus/engcommands/Master3Off"
+      },
+      "verified": false,
+      "notes": "Comandos Master3On/Off y dataref ENG3MasterSwitch presentes en el volcado de la familia ToLiss.",
+      "x": 88.0,
+      "y": 32.9
+    },
+    {
+      "id": "eng.master4",
+      "label": "MASTER 4",
+      "kind": "toggle2",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "size": 17,
+      "state": {
+        "dataref": "AirbusFBW/ENG4MasterSwitch"
+      },
+      "commands": {
+        "up": "toliss_airbus/engcommands/Master4On",
+        "down": "toliss_airbus/engcommands/Master4Off"
+      },
+      "verified": false,
+      "notes": "Comandos Master4On/Off y dataref ENG4MasterSwitch presentes en el volcado de la familia ToLiss.",
+      "x": 116.0,
+      "y": 32.9
+    },
+    {
+      "id": "eng.mode",
+      "label": "MODE",
+      "kind": "rotary",
+      "positions": [
+        "CRANK",
+        "NORM",
+        "IGN/START"
+      ],
+      "size": 24,
+      "state": {
+        "dataref": "AirbusFBW/ENGModeSwitch"
+      },
+      "commands": {
+        "up": "toliss_airbus/engcommands/EngineModeSwitchRight",
+        "down": "toliss_airbus/engcommands/EngineModeSwitchLeft"
+      },
+      "verified": false,
+      "notes": "Igual que en el A320: un único selector para los cuatro motores.",
+      "x": 66.0,
+      "y": 65.8
+    }
+  ]
+}

@@ -221,6 +221,21 @@ final class PanelModel {
         }
     }
 
+    /// Aircraft being flown: picks the mapping (A320 base, or the A340 overlay) and the figures
+    /// of the loadsheet, the flight report and the ground advice. Change it with `selectAircraft`.
+    private(set) var aircraft: AircraftProfile
+    /// ICAO type of the aircraft loaded in X-Plane (`sim/aircraft/view/acf_ICAO`), once connected.
+    private(set) var simAircraftICAO: String?
+    /// X-Plane reports this dataref with the aircraft's ICAO type ("A320", "A346").
+    static let aircraftTypeDataref = "sim/aircraft/view/acf_ICAO"
+
+    /// The aircraft X-Plane has loaded when it is not the one selected, to offer the switch.
+    var detectedAircraftMismatch: AircraftProfile? {
+        guard status == .connected, !demoMode,
+              let detected = AircraftProfile.detected(icao: simAircraftICAO), detected != aircraft else { return nil }
+        return detected
+    }
+
     var host: String {
         didSet { UserDefaults.standard.set(host, forKey: Keys.host) }
     }
@@ -622,6 +637,7 @@ final class PanelModel {
     @ObservationIgnored private var connectGeneration = 0
 
     private enum Keys {
+        static let aircraft = "aircraft.model"
         static let host = "xp.host"
         static let port = "xp.port"
         static let demoMode = "xp.demoMode"
@@ -670,6 +686,7 @@ final class PanelModel {
 
     init() {
         let defaults = UserDefaults.standard
+        aircraft = AircraftProfile.named(defaults.string(forKey: Keys.aircraft))
         host = defaults.string(forKey: Keys.host) ?? "192.168.1.100"
         let storedPort = defaults.integer(forKey: Keys.port)
         port = storedPort == 0 ? 8087 : storedPort   // 8087 = xp_relay.py default
@@ -747,10 +764,22 @@ final class PanelModel {
     // MARK: Mappings
 
     private func loadMappings() {
-        guard let directory = Bundle.main.url(forResource: "mapping", withExtension: nil) else {
+        guard let bundled = Bundle.main.url(forResource: "mapping", withExtension: nil) else {
             lastError = "No se encontró la carpeta 'mapping' en el bundle."
             return
         }
+        // Everything derived from the mapping starts empty: switching aircraft reloads it all.
+        subpanels = []
+        layout = .empty
+        controlsByID = [:]
+        panelOfControl = [:]
+        controlsByDataref = [:]
+        procedures = []
+        guide = .empty
+        exercises = []
+        turnaroundTemplates = []
+        fcu = nil
+        let directory = mappingDirectory(base: bundled)
         do {
             subpanels = try PanelLoader.loadAll(in: directory)
             layout = try PanelLoader.loadLayout(in: directory)
@@ -807,6 +836,43 @@ final class PanelModel {
                 lastError = "Error leyendo mapping/fcu: \(error.localizedDescription)"
             }
         }
+    }
+
+    /// The mapping of the selected aircraft: the bundled folder for the A320, or the bundled folder
+    /// with the aircraft's overlay laid on top, merged into a temporary folder.
+    private func mappingDirectory(base: URL) -> URL {
+        guard let overlay = aircraft.mappingOverlay else { return base }
+        let source = base.appendingPathComponent(overlay, isDirectory: true)
+        guard FileManager.default.fileExists(atPath: source.path) else {
+            lastError = "No se encontró el mapeo de \(aircraft.product) (mapping/\(overlay))."
+            return base
+        }
+        let destination = FileManager.default.temporaryDirectory
+            .appendingPathComponent("mapping-\(aircraft.id)", isDirectory: true)
+        do {
+            return try MappingOverlay.merge(base: base, overlay: source, into: destination)
+        } catch {
+            lastError = "Error preparando el mapeo de \(aircraft.product): \(error.localizedDescription)"
+            return base
+        }
+    }
+
+    /// Switches the aircraft being flown: reloads panels, procedures, guide and exercises for it
+    /// and reconnects, so the subscriptions and the demo follow the new mapping. Saved state
+    /// (turnaround, log, custom panels) stays; selections that no longer exist fall back.
+    func selectAircraft(_ profile: AircraftProfile) {
+        guard profile != aircraft else { return }
+        endExercise()
+        aircraft = profile
+        UserDefaults.standard.set(profile.id, forKey: Keys.aircraft)
+        loadMappings()
+        explainingControlID = nil
+        highlightedControl = nil
+        if let id = activeProcedureID, procedure(id) == nil { activeProcedureID = nil }
+        if visibleItems.isEmpty { selection = .group("overhead") }
+        layoutRevision += 1
+        fitRequestID += 1
+        if wantsConnection || status.isActive { connect() }
     }
 
     /// What the canvas shows for the current sidebar selection, in display order.
@@ -1197,7 +1263,7 @@ final class PanelModel {
             }
         }
 
-        let engines = ["eng.master1", "eng.master2"].map(positionName(ofControl:))
+        let engines = aircraft.engineNumbers.map { positionName(ofControl: "eng.master\($0)") }
         let snapshot = AutomationTriggers.Snapshot(
             altitude: data.altitude, onGround: data.onGround, groundspeed: data.groundspeed,
             parkingBrakeOn: positionName(ofControl: "park.brake").map { $0 == "ON" },
@@ -1530,7 +1596,9 @@ final class PanelModel {
     func draftTurnaroundPlan(now: Date = Date()) -> TurnaroundPlan {
         let inAnHour = now.addingTimeInterval(3600)
         let rounded = Date(timeIntervalSinceReferenceDate: (inAnHour.timeIntervalSinceReferenceDate / 300).rounded(.up) * 300)
-        var plan = TurnaroundPlan(templateID: turnaroundTemplates.first?.id ?? "departure", offBlocks: rounded)
+        var plan = TurnaroundPlan(templateID: turnaroundTemplates.first?.id ?? "departure", offBlocks: rounded,
+                                  passengers: aircraft.defaultPassengers, blockFuelKg: aircraft.defaultBlockFuel,
+                                  refuelKgPerMinute: aircraft.defaultRefuelRate)
         if let draft = nextLegDraft {
             nextLegDraft = nil
             return draft
@@ -1787,7 +1855,7 @@ final class PanelModel {
     func loadSheetBasis(origin: String, destination: String) -> LoadSheet.Basis {
         guard let ofp, ofp.origin.icao.uppercased() == origin.uppercased(),
               ofp.destination.icao.uppercased() == destination.uppercased(),
-              let basis = LoadSheet.Basis.ofp(ofp) else { return .standard }
+              let basis = LoadSheet.Basis.ofp(ofp) else { return aircraft.loadSheetBasis }
         return basis
     }
 
@@ -1904,7 +1972,7 @@ final class PanelModel {
         guard !simPaused, let data = flightData else { return }
         if recording == nil {
             guard !data.onGround || data.groundspeed > 3 else { return }
-            recording = FlightRecording(start: now)
+            recording = FlightRecording(start: now, detector: FlightEventDetector(tailStrikePitch: aircraft.tailStrikePitch))
             flownTrack = []
             flownProfile = []
             fmsDescentProfile = []
@@ -2071,7 +2139,7 @@ final class PanelModel {
             destinationCity: Radio.city(icao: ofp.destination.icao, airportName: ofp.destination.name),
             initialClimb: initial, cruise: ofp.initialAltitude ?? 30_000,
             squawk: clearance.isSquawkValid ? clearance.squawk : ATCScript.squawk(for: callsign + ofp.origin.icao + ofp.destination.icao))
-        input.aircraftType = ofp.aircraft.flatMap { $0.isEmpty ? nil : $0 } ?? "A320"
+        input.aircraftType = ofp.aircraft.flatMap { $0.isEmpty ? nil : $0 } ?? aircraft.icaoType
         input.departureRunway = [clearance.runway, departureATIS.runway ?? "", ofp.origin.runway ?? "", ofp.takeoff?.runway ?? ""]
             .first { !$0.isEmpty }
         input.arrivalRunway = ofp.destination.runway
@@ -2244,7 +2312,7 @@ final class PanelModel {
 
     /// What the pilot said: understood, done and read back, or shown as not understood.
     func handleVoiceOrder(_ text: String) {
-        guard let command = VoiceCommandParser.parse(text) else {
+        guard let command = VoiceCommandParser.parse(text, engineCount: aircraft.engineCount) else {
             flightAlert = FlightAlert(text: "No entendido: «\(text)»", level: .warning, date: Date())
             return
         }
@@ -2733,7 +2801,11 @@ final class PanelModel {
         }
         if dispatch.singleEngineTaxi == true, let takeoff = expectedTakeoff, now >= Taxi.secondEngineStart(takeoff: takeoff),
            turnaround?.blockTimes.outTime != nil {
-            once("engine2\(takeoff.timeIntervalSince1970)", "Rodaje con un motor: arranca el motor 2 para tener \(Int(Taxi.warmUpMinutes)) min de calentamiento", .info, speak: true)
+            let late = aircraft.lateStartEngines
+            let text = aircraft.engineCount > 2
+                ? "Rodaje con motores reducidos: arranca los motores \(aircraft.lateStartEnginesText) para tener \(Int(Taxi.warmUpMinutes)) min de calentamiento"
+                : "Rodaje con un motor: arranca el motor \(aircraft.lateStartEnginesText) para tener \(Int(Taxi.warmUpMinutes)) min de calentamiento"
+            once("engine\(late.map(String.init).joined())\(takeoff.timeIntervalSince1970)", text, .info, speak: true)
         }
     }
 
@@ -3197,6 +3269,7 @@ final class PanelModel {
         if let fcu { names.formUnion(fcu.datarefNames) }
         if hasMCDU { names.formUnion(MCDUScreen.datarefNames(unit: mcduUnit)) }
         names.formUnion(Self.backlightSources)
+        names.insert(Self.aircraftTypeDataref)
         names.formUnion(Self.turnaroundDatarefs)
         names.formUnion(MCDUGuide.datarefs)
         names.formUnion(Self.flightDatarefs)
@@ -3256,6 +3329,7 @@ final class PanelModel {
         // two pages on screen.
         mcduRaw.removeAll()
         decodeMCDU()
+        simAircraftICAO = nil
 
         // A fresh demo per connection: its update stream ends with the listeners that read it.
         demoSystems = nil
@@ -3338,6 +3412,10 @@ final class PanelModel {
         }
         if Self.backlightSources.contains(update.name) {
             applyBacklight(update)
+        }
+        if update.name == Self.aircraftTypeDataref {
+            let icao = update.value.textValue
+            if simAircraftICAO != icao { simAircraftICAO = icao }
         }
         if update.name.hasPrefix("AirbusFBW/MCDU1") || update.name.hasPrefix("AirbusFBW/MCDU2") {
             mcduRaw[update.name] = update.value

@@ -51,8 +51,8 @@ struct DispatchSheet: View {
                 link("ATIS", icon: "antenna.radiowaves.left.and.right", detail: model.atis.letter.map { "Información \($0)" }) { ATISView() }
                 link("Autorización de salida", icon: "text.bubble", done: d.clearance.isSquawkValid && d.clearance.initialAltitude != nil) { ClearanceView() }
                 link("Briefing de salida", icon: "airplane.departure", done: d.departureBriefed != nil) { DepartureBriefingView() }
-                link("Inspección exterior", icon: "figure.walk", detail: "\(d.walkaroundDone.count)/\(WalkaroundPoint.route.count)",
-                     done: d.walkaroundDone.count == WalkaroundPoint.route.count) { WalkaroundView() }
+                link("Inspección exterior", icon: "figure.walk", detail: "\(d.walkaroundDone.count)/\(WalkaroundPoint.route(for: model.aircraft).count)",
+                     done: d.walkaroundDone.count == WalkaroundPoint.route(for: model.aircraft).count) { WalkaroundView() }
             }
             Section("Tierra y salida") {
                 link("Pushback y arranque", icon: "arrow.uturn.backward") { PushbackView() }
@@ -675,7 +675,7 @@ private struct WalkaroundView: View {
     var body: some View {
         List {
             Section {
-                ForEach(WalkaroundPoint.route) { point in
+                ForEach(WalkaroundPoint.route(for: model.aircraft)) { point in
                     let done = model.dispatch.walkaroundDone.contains(point.id)
                     Button {
                         model.updateDispatch { state in

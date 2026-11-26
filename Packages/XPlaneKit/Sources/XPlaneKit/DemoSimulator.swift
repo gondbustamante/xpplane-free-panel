@@ -274,7 +274,7 @@ public actor DemoSimulator: SimulatorConnection {
         if let fcu { seed(fcu) }
         if simulatesSystems {
             // Generators are latched ON in a parked aircraft; they wait for their engine.
-            for id in ["elec.gen1", "elec.gen2", "elec.apu_gen"] {
+            for id in engineNumbers.map({ "elec.gen\($0)" }) + ["elec.apu_gen"] {
                 if let control = controlsByID[id] { setPosition(control, 1) }
             }
         }
@@ -462,6 +462,12 @@ public actor DemoSimulator: SimulatorConnection {
 
     // MARK: Systems
 
+    /// Engine numbers the mapping has a master switch for: 1–2 on the A320, 1–4 on the A340.
+    private var engineNumbers: [Int] {
+        let numbers = (1...8).filter { controlsByID["eng.master\($0)"] != nil }
+        return numbers.count >= 2 ? numbers : [1, 2]
+    }
+
     private func positionName(_ id: String) -> String? {
         guard let control = controlsByID[id] else { return nil }
         let index = position(of: control)
@@ -482,15 +488,16 @@ public actor DemoSimulator: SimulatorConnection {
         s.apuStart = on("apu.start")
         s.apuBleed = on("air_cond.apu_bleed")
         s.apuGen = on("elec.apu_gen", default: true)
-        s.generators = [on("elec.gen1", default: true), on("elec.gen2", default: true)]
+        let engines = engineNumbers
+        s.generators = engines.map { on("elec.gen\($0)", default: true) }
         s.irModes = ["adirs.ir1", "adirs.ir2", "adirs.ir3"].map { positionName($0) ?? "OFF" }
-        s.engineMasters = [on("eng.master1"), on("eng.master2")]
+        s.engineMasters = engines.map { on("eng.master\($0)") }
         s.engineMode = positionName("eng.mode") ?? "NORM"
-        s.engineBleeds = [on("air_cond.eng1_bleed", default: true), on("air_cond.eng2_bleed", default: true)]
+        s.engineBleeds = engines.map { on("air_cond.eng\($0)_bleed", default: true) }
         s.crossBleed = positionName("air_cond.x_bleed") ?? "AUTO"
-        s.enginePumps = [on("hyd.eng1_pump", default: true), on("hyd.eng2_pump", default: true)]
+        s.enginePumps = engines.map { on("hyd.eng\($0)_pump", default: true) }
         s.packs = [on("air_cond.pack1", default: true), on("air_cond.pack2", default: true)]
-        s.fireHandles = ["fire.eng1", "fire.eng2"].map { positionName($0) == "PUSHED" }
+        s.fireHandles = engines.map { positionName("fire.eng\($0)") == "PUSHED" }
         return s
     }
 
@@ -509,8 +516,8 @@ public actor DemoSimulator: SimulatorConnection {
         if let ext = controlsByID["elec.ext_pwr"]?.state {
             store(ext.key, .number(s.gpu ? (s.extPower ? 1 : 2) : 0))
         }
-        // GEN 1/2: ON with FAULT (3) while their engine is stopped.
-        for (i, id) in ["elec.gen1", "elec.gen2"].enumerated() {
+        // GEN 1/2 (… 4): ON with FAULT (3) while their engine is stopped.
+        for (i, id) in engineNumbers.map({ "elec.gen\($0)" }).enumerated() {
             guard let state = controlsByID[id]?.state else { continue }
             store(state.key, .number(s.generators[i] ? (aircraft.isRunning(i) ? 1 : 3) : 0))
         }
@@ -541,9 +548,12 @@ public actor DemoSimulator: SimulatorConnection {
         switch (id, text) {
         case ("apu.start", "AVAIL"):
             return aircraft.apuAvailable
-        case ("hyd.eng1_pump", "FAULT"), ("hyd.eng2_pump", "FAULT"):
-            let engine = id == "hyd.eng1_pump" ? 0 : 1
-            return switches().enginePumps[engine] && !aircraft.isRunning(engine)
+        case (_, "FAULT") where id.hasPrefix("hyd.eng") && id.contains("_pump"):
+            // "hyd.eng1_pump" (A320), "hyd.eng1_pump_g" (A340): the pump of engine 1.
+            let digits = id.dropFirst("hyd.eng".count).prefix { $0.isNumber }
+            guard let number = Int(digits), let engine = engineNumbers.firstIndex(of: number) else { return nil }
+            let selected = positionName(id).map { $0 == "ON" } ?? true
+            return selected && !aircraft.isRunning(engine)
         case ("air_cond.pack1", "FAULT"), ("air_cond.pack2", "FAULT"):
             let s = switches()
             let pack = id == "air_cond.pack1" ? 0 : 1

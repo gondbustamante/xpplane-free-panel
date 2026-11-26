@@ -8,6 +8,8 @@ import XPlaneKit
 // MARK: 3.2 Pushback and start
 
 struct PushbackView: View {
+    @Environment(PanelModel.self) private var model
+
     private struct Line: Identifiable {
         let id = UUID()
         let who: String
@@ -15,7 +17,26 @@ struct PushbackView: View {
         var note: String? = nil
     }
 
-    private let lines: [Line] = [
+    private var lines: [Line] { model.aircraft.engineCount > 2 ? Self.fourEngineLines : Self.twinLines }
+
+    /// A340: the start order is 4-3-2-1; ground clears the first pair during the push.
+    private static let fourEngineLines: [Line] = [
+        Line(who: "Cabina", text: "Ground from flight deck, ready for pushback, brakes set.",
+             note: "Antes: puertas cerradas, toboganes armados, ATC concede push y la baliza (BEACON) encendida."),
+        Line(who: "Tierra", text: "Flight deck from ground, tow bar connected, pin inserted, cleared to release brakes."),
+        Line(who: "Cabina", text: "Brakes released. Push facing west, cleared to start engines.",
+             note: "La dirección y el permiso de arranque los da ATC (\"pushback approved, facing…\")."),
+        Line(who: "Tierra", text: "Pushing back. Cleared to start engines four and three.",
+             note: "En el A340 el orden habitual es 4-3-2-1: el motor 4 mueve los sistemas verde y amarillo (frenos y dirección de la rueda de morro). El orden exacto lo fija el SOP de cada operador."),
+        Line(who: "Cabina", text: "Starting engine four.", note: "ENG MODE IGN/START, ENG 4 MASTER ON. Vigila N2/N3, EGT y FF; después el 3."),
+        Line(who: "Tierra", text: "Pushback complete, set parking brake.", note: nil),
+        Line(who: "Cabina", text: "Parking brake set. Starting engines two and one. Cleared to disconnect.",
+             note: "Los motores 2 y 1 se arrancan ya parados, o se dejan para el rodaje si se rueda con motores reducidos."),
+        Line(who: "Tierra", text: "Disconnecting. Pin and tow bar will be shown on your left. Bye bye.",
+             note: "Busca al operario con el pasador en la mano antes de rodar: es la confirmación de que el tractor está desconectado."),
+    ]
+
+    private static let twinLines: [Line] = [
         Line(who: "Cabina", text: "Ground from flight deck, ready for pushback, brakes set.",
              note: "Antes: puertas cerradas, toboganes armados, ATC concede push y la baliza (BEACON) encendida."),
         Line(who: "Tierra", text: "Flight deck from ground, tow bar connected, pin inserted, cleared to release brakes."),
@@ -51,7 +72,7 @@ struct PushbackView: View {
             Section("Si algo va mal") {
                 Text("«Stop pushback» (o «Stop, stop, stop»): tierra detiene el tractor. Freno de aparcamiento solo cuando tierra lo pida, o romperás la barra.")
                     .font(.footnote)
-                Text("Fuego o fallo en el arranque: «Ground, engine fire/start fault engine two, stand clear» y procedimiento de la QRH.")
+                Text("Fuego o fallo en el arranque: «Ground, engine fire/start fault engine \(model.aircraft.engineCount > 2 ? "four" : "two"), stand clear» y procedimiento de la QRH.")
                     .font(.footnote)
             }
         }
@@ -83,22 +104,28 @@ struct TaxiView: View {
             } header: {
                 Text("Rodaje de salida")
             } footer: {
-                Text("El A320 gasta unos 10-12 kg por minuto en rodaje con los dos motores. Si el rodaje real se alarga mucho, puede comerse la contingencia: compruébalo en FUEL PRED antes de despegar.")
+                Text(model.aircraft.engineCount > 2
+                     ? "El \(model.aircraft.name) gasta unos \(model.aircraft.allEnginesTaxiBurn.lowerBound)-\(model.aircraft.allEnginesTaxiBurn.upperBound) kg por minuto en rodaje con los cuatro motores. Si el rodaje real se alarga mucho, puede comerse la contingencia: compruébalo en FUEL PRED antes de despegar."
+                     : "El A320 gasta unos 10-12 kg por minuto en rodaje con los dos motores. Si el rodaje real se alarga mucho, puede comerse la contingencia: compruébalo en FUEL PRED antes de despegar.")
             }
             Section {
-                Toggle("Rodar con un motor", isOn: Binding(get: { model.dispatch.singleEngineTaxi ?? false },
+                Toggle(model.aircraft.engineCount > 2 ? "Rodar con los motores interiores" : "Rodar con un motor", isOn: Binding(get: { model.dispatch.singleEngineTaxi ?? false },
                                                          set: { on in model.updateDispatch { $0.singleEngineTaxi = on } }))
                 if model.dispatch.singleEngineTaxi == true {
-                    LabeledContent("Ahorro estimado", value: "\(Int(Taxi.singleEngineSaving(minutes: taxiMinutes))) kg")
+                    LabeledContent("Ahorro estimado", value: "\(Int(Taxi.reducedEngineSaving(minutes: taxiMinutes, aircraft: model.aircraft))) kg")
                     if let takeoff = model.expectedTakeoff {
                         LabeledContent("Despegue previsto", value: TurnaroundFormat.local(takeoff))
-                        LabeledContent("Arrancar el motor 1", value: TurnaroundFormat.local(Taxi.secondEngineStart(takeoff: takeoff)))
+                        LabeledContent(model.aircraft.engineCount > 2 ? "Arrancar los motores \(model.aircraft.lateStartEnginesText)" : "Arrancar el motor 1", value: TurnaroundFormat.local(Taxi.secondEngineStart(takeoff: takeoff)))
                     }
                 }
             } header: {
-                Text("Un solo motor")
+                Text(model.aircraft.engineCount > 2 ? "Motores reducidos" : "Un solo motor")
             } footer: {
-                Text("Muchas aerolíneas ruedan con el motor 2 y arrancan el 1 durante el rodaje, con tiempo para unos \(Int(Taxi.warmUpMinutes)) minutos de calentamiento antes del empuje de despegue. Ojo: con un motor el rodaje necesita más empuje (cuidado con el chorro en virajes cerrados y rampas), la APU sigue dando el bleed y el hidráulico verde llega por la PTU. No se usa con pista contaminada, pendiente o poco tiempo de rodaje. La app avisa (sin botones) cuando toca arrancar el segundo motor, con el turnaround en marcha.")
+                if model.aircraft.engineCount > 2 {
+                    Text("Algunos operadores del A340 ruedan con los motores interiores (2 y 3) y arrancan los exteriores (1 y 4) durante el rodaje, con tiempo para unos \(Int(Taxi.warmUpMinutes)) minutos de calentamiento antes del empuje de despegue. Con los exteriores parados, los sistemas hidráulicos dependen de las bombas eléctricas. No se usa con pista contaminada, pendiente o poco tiempo de rodaje. La app avisa (sin botones) cuando toca arrancarlos, con el turnaround en marcha.")
+                } else {
+                    Text("Muchas aerolíneas ruedan con el motor 2 y arrancan el 1 durante el rodaje, con tiempo para unos \(Int(Taxi.warmUpMinutes)) minutos de calentamiento antes del empuje de despegue. Ojo: con un motor el rodaje necesita más empuje (cuidado con el chorro en virajes cerrados y rampas), la APU sigue dando el bleed y el hidráulico verde llega por la PTU. No se usa con pista contaminada, pendiente o poco tiempo de rodaje. La app avisa (sin botones) cuando toca arrancar el segundo motor, con el turnaround en marcha.")
+                }
             }
         }
         .navigationTitle("Rodaje")

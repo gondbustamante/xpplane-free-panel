@@ -163,14 +163,14 @@ struct TurnaroundPlannerSheet: View {
                     Text("Con slot hay que despegar entre 5 minutos antes y 10 después del CTOT. La app calcula la hora límite de fuera calzos restando el rodaje. En un aeropuerto A-CDM la hora de salida es tu TOBT y el aeropuerto te da una TSAT para arrancar.")
                 }
                 Section {
-                    Stepper("Pasajeros: \(plan.passengers)", value: $plan.passengers, in: 0...180, step: 5)
-                    Stepper("Combustible de bloque: \(Int(plan.blockFuelKg)) kg", value: $plan.blockFuelKg, in: 1000...18_000, step: 100)
+                    Stepper("Pasajeros: \(plan.passengers)", value: $plan.passengers, in: 0...model.aircraft.maxPassengers, step: 5)
+                    Stepper("Combustible de bloque: \(Int(plan.blockFuelKg)) kg", value: $plan.blockFuelKg, in: model.aircraft.blockFuelRange, step: model.aircraft.blockFuelStep)
                     if selectedTemplate?.uses(.deboarding) == true {
-                        Stepper("Pasajeros que llegan: \(plan.arrivingPassengers ?? plan.passengers)", value: arriving, in: 0...180, step: 5)
-                        Stepper("Desembarque: \(Int(plan.deboardingMinutes ?? 8)) min", value: deboarding, in: 3...20, step: 1)
+                        Stepper("Pasajeros que llegan: \(plan.arrivingPassengers ?? plan.passengers)", value: arriving, in: 0...model.aircraft.maxPassengers, step: 5)
+                        Stepper("Desembarque: \(Int(plan.deboardingMinutes ?? 8)) min", value: deboarding, in: model.aircraft.deboardingMinutesRange, step: 1)
                     }
-                    Stepper("Embarque: \(Int(plan.boardingMinutes)) min", value: $plan.boardingMinutes, in: 5...40, step: 1)
-                    Stepper("Repostaje: \(Int(plan.refuelKgPerMinute)) kg/min", value: $plan.refuelKgPerMinute, in: 200...2000, step: 100)
+                    Stepper("Embarque: \(Int(plan.boardingMinutes)) min", value: $plan.boardingMinutes, in: model.aircraft.boardingMinutesRange, step: 1)
+                    Stepper("Repostaje: \(Int(plan.refuelKgPerMinute)) kg/min", value: $plan.refuelKgPerMinute, in: model.aircraft.refuelRateRange, step: 100)
                     Toggle("Iniciar los servicios a su hora", isOn: $plan.autoServices)
                 } header: {
                     Text("Carga y servicios")
@@ -471,7 +471,7 @@ struct TurnaroundSheet: View {
                 } footer: {
                     Text((sheet.basis.fromOFP
                           ? "Con los pesos del OFP: peso operativo \(Int(sheet.basis.dryOperatingWeight)) kg y \(Int(sheet.basis.massPerPassenger)) kg por pasajero con equipaje, sobre los pasajeros reales del embarque. "
-                          : "Con masas estándar (\(Int(LoadSheet.passengerMass)) kg por pasajero y \(Int(LoadSheet.bagMass)) kg de equipaje) sobre un peso operativo típico de \(Int(LoadSheet.dryOperatingWeight)) kg. ")
+                          : "Con masas estándar (\(Int(LoadSheet.passengerMass)) kg por pasajero y \(Int(LoadSheet.bagMass)) kg de equipaje) sobre un peso operativo típico de \(Int(sheet.basis.dryOperatingWeight)) kg. ")
                          + "Estos son los datos que van a INIT B o FUEL PRED en «Cierre del MCDU con la hoja de carga».")
                 }
             }

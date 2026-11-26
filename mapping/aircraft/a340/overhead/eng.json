@@ -1,0 +1,144 @@
+{
+  "id": "eng",
+  "title": "",
+  "group": "overhead",
+  "order": 43,
+  "frame": {
+    "x": 626,
+    "y": 488,
+    "w": 190,
+    "h": 42
+  },
+  "titleHidden": true,
+  "notes": "A340: MAN START de los cuatro motores (sin N1 MODE). ToLiss A340-600: nombres siguiendo los de la familia ToLiss (mismo código base que el A320, volcado en mapping/reference). Índices de array supuestos para 4 motores: verificar con Diagnóstico o xp.py watch en el A340. Geometría adaptada a la distribución del overhead del A340 (cuatro motores) sobre el lienzo del A320.",
+  "decorations": [
+    {
+      "type": "text",
+      "at": [
+        95.0,
+        4.0
+      ],
+      "text": "ENG",
+      "size": 6
+    },
+    {
+      "type": "text",
+      "at": [
+        95.0,
+        8.1
+      ],
+      "text": "MAN START",
+      "size": 5.5
+    }
+  ],
+  "controls": [
+    {
+      "id": "eng.man_start1",
+      "label": "1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ManStartSwitchArray",
+        "index": 0
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/ManStartLightsArray",
+          "index": 0,
+          "bit": 1
+        }
+      },
+      "guarded": true,
+      "guardStyle": "cage",
+      "verified": false,
+      "x": 34.0,
+      "y": 25.2
+    },
+    {
+      "id": "eng.man_start2",
+      "label": "2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ManStartSwitchArray",
+        "index": 1
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/ManStartLightsArray",
+          "index": 1,
+          "bit": 1
+        }
+      },
+      "guarded": true,
+      "guardStyle": "cage",
+      "verified": false,
+      "x": 74.0,
+      "y": 25.2
+    },
+    {
+      "id": "eng.man_start3",
+      "label": "3",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ManStartSwitchArray",
+        "index": 2
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/ManStartLightsArray",
+          "index": 2,
+          "bit": 1
+        }
+      },
+      "guarded": true,
+      "guardStyle": "cage",
+      "verified": false,
+      "x": 116.0,
+      "y": 25.2
+    },
+    {
+      "id": "eng.man_start4",
+      "label": "4",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ManStartSwitchArray",
+        "index": 3
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/ManStartLightsArray",
+          "index": 3,
+          "bit": 1
+        }
+      },
+      "guarded": true,
+      "guardStyle": "cage",
+      "verified": false,
+      "x": 156.0,
+      "y": 25.2
+    }
+  ]
+}

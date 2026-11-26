@@ -192,7 +192,12 @@ public struct FlightEventDetector: Sendable {
     /// Ground roll after a landing or before a take-off: not taxiing.
     private var lastAirborne: TimeInterval?
 
-    public init() {}
+    /// Pitch at which the tail touches with the gear compressed (11.7° on the A320).
+    public var tailStrikePitch: Double
+
+    public init(tailStrikePitch: Double = 11.7) {
+        self.tailStrikePitch = tailStrikePitch
+    }
 
     public mutating func update(_ now: Reading) -> [FlightEvent] {
         defer { previous = now }
@@ -234,9 +239,14 @@ public struct FlightEventDetector: Sendable {
         check(.excessiveBank, airborne && abs(now.bank) > (height < 400 ? 10 : 33),
               severity: { abs(now.bank) > 40 || height < 400 ? .high : .medium },
               detail: { "\(Int(abs(now.bank).rounded()))° de alabeo a \(Int(height)) ft" })
-        // A320: the tail touches at about 11.7° with the gear compressed.
-        check(.tailStrikeRisk, now.radioAltitude < 15 && now.pitch > 10 && now.ias > 80,
-              severity: { now.pitch > 11 ? .high : .medium },
+        // The tail touches at `tailStrikePitch` with the gear compressed (A320 11.7°: warns above
+        // 10°, high above 11°). Other aircraft keep the same proportion of their own limit
+        // (A340-600 9.5°: 8.1° and 8.9°).
+        let scale = tailStrikePitch / 11.7
+        let warnPitch = scale * 10
+        let highPitch = scale * 11
+        check(.tailStrikeRisk, now.radioAltitude < 15 && now.pitch > warnPitch && now.ias > 80,
+              severity: { now.pitch > highPitch ? .high : .medium },
               detail: { String(format: "%.1f° de cabeceo a %.0f ft", now.pitch, now.radioAltitude) })
         check(.speedBelowFL100, airborne && now.altitude < 9_800 && height > 2_500 && now.ias > 260,
               severity: { now.ias > 280 ? .medium : .low },

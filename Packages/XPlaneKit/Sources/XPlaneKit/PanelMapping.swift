@@ -339,13 +339,18 @@ public enum PanelLoader {
     }
 
     /// Loads every subpanel `*.json` under `directory` (recursively, skipping `layout.json`,
-    /// the `reference` folder and files without a `controls` array, such as the FCU),
-    /// sorted by `order` then title.
+    /// the `reference` folder, the aircraft overlays in `aircraft/` and files without a
+    /// `controls` array, such as the FCU), sorted by `order` then title.
     public static func loadAll(in directory: URL) throws -> [SubpanelDefinition] {
         let fileManager = FileManager.default
         guard let enumerator = fileManager.enumerator(at: directory, includingPropertiesForKeys: nil) else { return [] }
         var panels: [SubpanelDefinition] = []
-        for case let url as URL in enumerator where url.pathExtension.lowercased() == "json" {
+        for case let url as URL in enumerator {
+            if enumerator.level == 1, url.lastPathComponent == MappingOverlay.folder {
+                enumerator.skipDescendants()
+                continue
+            }
+            guard url.pathExtension.lowercased() == "json" else { continue }
             if url.lastPathComponent == "layout.json" { continue }
             if url.pathComponents.contains("reference") { continue }
             let data = try Data(contentsOf: url)

@@ -1,0 +1,901 @@
+{
+  "id": "elec",
+  "title": "",
+  "group": "overhead",
+  "order": 20,
+  "frame": {
+    "x": 200,
+    "y": 270,
+    "w": 416,
+    "h": 102
+  },
+  "titleHidden": true,
+  "notes": "A340: cuatro generadores con su IDG, APU GEN, dos tomas de tierra (EXT A y B), BAT 1, BAT 2 y APU BAT. BAT, EXT A, GND PWR e IDG 1/2 con los comandos de la familia ToLiss; el resto bloqueado hasta verificar. ToLiss A340-600: nombres siguiendo los de la familia ToLiss (mismo código base que el A320, volcado en mapping/reference). Índices de array supuestos para 4 motores: verificar con Diagnóstico o xp.py watch en el A340. Geometría adaptada a la distribución del overhead del A340 (cuatro motores) sobre el lienzo del A320.",
+  "decorations": [
+    {
+      "type": "text",
+      "at": [
+        208.0,
+        5.5
+      ],
+      "text": "BAT",
+      "size": 5.5
+    },
+    {
+      "type": "box",
+      "at": [
+        36.0,
+        66.0
+      ],
+      "text": "AC 1",
+      "size": 5
+    },
+    {
+      "type": "box",
+      "at": [
+        100.0,
+        66.0
+      ],
+      "text": "AC 2",
+      "size": 5
+    },
+    {
+      "type": "box",
+      "at": [
+        316.0,
+        66.0
+      ],
+      "text": "AC 3",
+      "size": 5
+    },
+    {
+      "type": "box",
+      "at": [
+        380.0,
+        66.0
+      ],
+      "text": "AC 4",
+      "size": 5
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          52.0,
+          66.0
+        ],
+        [
+          84.0,
+          66.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          116.0,
+          66.0
+        ],
+        [
+          300.0,
+          66.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          332.0,
+          66.0
+        ],
+        [
+          364.0,
+          66.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          158.0,
+          66.0
+        ],
+        [
+          158.0,
+          75.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          208.0,
+          66.0
+        ],
+        [
+          208.0,
+          75.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          258.0,
+          66.0
+        ],
+        [
+          258.0,
+          75.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          36.0,
+          70.0
+        ],
+        [
+          36.0,
+          75.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          100.0,
+          70.0
+        ],
+        [
+          100.0,
+          75.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          316.0,
+          70.0
+        ],
+        [
+          316.0,
+          75.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          380.0,
+          70.0
+        ],
+        [
+          380.0,
+          75.0
+        ]
+      ]
+    },
+    {
+      "type": "text",
+      "at": [
+        9.2,
+        51.0
+      ],
+      "text": "ELEC",
+      "size": 7,
+      "vertical": true
+    },
+    {
+      "type": "text",
+      "at": [
+        406.4,
+        51.0
+      ],
+      "text": "ELEC",
+      "size": 7,
+      "vertical": true
+    }
+  ],
+  "controls": [
+    {
+      "id": "elec.commercial",
+      "label": "COMMERCIAL",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ElecOHPArray",
+        "index": 6
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/ElecOHPArray",
+          "index": 6,
+          "onValue": 0
+        }
+      },
+      "readOnly": true,
+      "verified": false,
+      "x": 30.0,
+      "y": 18.0
+    },
+    {
+      "id": "elec.galley",
+      "label": "GALY & CAB",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "AUTO"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/GalleyPBLight",
+        "values": [
+          1,
+          0
+        ]
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/GalleyPBLight",
+          "onValue": 2
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/GalleyPBLight",
+          "onValue": 1
+        }
+      },
+      "sideLabel": "AUTO",
+      "readOnly": true,
+      "verified": false,
+      "x": 386.0,
+      "y": 18.0
+    },
+    {
+      "id": "elec.bat1_v",
+      "label": "BAT 1",
+      "kind": "display",
+      "positions": [
+        "",
+        ""
+      ],
+      "state": {
+        "dataref": "AirbusFBW/BatVolts",
+        "index": 0
+      },
+      "format": "%.1fV",
+      "verified": true,
+      "x": 112.0,
+      "y": 18.0
+    },
+    {
+      "id": "elec.bat1",
+      "label": "1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/BatOHPArray",
+        "index": 0,
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "3": 1
+        }
+      },
+      "commands": {
+        "up": "toliss_airbus/eleccommands/Bat1On",
+        "down": "toliss_airbus/eleccommands/Bat1Off"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/BatOHPArray",
+          "index": 0,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/BatOHPArray",
+          "index": 0,
+          "bit": 1,
+          "invert": true
+        }
+      },
+      "verified": true,
+      "notes": "Comandos de la familia ToLiss, iguales que en el A320.",
+      "x": 150.0,
+      "y": 18.0
+    },
+    {
+      "id": "elec.apu_bat",
+      "label": "APU",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/BatOHPArray",
+        "index": 2,
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "3": 1
+        }
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/BatOHPArray",
+          "index": 2,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/BatOHPArray",
+          "index": 2,
+          "bit": 1,
+          "invert": true
+        }
+      },
+      "readOnly": true,
+      "verified": false,
+      "notes": "APU BAT del A340: índice 2 de BatOHPArray supuesto.",
+      "x": 208.0,
+      "y": 18.0
+    },
+    {
+      "id": "elec.bat2",
+      "label": "2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/BatOHPArray",
+        "index": 1,
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "3": 1
+        }
+      },
+      "commands": {
+        "up": "toliss_airbus/eleccommands/Bat2On",
+        "down": "toliss_airbus/eleccommands/Bat2Off"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/BatOHPArray",
+          "index": 1,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/BatOHPArray",
+          "index": 1,
+          "bit": 1,
+          "invert": true
+        }
+      },
+      "verified": true,
+      "notes": "Comandos de la familia ToLiss, iguales que en el A320.",
+      "x": 266.0,
+      "y": 18.0
+    },
+    {
+      "id": "elec.bat2_v",
+      "label": "BAT 2",
+      "kind": "display",
+      "positions": [
+        "",
+        ""
+      ],
+      "state": {
+        "dataref": "AirbusFBW/BatVolts",
+        "index": 1
+      },
+      "format": "%.1fV",
+      "verified": true,
+      "x": 304.0,
+      "y": 18.0
+    },
+    {
+      "id": "elec.idg1",
+      "label": "IDG 1",
+      "kind": "korry",
+      "positions": [
+        "ON",
+        "DISC"
+      ],
+      "guarded": true,
+      "guardStyle": "red",
+      "size": 15,
+      "verified": true,
+      "x": 36.0,
+      "y": 50.0,
+      "commands": {
+        "press": "toliss_airbus/eleccommands/IDG1PressAndHold",
+        "duration": 3
+      },
+      "notes": "Comando de la familia ToLiss (volcado del A320)."
+    },
+    {
+      "id": "elec.idg2",
+      "label": "IDG 2",
+      "kind": "korry",
+      "positions": [
+        "ON",
+        "DISC"
+      ],
+      "guarded": true,
+      "guardStyle": "red",
+      "size": 15,
+      "verified": true,
+      "x": 100.0,
+      "y": 50.0,
+      "commands": {
+        "press": "toliss_airbus/eleccommands/IDG2PressAndHold",
+        "duration": 3
+      },
+      "notes": "Comando de la familia ToLiss (volcado del A320)."
+    },
+    {
+      "id": "elec.idg3",
+      "label": "IDG 3",
+      "kind": "korry",
+      "positions": [
+        "ON",
+        "DISC"
+      ],
+      "guarded": true,
+      "guardStyle": "red",
+      "size": 15,
+      "verified": false,
+      "x": 316.0,
+      "y": 50.0,
+      "commands": {
+        "press": "toliss_airbus/eleccommands/IDG3PressAndHold",
+        "duration": 3
+      },
+      "readOnly": true,
+      "notes": "Comando IDG3PressAndHold supuesto (no está en el volcado del A320): bloqueado hasta comprobarlo con xp.py dump en el A340."
+    },
+    {
+      "id": "elec.idg4",
+      "label": "IDG 4",
+      "kind": "korry",
+      "positions": [
+        "ON",
+        "DISC"
+      ],
+      "guarded": true,
+      "guardStyle": "red",
+      "size": 15,
+      "verified": false,
+      "x": 380.0,
+      "y": 50.0,
+      "commands": {
+        "press": "toliss_airbus/eleccommands/IDG4PressAndHold",
+        "duration": 3
+      },
+      "readOnly": true,
+      "notes": "Comando IDG4PressAndHold supuesto (no está en el volcado del A320): bloqueado hasta comprobarlo con xp.py dump en el A340."
+    },
+    {
+      "id": "elec.ac_ess_feed",
+      "label": "AC ESS FEED",
+      "kind": "korry",
+      "positions": [
+        "NORM",
+        "ALTN"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/AcEssAltn"
+      },
+      "lamps": {
+        "bottom": {
+          "text": "ALTN",
+          "color": "white",
+          "dataref": "AirbusFBW/AcEssAltn"
+        }
+      },
+      "size": 15,
+      "readOnly": true,
+      "verified": false,
+      "x": 160.0,
+      "y": 50.0
+    },
+    {
+      "id": "elec.bus_tie",
+      "label": "BUS TIE",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "AUTO"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ElecOHPArray",
+        "index": 5
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/ElecOHPArray",
+          "index": 5,
+          "onValue": 0
+        }
+      },
+      "sideLabel": "AUTO",
+      "size": 15,
+      "readOnly": true,
+      "verified": false,
+      "x": 208.0,
+      "y": 50.0
+    },
+    {
+      "id": "elec.gpu",
+      "label": "GND PWR",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ExtPowOHPArray",
+        "index": 0,
+        "values": [
+          0,
+          2
+        ],
+        "aliases": {
+          "1": 1
+        }
+      },
+      "commands": {
+        "press": "toliss_airbus/elec_ground_power/toggle"
+      },
+      "lamps": {
+        "top": {
+          "text": "AVAIL",
+          "color": "green",
+          "dataref": "AirbusFBW/ExtPowOHPArray",
+          "index": 0,
+          "onValue": 0,
+          "invert": true
+        }
+      },
+      "size": 16,
+      "verified": true,
+      "notes": "Conecta o quita la GPU con el comando del ToLiss, como en el A320.",
+      "x": 256.0,
+      "y": 50.0
+    },
+    {
+      "id": "elec.gen1",
+      "label": "GEN 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/EngGenOHPArray",
+        "index": 0,
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "3": 1
+        }
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/EngGenOHPArray",
+          "index": 0,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/EngGenOHPArray",
+          "index": 0,
+          "bit": 1,
+          "invert": true
+        }
+      },
+      "readOnly": true,
+      "verified": false,
+      "x": 36.0,
+      "y": 84.0
+    },
+    {
+      "id": "elec.gen2",
+      "label": "GEN 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/EngGenOHPArray",
+        "index": 1,
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "3": 1
+        }
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/EngGenOHPArray",
+          "index": 1,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/EngGenOHPArray",
+          "index": 1,
+          "bit": 1,
+          "invert": true
+        }
+      },
+      "readOnly": true,
+      "verified": false,
+      "x": 100.0,
+      "y": 84.0
+    },
+    {
+      "id": "elec.gen3",
+      "label": "GEN 3",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/EngGenOHPArray",
+        "index": 2,
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "3": 1
+        }
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/EngGenOHPArray",
+          "index": 2,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/EngGenOHPArray",
+          "index": 2,
+          "bit": 1,
+          "invert": true
+        }
+      },
+      "readOnly": true,
+      "verified": false,
+      "x": 316.0,
+      "y": 84.0
+    },
+    {
+      "id": "elec.gen4",
+      "label": "GEN 4",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/EngGenOHPArray",
+        "index": 3,
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "3": 1
+        }
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/EngGenOHPArray",
+          "index": 3,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/EngGenOHPArray",
+          "index": 3,
+          "bit": 1,
+          "invert": true
+        }
+      },
+      "readOnly": true,
+      "verified": false,
+      "x": 380.0,
+      "y": 84.0
+    },
+    {
+      "id": "elec.apu_gen",
+      "label": "APU GEN",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/APUGenOHPArray",
+        "index": 0,
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "3": 1
+        }
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/OHPLightsATA24_Raw",
+          "index": 5
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/APUGenOHPArray",
+          "index": 0,
+          "bit": 1,
+          "invert": true
+        }
+      },
+      "readOnly": true,
+      "verified": false,
+      "x": 158.0,
+      "y": 84.0
+    },
+    {
+      "id": "elec.ext_pwr",
+      "label": "EXT A",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ExtPowOHPArray",
+        "index": 0,
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "2": 0
+        }
+      },
+      "commands": {
+        "up": "toliss_airbus/eleccommands/ExtPowOn",
+        "down": "toliss_airbus/eleccommands/ExtPowOff"
+      },
+      "lamps": {
+        "top": {
+          "text": "AVAIL",
+          "color": "green",
+          "dataref": "AirbusFBW/ExtPowOHPArray",
+          "index": 0,
+          "onValue": 2
+        },
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/ExtPowOHPArray",
+          "index": 0,
+          "onValue": 1
+        }
+      },
+      "verified": false,
+      "notes": "EXT PWR A con los comandos del A320 (ExtPowOn/Off); comprobar en el A340 si actúan sobre A.",
+      "x": 208.0,
+      "y": 84.0
+    },
+    {
+      "id": "elec.ext_pwr_b",
+      "label": "EXT B",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ExtPowOHPArray",
+        "index": 1,
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "2": 0
+        }
+      },
+      "lamps": {
+        "top": {
+          "text": "AVAIL",
+          "color": "green",
+          "dataref": "AirbusFBW/ExtPowOHPArray",
+          "index": 1,
+          "onValue": 2
+        },
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/ExtPowOHPArray",
+          "index": 1,
+          "onValue": 1
+        }
+      },
+      "readOnly": true,
+      "verified": false,
+      "notes": "EXT PWR B: índice 1 de ExtPowOHPArray supuesto.",
+      "x": 258.0,
+      "y": 84.0
+    }
+  ]
+}

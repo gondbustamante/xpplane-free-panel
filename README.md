@@ -84,6 +84,10 @@ El turnaround guarda el combustible en OUT e IN y la toma, y el diario muestra e
 
 Los procedimientos incluyen la **preparación del MCDU como la hacen los pilotos de línea** (DATA, INIT, F-PLN, SEC F-PLN, RAD NAV, INIT B, PERF), el cierre con la hoja de carga y la preparación de la aproximación, con los pasos de cada página y el porqué de cada uno.
 
+## ToLiss A340-600
+
+Toca el nombre del avión en la barra lateral (o *Ajustes → Avión*) y elige **ToLiss A340-600**. Los paneles, los procedimientos (arranque 4-3-2-1), la guía del modo aprender, los ejercicios, el turnaround de largo radio, la hoja de carga y el modo demo pasan al A340; el A320 sigue exactamente igual. Si al conectar X-Plane tiene cargado un avión distinto del elegido, la barra lateral ofrece cambiar con un toque. FCU, EFIS, radios, ECAM y MCDU son los mismos que en el A320. Los mandos nuevos del A340 están pendientes de verificar contra el ToLiss A340: ver [docs/MAPPING.md](docs/MAPPING.md#otros-aviones-mappingaircraftid).
+
 ## Verificar y ampliar el mapeo
 
 Los índices del array `AirbusFBW/OHPLightSwitches` proceden de scripts publicados por usuarios y hay que confirmarlos en tu versión de ToLiss. El flujo está en [docs/MAPPING.md](docs/MAPPING.md). Desde el iPad: menú de estado → *Diagnóstico de datarefs…*, haz clic en un interruptor de la cabina virtual y mira qué índice se ilumina. Desde la Terminal:
@@ -111,6 +115,7 @@ mapping/efis/          EFIS capitán y F/O del glareshield (BARO, FD, LS, ND)
 mapping/procedures/    Procedimientos normales y checklist del A320; los ítems ligados a mandos se marcan solos
 mapping/guide/         Explicaciones del modo aprender: qué hace cada sistema y cada mando, posición a posición
 mapping/exercises/     Ejercicios cronometrados sobre los procedimientos (tiempo objetivo, nivel)
+mapping/aircraft/a340/ Capa del ToLiss A340-600: solo los archivos que cambian respecto al A320 (overhead de cuatro motores, procedimientos, guía, turnaround)
 mapping/reference/     Volcado de datarefs y comandos de ToLiss (xp.py dump)
 tools/                 xp_relay.py (relay LAN), xp.py (CLI de descubrimiento), validate_mapping.py, make_icon.py (icono y logo)
 docs/                  Arquitectura, roadmap y guía de mapeo

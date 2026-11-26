@@ -1,0 +1,620 @@
+{
+  "id": "fire",
+  "title": "",
+  "group": "overhead",
+  "order": 5,
+  "frame": {
+    "x": 200,
+    "y": 82,
+    "w": 416,
+    "h": 68
+  },
+  "titleHidden": true,
+  "notes": "A340: pulsadores de fuego de los cuatro motores y del APU. ToLiss A340-600: nombres siguiendo los de la familia ToLiss (mismo código base que el A320, volcado en mapping/reference). Índices de array supuestos para 4 motores: verificar con Diagnóstico o xp.py watch en el A340. Geometría adaptada a la distribución del overhead del A340 (cuatro motores) sobre el lienzo del A320.",
+  "decorations": [
+    {
+      "type": "divider",
+      "points": [
+        [
+          178.0,
+          3.7
+        ],
+        [
+          178.0,
+          64.7
+        ]
+      ]
+    },
+    {
+      "type": "divider",
+      "points": [
+        [
+          238.0,
+          3.7
+        ],
+        [
+          238.0,
+          64.7
+        ]
+      ]
+    },
+    {
+      "type": "text",
+      "at": [
+        9.2,
+        34.0
+      ],
+      "text": "FIRE",
+      "size": 7,
+      "vertical": true
+    },
+    {
+      "type": "text",
+      "at": [
+        406.4,
+        34.0
+      ],
+      "text": "FIRE",
+      "size": 7,
+      "vertical": true
+    }
+  ],
+  "controls": [
+    {
+      "id": "fire.eng1",
+      "label": "ENG 1",
+      "kind": "korry",
+      "positions": [
+        "NORM",
+        "PUSHED"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENGFireSwitchArray",
+        "index": 0
+      },
+      "lamps": {
+        "top": {
+          "text": "FIRE",
+          "color": "red",
+          "dataref": "AirbusFBW/OHPLightsATA70_Raw",
+          "index": 11
+        },
+        "bottom": {
+          "text": "PUSHED",
+          "color": "white",
+          "dataref": "AirbusFBW/ENGFireSwitchArray",
+          "index": 0
+        }
+      },
+      "guarded": true,
+      "style": "fire",
+      "verified": true,
+      "x": 52.0,
+      "y": 22.0
+    },
+    {
+      "id": "fire.eng1_agent1",
+      "label": "AGENT 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "DISCH"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FireExOHPArray",
+        "index": 0
+      },
+      "lamps": {
+        "top": {
+          "text": "SQUIB",
+          "color": "white",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 0,
+          "onValue": 1
+        },
+        "bottom": {
+          "text": "DISCH",
+          "color": "amber",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 0,
+          "onValue": 2
+        }
+      },
+      "guarded": true,
+      "guardStyle": "red",
+      "size": 15,
+      "readOnly": true,
+      "verified": false,
+      "x": 37.0,
+      "y": 52.0
+    },
+    {
+      "id": "fire.eng1_agent2",
+      "label": "AGENT 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "DISCH"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FireExOHPArray",
+        "index": 1
+      },
+      "lamps": {
+        "top": {
+          "text": "SQUIB",
+          "color": "white",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 1,
+          "onValue": 1
+        },
+        "bottom": {
+          "text": "DISCH",
+          "color": "amber",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 1,
+          "onValue": 2
+        }
+      },
+      "guarded": true,
+      "guardStyle": "red",
+      "size": 15,
+      "readOnly": true,
+      "verified": false,
+      "x": 67.0,
+      "y": 52.0
+    },
+    {
+      "id": "fire.eng1_test",
+      "label": "TEST",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/FireTestENG1",
+        "duration": 2
+      },
+      "style": "round",
+      "size": 14,
+      "verified": true,
+      "notes": "Comando AirbusFBW/FireTestENG1 presente en el volcado de la familia ToLiss.",
+      "x": 87.0,
+      "y": 22.0
+    },
+    {
+      "id": "fire.eng2",
+      "label": "ENG 2",
+      "kind": "korry",
+      "positions": [
+        "NORM",
+        "PUSHED"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENGFireSwitchArray",
+        "index": 1
+      },
+      "lamps": {
+        "top": {
+          "text": "FIRE",
+          "color": "red",
+          "dataref": "AirbusFBW/OHPLightsATA70_Raw",
+          "index": 13
+        },
+        "bottom": {
+          "text": "PUSHED",
+          "color": "white",
+          "dataref": "AirbusFBW/ENGFireSwitchArray",
+          "index": 1
+        }
+      },
+      "guarded": true,
+      "style": "fire",
+      "verified": true,
+      "x": 136.0,
+      "y": 22.0
+    },
+    {
+      "id": "fire.eng2_agent1",
+      "label": "AGENT 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "DISCH"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FireExOHPArray",
+        "index": 2
+      },
+      "lamps": {
+        "top": {
+          "text": "SQUIB",
+          "color": "white",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 2,
+          "onValue": 1
+        },
+        "bottom": {
+          "text": "DISCH",
+          "color": "amber",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 2,
+          "onValue": 2
+        }
+      },
+      "guarded": true,
+      "guardStyle": "red",
+      "size": 15,
+      "readOnly": true,
+      "verified": false,
+      "x": 121.0,
+      "y": 52.0
+    },
+    {
+      "id": "fire.eng2_agent2",
+      "label": "AGENT 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "DISCH"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FireExOHPArray",
+        "index": 3
+      },
+      "lamps": {
+        "top": {
+          "text": "SQUIB",
+          "color": "white",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 3,
+          "onValue": 1
+        },
+        "bottom": {
+          "text": "DISCH",
+          "color": "amber",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 3,
+          "onValue": 2
+        }
+      },
+      "guarded": true,
+      "guardStyle": "red",
+      "size": 15,
+      "readOnly": true,
+      "verified": false,
+      "x": 151.0,
+      "y": 52.0
+    },
+    {
+      "id": "fire.eng2_test",
+      "label": "TEST",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/FireTestENG2",
+        "duration": 2
+      },
+      "style": "round",
+      "size": 14,
+      "verified": true,
+      "notes": "Comando AirbusFBW/FireTestENG2 presente en el volcado de la familia ToLiss.",
+      "x": 171.0,
+      "y": 22.0
+    },
+    {
+      "id": "fire.eng3",
+      "label": "ENG 3",
+      "kind": "korry",
+      "positions": [
+        "NORM",
+        "PUSHED"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENGFireSwitchArray",
+        "index": 2
+      },
+      "lamps": {
+        "top": {
+          "text": "FIRE",
+          "color": "red",
+          "dataref": "AirbusFBW/OHPLightsATA70_Raw",
+          "index": 15
+        },
+        "bottom": {
+          "text": "PUSHED",
+          "color": "white",
+          "dataref": "AirbusFBW/ENGFireSwitchArray",
+          "index": 2
+        }
+      },
+      "guarded": true,
+      "style": "fire",
+      "verified": false,
+      "notes": "ENG 1/2 como en el A320; ENG 3/4 en los índices 2 y 3 de ENGFireSwitchArray y lámpara FIRE en OHPLightsATA70_Raw supuestos.",
+      "x": 280.0,
+      "y": 22.0
+    },
+    {
+      "id": "fire.eng3_agent1",
+      "label": "AGENT 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "DISCH"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FireExOHPArray",
+        "index": 4
+      },
+      "lamps": {
+        "top": {
+          "text": "SQUIB",
+          "color": "white",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 4,
+          "onValue": 1
+        },
+        "bottom": {
+          "text": "DISCH",
+          "color": "amber",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 4,
+          "onValue": 2
+        }
+      },
+      "guarded": true,
+      "guardStyle": "red",
+      "size": 15,
+      "readOnly": true,
+      "verified": false,
+      "x": 265.0,
+      "y": 52.0
+    },
+    {
+      "id": "fire.eng3_agent2",
+      "label": "AGENT 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "DISCH"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FireExOHPArray",
+        "index": 5
+      },
+      "lamps": {
+        "top": {
+          "text": "SQUIB",
+          "color": "white",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 5,
+          "onValue": 1
+        },
+        "bottom": {
+          "text": "DISCH",
+          "color": "amber",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 5,
+          "onValue": 2
+        }
+      },
+      "guarded": true,
+      "guardStyle": "red",
+      "size": 15,
+      "readOnly": true,
+      "verified": false,
+      "x": 295.0,
+      "y": 52.0
+    },
+    {
+      "id": "fire.eng3_test",
+      "label": "TEST",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/FireTestENG3",
+        "duration": 2
+      },
+      "style": "round",
+      "size": 14,
+      "verified": true,
+      "notes": "Comando AirbusFBW/FireTestENG3 presente en el volcado de la familia ToLiss.",
+      "x": 315.0,
+      "y": 22.0
+    },
+    {
+      "id": "fire.eng4",
+      "label": "ENG 4",
+      "kind": "korry",
+      "positions": [
+        "NORM",
+        "PUSHED"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENGFireSwitchArray",
+        "index": 3
+      },
+      "lamps": {
+        "top": {
+          "text": "FIRE",
+          "color": "red",
+          "dataref": "AirbusFBW/OHPLightsATA70_Raw",
+          "index": 17
+        },
+        "bottom": {
+          "text": "PUSHED",
+          "color": "white",
+          "dataref": "AirbusFBW/ENGFireSwitchArray",
+          "index": 3
+        }
+      },
+      "guarded": true,
+      "style": "fire",
+      "verified": false,
+      "notes": "ENG 1/2 como en el A320; ENG 3/4 en los índices 2 y 3 de ENGFireSwitchArray y lámpara FIRE en OHPLightsATA70_Raw supuestos.",
+      "x": 364.0,
+      "y": 22.0
+    },
+    {
+      "id": "fire.eng4_agent1",
+      "label": "AGENT 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "DISCH"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FireExOHPArray",
+        "index": 6
+      },
+      "lamps": {
+        "top": {
+          "text": "SQUIB",
+          "color": "white",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 6,
+          "onValue": 1
+        },
+        "bottom": {
+          "text": "DISCH",
+          "color": "amber",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 6,
+          "onValue": 2
+        }
+      },
+      "guarded": true,
+      "guardStyle": "red",
+      "size": 15,
+      "readOnly": true,
+      "verified": false,
+      "x": 349.0,
+      "y": 52.0
+    },
+    {
+      "id": "fire.eng4_agent2",
+      "label": "AGENT 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "DISCH"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FireExOHPArray",
+        "index": 7
+      },
+      "lamps": {
+        "top": {
+          "text": "SQUIB",
+          "color": "white",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 7,
+          "onValue": 1
+        },
+        "bottom": {
+          "text": "DISCH",
+          "color": "amber",
+          "dataref": "AirbusFBW/FireExOHPArray",
+          "index": 7,
+          "onValue": 2
+        }
+      },
+      "guarded": true,
+      "guardStyle": "red",
+      "size": 15,
+      "readOnly": true,
+      "verified": false,
+      "x": 379.0,
+      "y": 52.0
+    },
+    {
+      "id": "fire.eng4_test",
+      "label": "TEST",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/FireTestENG4",
+        "duration": 2
+      },
+      "style": "round",
+      "size": 14,
+      "verified": true,
+      "notes": "Comando AirbusFBW/FireTestENG4 presente en el volcado de la familia ToLiss.",
+      "x": 399.0,
+      "y": 22.0
+    },
+    {
+      "id": "fire.apu",
+      "label": "APU",
+      "kind": "korry",
+      "positions": [
+        "NORM",
+        "PUSHED"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/APUOnFire"
+      },
+      "lamps": {
+        "top": {
+          "text": "FIRE",
+          "color": "red",
+          "dataref": "AirbusFBW/APUOnFire"
+        }
+      },
+      "guarded": true,
+      "style": "fire",
+      "readOnly": true,
+      "verified": false,
+      "x": 208.0,
+      "y": 22.0
+    },
+    {
+      "id": "fire.apu_agent",
+      "label": "AGENT",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "DISCH"
+      ],
+      "commands": {
+        "press": "AirbusFBW/EngFireProt/APUAgentPush",
+        "duration": 2
+      },
+      "guarded": true,
+      "guardStyle": "red",
+      "size": 15,
+      "verified": true,
+      "x": 194.0,
+      "y": 52.0
+    },
+    {
+      "id": "fire.apu_test",
+      "label": "TEST",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "AirbusFBW/FireTestAPU",
+        "duration": 2
+      },
+      "style": "round",
+      "size": 14,
+      "verified": true,
+      "x": 224.0,
+      "y": 52.0
+    }
+  ]
+}

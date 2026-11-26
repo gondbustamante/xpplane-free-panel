@@ -1,0 +1,253 @@
+{
+  "id": "anti_ice",
+  "title": "ANTI ICE",
+  "group": "overhead",
+  "order": 35,
+  "frame": {
+    "x": 200,
+    "y": 474,
+    "w": 178,
+    "h": 52
+  },
+  "notes": "A340: WING y los cuatro motores. ToLiss A340-600: nombres siguiendo los de la familia ToLiss (mismo código base que el A320, volcado en mapping/reference). Índices de array supuestos para 4 motores: verificar con Diagnóstico o xp.py watch en el A340. Geometría adaptada a la distribución del overhead del A340 (cuatro motores) sobre el lienzo del A320.",
+  "decorations": [
+    {
+      "type": "divider",
+      "points": [
+        [
+          49.0,
+          16.2
+        ],
+        [
+          49.0,
+          48.8
+        ]
+      ]
+    },
+    {
+      "type": "divider",
+      "points": [
+        [
+          174.4,
+          16.2
+        ],
+        [
+          174.4,
+          48.8
+        ]
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "id": "anti_ice.wing",
+      "label": "WING",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/WAILights",
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "2": 0,
+          "3": 1
+        }
+      },
+      "commands": {
+        "up": "toliss_airbus/antiicecommands/WingOn",
+        "down": "toliss_airbus/antiicecommands/WingOff"
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/WAILights",
+          "bit": 2
+        },
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/WAILights",
+          "bit": 1
+        }
+      },
+      "verified": true,
+      "notes": "Confirmado por el volcado de ToLiss (mapping/reference) y por el proyecto XSchenFly/Rowsfire A107 (X-Plane 12, Web API). Valor en bits: 1 = ON, 2 = FAULT.",
+      "x": 28.0,
+      "y": 31.7
+    },
+    {
+      "id": "anti_ice.eng1",
+      "label": "ENG 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENG1AILights",
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "2": 0,
+          "3": 1
+        }
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/ENG1AILights",
+          "bit": 2
+        },
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/ENG1AILights",
+          "bit": 1
+        }
+      },
+      "size": 15,
+      "verified": true,
+      "x": 70.0,
+      "y": 31.7,
+      "commands": {
+        "up": "toliss_airbus/antiicecommands/ENG1On",
+        "down": "toliss_airbus/antiicecommands/ENG1Off"
+      }
+    },
+    {
+      "id": "anti_ice.eng2",
+      "label": "ENG 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENG2AILights",
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "2": 0,
+          "3": 1
+        }
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/ENG2AILights",
+          "bit": 2
+        },
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/ENG2AILights",
+          "bit": 1
+        }
+      },
+      "size": 15,
+      "verified": true,
+      "x": 98.0,
+      "y": 31.7,
+      "commands": {
+        "up": "toliss_airbus/antiicecommands/ENG2On",
+        "down": "toliss_airbus/antiicecommands/ENG2Off"
+      }
+    },
+    {
+      "id": "anti_ice.eng3",
+      "label": "ENG 3",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENG3AILights",
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "2": 0,
+          "3": 1
+        }
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/ENG3AILights",
+          "bit": 2
+        },
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/ENG3AILights",
+          "bit": 1
+        }
+      },
+      "size": 15,
+      "verified": false,
+      "x": 126.0,
+      "y": 31.7,
+      "write": {
+        "dataref": "AirbusFBW/ENG3AISwitch"
+      },
+      "notes": "Sin comando ENG3 en el volcado del A320: escribe ENG3AISwitch por analogía con ENG1/2AISwitch."
+    },
+    {
+      "id": "anti_ice.eng4",
+      "label": "ENG 4",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/ENG4AILights",
+        "values": [
+          0,
+          1
+        ],
+        "aliases": {
+          "2": 0,
+          "3": 1
+        }
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/ENG4AILights",
+          "bit": 2
+        },
+        "bottom": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/ENG4AILights",
+          "bit": 1
+        }
+      },
+      "size": 15,
+      "verified": false,
+      "x": 154.0,
+      "y": 31.7,
+      "write": {
+        "dataref": "AirbusFBW/ENG4AISwitch"
+      },
+      "notes": "Sin comando ENG4 en el volcado del A320: escribe ENG4AISwitch por analogía con ENG1/2AISwitch."
+    }
+  ]
+}

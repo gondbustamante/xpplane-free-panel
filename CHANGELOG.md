@@ -4,6 +4,21 @@ Registro de cambios de A320 Overhead. La app muestra lo mismo en *Opciones (⋯)
 
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y las versiones, [SemVer](https://semver.org/lang/es/).
 
+## [0.10.0] · 2026-11-26 · ToLiss A340-600
+
+### Nuevo
+- Elige el avión que vuelas: ToLiss A320 o ToLiss A340-600, tocando el nombre del avión en la barra lateral o en Ajustes. Paneles, procedimientos, guía, ejercicios, turnaround y modo demo se adaptan; el A320 sigue exactamente igual.
+- Overhead del A340 con cuatro motores: FIRE de los motores 1 a 4 y del APU, HYD con las bombas de los motores exteriores, FUEL con bomba principal y de reserva por tanque de alimentación y crossfeed por motor, ELEC con GEN e IDG 1-4, EXT A/B y APU BAT, sangrado y antihielo de los cuatro motores y MAN START 1-4. En el pedestal, ENG MASTER 1 a 4.
+- Procedimientos del A340: arranque en orden 4-3-2-1, bombas de combustible, sangrados y masters de los cuatro motores en la preparación, el parking y la checklist.
+- Al conectar, si X-Plane tiene cargado un avión distinto del elegido, la barra lateral ofrece cambiar con un toque.
+- Cifras propias del A340-600 en la hoja de carga (pesos máximos y operativo), el turnaround (380 plazas, 90 min de salida y de tránsito, combustible hasta 155 t), el golpe de cola del informe de vuelo, el rodaje con motores reducidos, la fraseología de pushback y la inspección exterior.
+
+### Mejorado
+- El modo demo simula 2 o 4 motores: generadores, sangrado por lados del colector y bombas hidráulicas según el avión.
+
+### Pendiente de verificar
+- Los mandos nuevos del A340 (motores 3 y 4, índices de los arrays de FUEL/HYD/ELEC) siguen la nomenclatura de la familia ToLiss pero no se han comprobado contra un volcado del A340. Con el A340 cargado: `python3 tools/xp.py dump --grep "AirbusFBW|toliss"` y Diagnóstico de datarefs; detalles en docs/MAPPING.md.
+
 ## [0.9.2] · 2026-11-15 · Copiloto, informe de vuelo y mapa
 
 ### Nuevo

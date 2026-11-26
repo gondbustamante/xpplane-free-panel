@@ -1,0 +1,475 @@
+{
+  "id": "hyd",
+  "title": "",
+  "group": "overhead",
+  "order": 8,
+  "frame": {
+    "x": 200,
+    "y": 152,
+    "w": 416,
+    "h": 54
+  },
+  "titleHidden": true,
+  "notes": "A340: bombas movidas por los motores exteriores (ENG 1: verde y azul; ENG 4: verde y amarillo) y una eléctrica por sistema; sin PTU. Asignación de pulsadores tomada de la descripción general del sistema del A340 (sin FCOM a mano): verificar las etiquetas en la cabina del ToLiss. ToLiss A340-600: nombres siguiendo los de la familia ToLiss (mismo código base que el A320, volcado en mapping/reference). Índices de array supuestos para 4 motores: verificar con Diagnóstico o xp.py watch en el A340. Índices de HydOHPArray supuestos (se escriben, sin verificar). Geometría adaptada a la distribución del overhead del A340 (cuatro motores) sobre el lienzo del A320.",
+  "decorations": [
+    {
+      "type": "box",
+      "at": [
+        70.0,
+        5.6
+      ],
+      "text": "GREEN"
+    },
+    {
+      "type": "box",
+      "at": [
+        193.0,
+        5.6
+      ],
+      "text": "BLUE"
+    },
+    {
+      "type": "box",
+      "at": [
+        346.0,
+        5.6
+      ],
+      "text": "YELLOW"
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          40.0,
+          13.0
+        ],
+        [
+          100.0,
+          13.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          172.0,
+          13.0
+        ],
+        [
+          214.0,
+          13.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          316.0,
+          13.0
+        ],
+        [
+          346.0,
+          13.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          380.0,
+          13.0
+        ],
+        [
+          380.0,
+          24.8
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          380.0,
+          13.0
+        ],
+        [
+          70.0,
+          13.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          40.0,
+          13.0
+        ],
+        [
+          40.0,
+          24.8
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          100.0,
+          13.0
+        ],
+        [
+          100.0,
+          24.8
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          172.0,
+          13.0
+        ],
+        [
+          172.0,
+          24.8
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          214.0,
+          13.0
+        ],
+        [
+          214.0,
+          24.8
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          316.0,
+          13.0
+        ],
+        [
+          316.0,
+          24.8
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          346.0,
+          13.0
+        ],
+        [
+          346.0,
+          24.8
+        ]
+      ]
+    },
+    {
+      "type": "divider",
+      "points": [
+        [
+          136.0,
+          4.0
+        ],
+        [
+          136.0,
+          50.0
+        ]
+      ]
+    },
+    {
+      "type": "divider",
+      "points": [
+        [
+          282.0,
+          4.0
+        ],
+        [
+          282.0,
+          50.0
+        ]
+      ]
+    },
+    {
+      "type": "text",
+      "at": [
+        9.2,
+        29.0
+      ],
+      "text": "HYD",
+      "size": 7,
+      "vertical": true
+    },
+    {
+      "type": "text",
+      "at": [
+        406.4,
+        29.0
+      ],
+      "text": "HYD",
+      "size": 7,
+      "vertical": true
+    }
+  ],
+  "controls": [
+    {
+      "id": "hyd.eng1_pump_g",
+      "label": "ENG 1 PUMP",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/HydOHPArray",
+        "index": 0
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
+          "index": 0,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
+          "index": 0,
+          "onValue": 0
+        }
+      },
+      "verified": false,
+      "x": 40.0,
+      "y": 38.8
+    },
+    {
+      "id": "hyd.elec_pump_g",
+      "label": "ELEC PUMP",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "AUTO"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/HydOHPArray",
+        "index": 1
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
+          "index": 1,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
+          "index": 1,
+          "onValue": 0
+        }
+      },
+      "sideLabel": "AUTO",
+      "verified": false,
+      "x": 100.0,
+      "y": 38.8
+    },
+    {
+      "id": "hyd.eng1_pump_b",
+      "label": "ENG 1 PUMP",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/HydOHPArray",
+        "index": 2
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
+          "index": 2,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
+          "index": 2,
+          "onValue": 0
+        }
+      },
+      "verified": false,
+      "x": 172.0,
+      "y": 38.8
+    },
+    {
+      "id": "hyd.elec_pump_b",
+      "label": "ELEC PUMP",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "AUTO"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/HydOHPArray",
+        "index": 3
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
+          "index": 3,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
+          "index": 3,
+          "onValue": 0
+        }
+      },
+      "sideLabel": "AUTO",
+      "verified": false,
+      "x": 214.0,
+      "y": 38.8
+    },
+    {
+      "id": "hyd.rat_man_on",
+      "label": "RAT MAN ON",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "commands": {
+        "press": "toliss_airbus/hydcommands/PressRATReleaseButton"
+      },
+      "guardStyle": "red",
+      "readOnly": false,
+      "verified": true,
+      "notes": "Comando de la familia ToLiss (volcado del A320).",
+      "x": 256.0,
+      "y": 38.8
+    },
+    {
+      "id": "hyd.elec_pump_y",
+      "label": "ELEC PUMP",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/HydOHPArray",
+        "index": 4
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
+          "index": 4,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
+          "index": 4,
+          "onValue": 0
+        }
+      },
+      "verified": false,
+      "x": 316.0,
+      "y": 38.8
+    },
+    {
+      "id": "hyd.eng4_pump_y",
+      "label": "ENG 4 PUMP",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/HydOHPArray",
+        "index": 5
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
+          "index": 5,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
+          "index": 5,
+          "onValue": 0
+        }
+      },
+      "verified": false,
+      "x": 346.0,
+      "y": 38.8
+    },
+    {
+      "id": "hyd.eng4_pump_g",
+      "label": "ENG 4 PUMP",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/HydOHPArray",
+        "index": 6
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
+          "index": 6,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/HydPumpOHPArray",
+          "index": 6,
+          "onValue": 0
+        }
+      },
+      "verified": false,
+      "x": 380.0,
+      "y": 38.8
+    }
+  ]
+}

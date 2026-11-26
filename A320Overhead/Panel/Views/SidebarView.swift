@@ -126,7 +126,7 @@ struct SidebarView: View {
         .tutorialTarget(.sidebar)
         .environment(\.editMode, $editMode)
         .searchable(text: $query, placement: .sidebar, prompt: "Buscar paneles, procedimientos y ejercicios")
-        .navigationTitle("A320")
+        .navigationTitle(model.aircraft.name)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 if isEditing {
@@ -518,8 +518,24 @@ private struct SidebarHeader: View {
                 .shadow(color: .black.opacity(0.35), radius: 3, y: 1)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
-                Text("ToLiss A320")
-                    .font(.headline)
+                // The aircraft flown: a tap switches between the A320 and the A340.
+                Menu {
+                    Picker("Avión", selection: Binding(get: { model.aircraft }, set: { model.selectAircraft($0) })) {
+                        ForEach(AircraftProfile.all) { profile in
+                            Text(profile.product).tag(profile)
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(model.aircraft.product)
+                            .font(.headline)
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .foregroundStyle(.primary)
+                .accessibilityLabel("Avión: \(model.aircraft.product). Cambiar de avión")
                 HStack(spacing: 6) {
                     Circle()
                         .fill(model.statusColor)
@@ -528,6 +544,14 @@ private struct SidebarHeader: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                }
+                if let detected = model.detectedAircraftMismatch {
+                    Button("X-Plane: \(model.simAircraftICAO ?? detected.icaoType) · usar \(detected.name)") {
+                        model.selectAircraft(detected)
+                    }
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.orange)
+                    .buttonStyle(.plain)
                 }
             }
             Spacer(minLength: 0)

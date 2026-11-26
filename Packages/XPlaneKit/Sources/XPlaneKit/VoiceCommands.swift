@@ -37,7 +37,8 @@ public struct VoiceCommand: Equatable, Sendable {
 /// a small vocabulary first, so "luces de aterrizaje encendidas" and "landing lights on" read
 /// the same, and the speech recogniser's spellings of numbers ("one", "1", "won") too.
 public enum VoiceCommandParser {
-    public static func parse(_ text: String) -> VoiceCommand? {
+    /// `engineCount` is 2 on the A320 and 4 on the A340 (engine anti-ice on every engine).
+    public static func parse(_ text: String, engineCount: Int = 2) -> VoiceCommand? {
         let words = normalize(text)
         guard !words.isEmpty else { return nil }
         let set = Set(words)
@@ -135,7 +136,7 @@ public enum VoiceCommandParser {
         }
 
         if set.contains("antiice") {
-            let engines = [VoiceCommand.Target("anti_ice.eng1", on ? "ON" : "OFF"), .init("anti_ice.eng2", on ? "ON" : "OFF")]
+            let engines = (1...max(engineCount, 1)).map { VoiceCommand.Target("anti_ice.eng\($0)", on ? "ON" : "OFF") }
             guard on || off else { return nil }
             if set.contains("wing") {
                 return VoiceCommand(.set(engines + [.init("anti_ice.wing", on ? "ON" : "OFF")]),

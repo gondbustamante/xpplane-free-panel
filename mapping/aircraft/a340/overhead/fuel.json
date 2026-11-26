@@ -1,0 +1,713 @@
+{
+  "id": "fuel",
+  "title": "",
+  "group": "overhead",
+  "order": 9,
+  "frame": {
+    "x": 200,
+    "y": 208,
+    "w": 416,
+    "h": 58
+  },
+  "titleHidden": true,
+  "notes": "A340-600: bombas principal y de reserva de cada tanque de alimentación (uno por motor), crossfeed de cada motor, trasvase del central y MODE SEL. El trim tank, los tanques exteriores y el trasvase manual se gestionan solos en AUTO y no se representan. ToLiss A340-600: nombres siguiendo los de la familia ToLiss (mismo código base que el A320, volcado en mapping/reference). Índices de array supuestos para 4 motores: verificar con Diagnóstico o xp.py watch en el A340. Índices de FuelOHPArray supuestos (se escriben, sin verificar); X FEED bloqueado porque su estado es de solo lectura y no se conoce dónde escribir. Geometría adaptada a la distribución del overhead del A340 (cuatro motores) sobre el lienzo del A320.",
+  "decorations": [
+    {
+      "type": "text",
+      "at": [
+        94.0,
+        3.5
+      ],
+      "text": "FEED TANKS 1 · 2",
+      "size": 5
+    },
+    {
+      "type": "text",
+      "at": [
+        322.0,
+        3.5
+      ],
+      "text": "FEED TANKS 3 · 4",
+      "size": 5
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          52.0,
+          22.0
+        ],
+        [
+          364.0,
+          22.0
+        ]
+      ]
+    },
+    {
+      "type": "divider",
+      "points": [
+        [
+          166.0,
+          4.0
+        ],
+        [
+          166.0,
+          54.0
+        ]
+      ]
+    },
+    {
+      "type": "divider",
+      "points": [
+        [
+          250.0,
+          4.0
+        ],
+        [
+          250.0,
+          54.0
+        ]
+      ]
+    },
+    {
+      "type": "text",
+      "at": [
+        9.2,
+        29.6
+      ],
+      "text": "FUEL",
+      "size": 7,
+      "vertical": true
+    },
+    {
+      "type": "text",
+      "at": [
+        406.4,
+        29.6
+      ],
+      "text": "FUEL",
+      "size": 7,
+      "vertical": true
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          39.0,
+          30.0
+        ],
+        [
+          65.0,
+          30.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          52.0,
+          22.0
+        ],
+        [
+          52.0,
+          30.0
+        ]
+      ]
+    },
+    {
+      "type": "text",
+      "at": [
+        52.0,
+        55.0
+      ],
+      "text": "ENG 1",
+      "size": 5
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          123.0,
+          30.0
+        ],
+        [
+          149.0,
+          30.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          136.0,
+          22.0
+        ],
+        [
+          136.0,
+          30.0
+        ]
+      ]
+    },
+    {
+      "type": "text",
+      "at": [
+        136.0,
+        55.0
+      ],
+      "text": "ENG 2",
+      "size": 5
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          267.0,
+          30.0
+        ],
+        [
+          293.0,
+          30.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          280.0,
+          22.0
+        ],
+        [
+          280.0,
+          30.0
+        ]
+      ]
+    },
+    {
+      "type": "text",
+      "at": [
+        280.0,
+        55.0
+      ],
+      "text": "ENG 3",
+      "size": 5
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          351.0,
+          30.0
+        ],
+        [
+          377.0,
+          30.0
+        ]
+      ]
+    },
+    {
+      "type": "line",
+      "points": [
+        [
+          364.0,
+          22.0
+        ],
+        [
+          364.0,
+          30.0
+        ]
+      ]
+    },
+    {
+      "type": "text",
+      "at": [
+        364.0,
+        55.0
+      ],
+      "text": "ENG 4",
+      "size": 5
+    }
+  ],
+  "controls": [
+    {
+      "id": "fuel.eng1_main",
+      "label": "MAIN",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 0
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 0,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelOHPArray",
+          "index": 0,
+          "onValue": 0
+        }
+      },
+      "size": 15,
+      "verified": false,
+      "x": 39.0,
+      "y": 40.0
+    },
+    {
+      "id": "fuel.eng1_stby",
+      "label": "STBY",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 4
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 4,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelOHPArray",
+          "index": 4,
+          "onValue": 0
+        }
+      },
+      "size": 15,
+      "verified": false,
+      "x": 65.0,
+      "y": 40.0
+    },
+    {
+      "id": "fuel.x_feed1",
+      "label": "X FEED 1",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelXFVOHPArray",
+        "index": 0
+      },
+      "lamps": {
+        "top": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/FuelXFVOHPArray",
+          "index": 0,
+          "bit": 1
+        },
+        "bottom": {
+          "text": "OPEN",
+          "color": "green",
+          "dataref": "AirbusFBW/FuelXFVOHPArray",
+          "index": 0,
+          "bit": 2
+        }
+      },
+      "size": 15,
+      "readOnly": true,
+      "verified": false,
+      "x": 52.0,
+      "y": 14.0
+    },
+    {
+      "id": "fuel.eng2_main",
+      "label": "MAIN",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 1
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 1,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelOHPArray",
+          "index": 1,
+          "onValue": 0
+        }
+      },
+      "size": 15,
+      "verified": false,
+      "x": 123.0,
+      "y": 40.0
+    },
+    {
+      "id": "fuel.eng2_stby",
+      "label": "STBY",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 5
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 5,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelOHPArray",
+          "index": 5,
+          "onValue": 0
+        }
+      },
+      "size": 15,
+      "verified": false,
+      "x": 149.0,
+      "y": 40.0
+    },
+    {
+      "id": "fuel.x_feed2",
+      "label": "X FEED 2",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelXFVOHPArray",
+        "index": 1
+      },
+      "lamps": {
+        "top": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/FuelXFVOHPArray",
+          "index": 1,
+          "bit": 1
+        },
+        "bottom": {
+          "text": "OPEN",
+          "color": "green",
+          "dataref": "AirbusFBW/FuelXFVOHPArray",
+          "index": 1,
+          "bit": 2
+        }
+      },
+      "size": 15,
+      "readOnly": true,
+      "verified": false,
+      "x": 136.0,
+      "y": 14.0
+    },
+    {
+      "id": "fuel.eng3_main",
+      "label": "MAIN",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 2
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 2,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelOHPArray",
+          "index": 2,
+          "onValue": 0
+        }
+      },
+      "size": 15,
+      "verified": false,
+      "x": 267.0,
+      "y": 40.0
+    },
+    {
+      "id": "fuel.eng3_stby",
+      "label": "STBY",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 6
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 6,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelOHPArray",
+          "index": 6,
+          "onValue": 0
+        }
+      },
+      "size": 15,
+      "verified": false,
+      "x": 293.0,
+      "y": 40.0
+    },
+    {
+      "id": "fuel.x_feed3",
+      "label": "X FEED 3",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelXFVOHPArray",
+        "index": 2
+      },
+      "lamps": {
+        "top": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/FuelXFVOHPArray",
+          "index": 2,
+          "bit": 1
+        },
+        "bottom": {
+          "text": "OPEN",
+          "color": "green",
+          "dataref": "AirbusFBW/FuelXFVOHPArray",
+          "index": 2,
+          "bit": 2
+        }
+      },
+      "size": 15,
+      "readOnly": true,
+      "verified": false,
+      "x": 280.0,
+      "y": 14.0
+    },
+    {
+      "id": "fuel.eng4_main",
+      "label": "MAIN",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 3
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 3,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelOHPArray",
+          "index": 3,
+          "onValue": 0
+        }
+      },
+      "size": 15,
+      "verified": false,
+      "x": 351.0,
+      "y": 40.0
+    },
+    {
+      "id": "fuel.eng4_stby",
+      "label": "STBY",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 7
+      },
+      "lamps": {
+        "top": {
+          "text": "FAULT",
+          "color": "amber",
+          "dataref": "AirbusFBW/FuelAutoPumpSDArray",
+          "index": 7,
+          "onValue": 3
+        },
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelOHPArray",
+          "index": 7,
+          "onValue": 0
+        }
+      },
+      "size": 15,
+      "verified": false,
+      "x": 377.0,
+      "y": 40.0
+    },
+    {
+      "id": "fuel.x_feed4",
+      "label": "X FEED 4",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "ON"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelXFVOHPArray",
+        "index": 3
+      },
+      "lamps": {
+        "top": {
+          "text": "ON",
+          "color": "blue",
+          "dataref": "AirbusFBW/FuelXFVOHPArray",
+          "index": 3,
+          "bit": 1
+        },
+        "bottom": {
+          "text": "OPEN",
+          "color": "green",
+          "dataref": "AirbusFBW/FuelXFVOHPArray",
+          "index": 3,
+          "bit": 2
+        }
+      },
+      "size": 15,
+      "readOnly": true,
+      "verified": false,
+      "x": 364.0,
+      "y": 14.0
+    },
+    {
+      "id": "fuel.ctr_l_xfr",
+      "label": "CTR TK\nL XFR",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "AUTO"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 8
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelOHPArray",
+          "index": 8,
+          "onValue": 0
+        }
+      },
+      "size": 15,
+      "verified": false,
+      "x": 190.0,
+      "y": 40.0
+    },
+    {
+      "id": "fuel.ctr_r_xfr",
+      "label": "CTR TK\nR XFR",
+      "kind": "korry",
+      "positions": [
+        "OFF",
+        "AUTO"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 9
+      },
+      "lamps": {
+        "bottom": {
+          "text": "OFF",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelOHPArray",
+          "index": 9,
+          "onValue": 0
+        }
+      },
+      "size": 15,
+      "verified": false,
+      "x": 226.0,
+      "y": 40.0
+    },
+    {
+      "id": "fuel.mode_sel",
+      "label": "MODE SEL",
+      "kind": "korry",
+      "positions": [
+        "MAN",
+        "AUTO"
+      ],
+      "state": {
+        "dataref": "AirbusFBW/FuelOHPArray",
+        "index": 10
+      },
+      "lamps": {
+        "bottom": {
+          "text": "MAN",
+          "color": "white",
+          "dataref": "AirbusFBW/FuelOHPArray",
+          "index": 10,
+          "onValue": 0
+        }
+      },
+      "size": 15,
+      "verified": false,
+      "x": 208.0,
+      "y": 14.0
+    }
+  ]
+}

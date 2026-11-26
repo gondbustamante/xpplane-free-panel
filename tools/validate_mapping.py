@@ -9,11 +9,19 @@ mapping/guide/*.json       learn-mode explanations; must name real controls, pos
 mapping/exercises/*.json   timed exercises over the procedures
 mapping/turnaround/*.json  ground-time templates: milestones before off-blocks
 mapping/reference/*.txt    xp.py dump of ToLiss; every AirbusFBW/ and toliss_airbus/ name must appear there
+mapping/aircraft/<id>/     overlay of another aircraft (A340): its files replace the base ones at the same
+                           relative path. Each overlay is validated merged over the base, as the app loads it.
+                           Names missing from the A320 dump are warnings there unless the overlay has its own
+                           reference/ dump (xp.py dump with that aircraft loaded).
+
+Usage: validate_mapping.py [--aircraft a340]   (no option: the base and every overlay)
 """
 import glob
 import json
 import os
+import shutil
 import sys
+import tempfile
 
 KINDS = {"toggle2": 2, "toggle3": 3, "korry": None, "rotary": None, "knob": None, "display": None,
          "lever": None, "dualKnob": None}
@@ -527,10 +535,65 @@ def print_rows(rows):
         print(f"  {text}  verificado: {status}")
 
 
+def merged_overlay(base, overlay):
+    """Copies the base mapping (without the overlays) to a temporary folder and lays the overlay on
+    top, like MappingOverlay.merge in the app. Returns the folder; the caller removes it."""
+    target = tempfile.mkdtemp(prefix="mapping-")
+    for entry in os.listdir(base):
+        if entry == "aircraft":
+            continue
+        source = os.path.join(base, entry)
+        if os.path.isdir(source):
+            shutil.copytree(source, os.path.join(target, entry))
+        else:
+            shutil.copy2(source, target)
+    for folder, _, names in os.walk(overlay):
+        relative = os.path.relpath(folder, overlay)
+        for name in names:
+            destination = os.path.join(target, relative, name)
+            if name.endswith(".removed"):
+                removed = destination[:-len(".removed")]
+                if os.path.exists(removed):
+                    os.remove(removed)
+                continue
+            os.makedirs(os.path.dirname(destination), exist_ok=True)
+            shutil.copy2(os.path.join(folder, name), destination)
+    return target
+
+
 def main():
-    root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "mapping")
+    base = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "mapping")
+    args = sys.argv[1:]
+    overlays_dir = os.path.join(base, "aircraft")
+    available = sorted(d for d in os.listdir(overlays_dir)) if os.path.isdir(overlays_dir) else []
+    if args[:1] == ["--aircraft"] and len(args) > 1:
+        wanted = [args[1]]
+    else:
+        wanted = [None] + available
+    failed = False
+    for aircraft in wanted:
+        if aircraft is None:
+            print("######## A320 (mapping/)")
+            failed |= validate_tree(base, base, strict_dump=True)
+            continue
+        overlay = os.path.join(overlays_dir, aircraft)
+        if not os.path.isdir(overlay):
+            sys.exit(f"No existe mapping/aircraft/{aircraft}.")
+        print(f"\n######## {aircraft.upper()} (mapping/ + mapping/aircraft/{aircraft})")
+        merged = merged_overlay(base, overlay)
+        try:
+            own_dump = os.path.isdir(os.path.join(overlay, "reference"))
+            failed |= validate_tree(merged, base, strict_dump=own_dump)
+        finally:
+            shutil.rmtree(merged, ignore_errors=True)
+    sys.exit(1 if failed else 0)
+
+
+def validate_tree(root, base, strict_dump):
+    """Validates one mapping tree. Returns True when it has errors."""
     files = sorted(f for f in glob.glob(os.path.join(root, "**", "*.json"), recursive=True)
-                   if os.path.basename(f) != "layout.json" and os.sep + "reference" + os.sep not in f
+                   if os.path.relpath(f, root).split(os.sep)[0] != "aircraft"
+                   and os.path.basename(f) != "layout.json" and os.sep + "reference" + os.sep not in f
                    and os.sep + "procedures" + os.sep not in f and os.sep + "guide" + os.sep not in f
                    and os.sep + "exercises" + os.sep not in f and os.sep + "turnaround" + os.sep not in f)
     if not files:
@@ -551,13 +614,13 @@ def main():
         panel_ids_by_group.setdefault(group, set()).add(panel.get("id"))
         used_datarefs |= datarefs
         used_commands |= commands
-        print(f"\n== {panel.get('title', '?')}  ({os.path.relpath(path)})")
+        print(f"\n== {panel.get('title', '?')}  ({os.path.relpath(path, root)})")
         print_rows(rows)
         for row in rows:
             total += 1
             verified += str(row[-1]).startswith("sí")
             if row[0] in all_ids:
-                errors.append(f"{row[0]}: id repetido en {os.path.relpath(all_ids[row[0]])}")
+                errors.append(f"{row[0]}: id repetido en {os.path.relpath(all_ids[row[0]], root)}")
             all_ids[row[0]] = path
         for error in errors:
             print(f"  ERROR: {error}")
@@ -591,17 +654,18 @@ def main():
     else:
         checkable_d = {n for n in used_datarefs if n.startswith(DUMP_PREFIXES)}
         checkable_c = {n for n in used_commands if n.startswith(DUMP_PREFIXES)}
+        label = "ERROR" if strict_dump else "AVISO (sin volcado de este avión)"
         for name in sorted(checkable_d - ref_datarefs):
-            print(f"ERROR: el dataref '{name}' no aparece en mapping/reference/datarefs.txt")
-            failed = True
+            print(f"{label}: el dataref '{name}' no aparece en mapping/reference/datarefs.txt")
+            failed |= strict_dump
         for name in sorted(checkable_c - ref_commands):
-            print(f"ERROR: el comando '{name}' no aparece en mapping/reference/commands.txt")
-            failed = True
+            print(f"{label}: el comando '{name}' no aparece en mapping/reference/commands.txt")
+            failed |= strict_dump
         skipped = len(used_datarefs - checkable_d) + len(used_commands - checkable_c)
         print(f"\nNombres comprobados contra el volcado: {len(checkable_d)} datarefs y {len(checkable_c)} comandos"
               + (f" ({skipped} nombres sim/* fuera del filtro del volcado, no comprobados)." if skipped else "."))
     print(f"{total} controles, {verified} verificados, {total - verified} pendientes.")
-    sys.exit(1 if failed else 0)
+    return failed
 
 
 if __name__ == "__main__":

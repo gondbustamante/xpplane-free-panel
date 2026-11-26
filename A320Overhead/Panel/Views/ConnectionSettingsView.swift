@@ -13,6 +13,23 @@ struct ConnectionSettingsView: View {
         NavigationStack {
             Form {
                 Section {
+                    Picker("Avión", selection: Binding(get: { model.aircraft }, set: { model.selectAircraft($0) })) {
+                        ForEach(AircraftProfile.all) { profile in
+                            Text(profile.product).tag(profile)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    if let detected = model.detectedAircraftMismatch {
+                        Button("X-Plane tiene cargado un \(model.simAircraftICAO ?? detected.icaoType): usar \(detected.product)") {
+                            model.selectAircraft(detected)
+                        }
+                    }
+                } header: {
+                    Text("Avión")
+                } footer: {
+                    Text("Elige el avión que vuelas en X-Plane. Paneles, procedimientos, guía, ejercicios, turnaround y la simulación del modo demo se adaptan a él; al cambiarlo la app se reconecta. El A340 comparte con el A320 el FCU, el EFIS, las radios y el MCDU, y tiene su propio overhead de cuatro motores: sus mandos nuevos están sin verificar contra tu ToLiss A340 (Diagnóstico de datarefs).")
+                }
+                Section {
                     HStack(spacing: 10) {
                         Circle().fill(model.statusColor).frame(width: 10, height: 10)
                         Text(model.statusLabel).lineLimit(2)
